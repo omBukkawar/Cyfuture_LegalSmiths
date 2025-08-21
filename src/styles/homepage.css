@@ -1,0 +1,179 @@
+.top-bar {
+  position: absolute;
+  top: 20px;
+  left: 50px;
+  right: 50px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 10;
+}
+
+.brand {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: black;
+  text-decoration: none;
+}
+
+.login-link {
+  font-size: 3rem;
+  font-weight: bold;
+  color: white;
+  text-decoration: none;
+}
+
+.homepage {
+  font-family: Arial, sans-serif;
+  color: #222;
+  line-height:3;
+}
+
+header.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background: #fff;
+  position: sticky;
+  top: 0;
+  border-bottom: 1px solid #ddd;
+}
+
+header .logo {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.about {
+  text-align: center;
+  padding: 3rem 2rem;
+  background: url("../assets/background.jpeg") center/cover no-repeat;
+  color: white;
+}
+.about_text{
+  font-size: 1.5rem;
+}
+
+.about h1 {
+  font-size: 3.5rem;
+  margin-bottom: 1rem;
+}
+
+.about .translucent {
+  background: rgb(245, 245, 245,0.4);
+  padding: 2rem;
+  width: 90%;
+  border-radius: 10px;
+  margin-top: 2rem;
+  font-size: 1.6rem;
+  display: inline-block;
+  color: white;
+}
+
+.shield-icon {
+  font-size: 2rem;
+  display: block;
+  margin-top: 1rem;
+}
+
+.principles {
+  padding: 3rem 2rem;
+  background: #fafafa;
+  text-align:left;
+}
+
+.services-btn {
+  margin-top: 1rem;
+  padding: 0.8rem 6rem;
+  background: #4f46e5;
+  border: none;
+  color: white;
+  font-weight: bold;
+  font-size: 1.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.images-grid {
+  margin-top: 2rem;
+  position: relative;
+  height: 600px; 
+}
+
+.images-grid img {
+  position: absolute;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.images-grid img:nth-child(1) {
+  top: 0;
+  right: 0;
+  width: 45%;
+  height: 45%;
+}
+
+.images-grid img:nth-child(2) {
+  bottom: 0;
+  left: 0;
+  width: 30%;
+  height: 40%;
+}
+
+.images-grid img:nth-child(3) {
+  bottom: 0;
+  left: 35%;
+  width: 40%;
+  height: 50%;
+}
+
+.images-grid img:nth-child(4) {
+  bottom: 0;
+  right: 0;
+  width: 30%;
+  height: 40%;
+}
+
+.meet{
+  background-color: #ababab;
+  text-align: left;
+  padding:3rem 2rem;
+  margin-bottom:2rem;
+  h2{
+    font-size: 2rem;;
+  }
+  p{
+    font-size:1rem;
+  }
+}
+.contact {
+  margin-left:3rem;
+  padding: 3rem 2rem;
+  text-align: center;
+}
+
+.contact {
+  background: #ababab;
+  width:90%;
+  border-radius: 10px;
+}
+
+.contact-btn {
+  margin-top: 1rem;
+  padding: 0.8rem 2rem;
+  background: #4f46e5;
+  border: none;
+  color: white;
+  font-weight: bold;
+  border-radius: 17px;
+  cursor: pointer;
+}
+
+footer.footer {
+  padding: 1rem;
+  background: #222;
+  color: #fff;
+  text-align: center;
+  margin-top: 2rem;
+}
