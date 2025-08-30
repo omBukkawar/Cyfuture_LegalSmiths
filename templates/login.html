@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <div class="navbar">
+        <h2>Legal Smiths</h2>
+    </div>
+    <div class="header">
+        <h1>Login</h1>
+    </div>
+
+    <form id="loginForm">
+        <input type="email" name="Email" placeholder="Enter your Email" required><br>
+        <input type="password" name="password" placeholder="Enter your Password" required><br>
+        <button type="submit">Login</button>
+    </form>
+
+    <p>New Here? <a href="/register">Create an account</a></p>
+
+    <div class="back">
+        <button>Back</button>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const Email = e.target.Email.value;
+            const password = e.target.password.value;
+
+            fetch('http://localhost:5500/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            })
+            .then(res => {
+                if (res.ok) return res.text();
+                throw new Error('Invalid login');
+            })
+            .then(data => {
+                alert(data); // "Login successful!"
+                window.location.href = "/homepage.html"; // Redirect after login
+            })
+            .catch(err => {
+                alert(err.message); // "Invalid login"
+            });
+        });
+    </script>
+</body>
+</html>

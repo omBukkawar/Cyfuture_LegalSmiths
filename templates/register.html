@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <div class="navbar">
+        <h2>Legal Smiths</h2>
+    </div>
+    <div class="header">
+        <h1>Register</h1>
+    </div>
+
+    <form id="registerForm">
+        <input type="text" name="Name" id="name-input" placeholder="Enter your name" required>
+        <input type="email" name="Email" id="Email-input" placeholder="Enter your Email" required>
+        <input type="password" name="password" id="password-input" placeholder="Enter your Password" required>
+        <input type="number" name="phoneno" id="phoneno-input" placeholder="Enter your Phone No" required>
+        <button type="submit">Register</button>
+    </form>
+
+    <p>Already Have an Account? <a href="/login">Login</a></p>
+
+    <div class="back">
+        <button>Back</button>
+    </div>
+
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const Name = document.getElementById('name-input').value;
+            const Email = document.getElementById('Email-input').value;
+            const password = document.getElementById('password-input').value;
+            const phoneno = document.getElementById('phoneno-input').value;
+
+            fetch('http://localhost:3000/register', { // backend URL
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ Name, Email, password, phoneno })
+            })
+            .then(res => res.text())
+            .then(data => alert(data))
+            .catch(err => console.error(err));
+        });
+    </script>
+</body>
+</html>
