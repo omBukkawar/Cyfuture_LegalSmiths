@@ -35,9 +35,9 @@ const Login = () => {
           <input type="password" name="password" id="password-input" placeholder="Enter your Password" value={formData.password}  onChange={handleChange} required/>
         
         </div>
-        <div>
-          <button type="submit">Login</button>
-        </div>
+        
+          <button type="submit"><Link to="/services">Login</Link></button>
+        
       </form>
 
       <p className="link">
