@@ -7,6 +7,7 @@ import Services from "./pages/services";
 import Assistant from "./pages/legalAssistant";
 import Prediction from "./pages/casePrediction";
 import Analyzer from "./pages/contractAnalyzer";
+import Contact from "./pages/contact";
 
 const App = () => {
   return (
@@ -15,10 +16,10 @@ const App = () => {
       <Route path="/register" element={<Register />} />
       <Route path="/login" element={<Login />} />
       <Route path="/services" element={<Services />} />
-      <Route path="/contact" element={<h1>Contact Page Coming Soon</h1>} />
       <Route path="/legalAssistant" element={<Assistant />} />
       <Route path="/casePrediction" element={<Prediction />} />
       <Route path="/contractAnalyzer" element={<Analyzer />} />
+      <Route path="/contact" element={<Contact />} />
     </Routes>
   );
 };

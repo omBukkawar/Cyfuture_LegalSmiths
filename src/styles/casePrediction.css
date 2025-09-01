@@ -21,12 +21,12 @@
   align-items: center;
   z-index: 10;
 }
-.brand {
+.case-prediction .brand {
   font-weight: bold;
   color: white;
   text-decoration: none;
 }
-.login-link {
+.case-prediction .login-link {
   font-weight: bold;
   color: white;
   text-decoration: none;
