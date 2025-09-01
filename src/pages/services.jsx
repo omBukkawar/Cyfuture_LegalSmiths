@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import Footer from "../components/Footer";
 import "../styles/services.css";
 
-import img1 from "../assets/services_img1.webp";
+import img1 from "../assets/services_img1.jpg";
 import img2 from "../assets/services_img2.jpg";
 import img3 from "../assets/services_img3.webp";
 import img4 from "../assets/services_img4.jpeg";
@@ -26,22 +26,19 @@ const Services = () => {
 
       <section className="intro">
         <h1>AI Legal Solutions</h1>
-        <p>
-          LegalSmiths offers AI Legal Assistant for legal queries, Case Outcome
-          Prediction for predicting case results, and Smart Contract Analyzer
-          for contract analysis.
+        <p className="intro_text">
+          LegalSmiths offers AI Legal Assistant for legal queries, Case Outcome Prediction for predicting case results, and Smart Contract Analyzer for contract analysis.
         </p>
         <img src={img1} alt="Legal services overview" />
-        <p>
+        
+      </section>
+
+      <div className="container">
+        <p className="cont_text">
           LegalSmiths provides AI Legal Assistant, Case Outcome Prediction, and
           Smart Contract Analyzer services to offer accessible legal advice,
           informed decision-making, and error-free contract analysis.
         </p>
-      </section>
-      
-      <hr />
-
-      <div className="container">
         <div className="cards">
           <img src={img2} alt="AI Legal Assistant" />
           <h3>AI Legal Assistant</h3>
@@ -70,7 +67,6 @@ const Services = () => {
           </p>
         </div>
       </div>
-      <hr />
 
       <h2>Empowering Legal Analysis and Advice.</h2>
       <div className="buttons">

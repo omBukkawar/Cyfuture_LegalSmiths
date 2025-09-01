@@ -4,7 +4,7 @@ import Footer from "../components/Footer";
 import "../styles/homepage.css";
 
 import img1 from "../assets/homepage_img1.jpg";
-import img2 from "../assets/homepage_img2.jpg";
+import img2 from "../assets/homepage_img4.webp";
 import img3 from "../assets/homepage_img3.jpg";
 import img4 from "../assets/homepage_img4.jpeg";
 
@@ -94,11 +94,13 @@ const HomePage = () => {
 
         <section className="contact">
           <h2>Join LegalSmiths for AI-powered legal solutions.</h2>
-          <p>
+          <p><i>
+
             “LegalSmiths is a game-changer in the legal tech industry. The
             platform is intuitive, secure, and provides accurate legal analysis.
             I highly recommend it to anyone seeking legal advice.” - Victoria
             White
+          </i>
           </p>
           <Link to="/contact">
             <button className="contact-btn">Contact Us</button>

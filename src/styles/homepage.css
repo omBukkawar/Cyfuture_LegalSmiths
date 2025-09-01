@@ -6,10 +6,6 @@
   
 }
 .homepage .top-bar {
-  position: absolute;
-  top: 20px;
-  left: 50px;
-  right: 50px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -36,20 +32,20 @@
   font-size: 1.5rem;
   font-weight: 300;
   max-width: 800px;
-  margin: 0 auto;
+  margin:0 auto;
   line-height: 1.6;
   display: block;
-  text-align: center;
   word-wrap: break-word;
+  margin-bottom: 2rem;
 }
 
 .about h1 {
-  font-size: 3.5rem;
-  margin-bottom: 1rem;
+  font-size: 3rem;
+  margin-bottom: 1.5rem;
   margin-top: 6rem;
 }
 .about .translucent p {
-    font-size: 1.5rem;
+    font-size: 1.2rem;
     font-weight: 300;
     max-width: 800px;
     margin: 0 auto;
@@ -57,6 +53,10 @@
     display: block;
     text-align: center;
     word-wrap: break-word;
+    margin-bottom:0.7rem;
+}
+.translucent h2{
+  margin: 1.5rem;
 }
 .about .translucent svg{
   margin:20px;
@@ -65,11 +65,11 @@
   background: rgba(245, 245, 245, 0.2);
   padding: 1rem;
   max-width: 1350px;
-  height: 250px;
+  height: 21rem;
   margin: 1rem auto;
   border: 0.5px solid lightgrey;
   border-radius: 25px;
-  font-size: 1.6rem;
+  font-size: 1.2rem;
   line-height: 1.6;
   text-align: center;
 }
@@ -175,30 +175,39 @@
   font-size: 1.5rem;
   border-radius: 16px;
   align-items: center;
-  justify-content: center; /* Center content */
-  gap: 12px; /* <-- Add space between text and SVG */
-  text-decoration: none; /* <-- Remove underline */
+  justify-content: center;
+  gap: 12px;
   border: none;
   cursor: pointer;
+  cursor: pointer;
+  transition: background 0.3s ease;
 }
-
+.services-btn:hover{
+  background: #4a4a4a;
+}
+a{
+  text-decoration:none;
+}
 .meet {
-  background-color: #ababab;
+  background-color: #c3c3c3;
   text-align: left;
   padding: 4rem 3rem;
   margin-bottom: 6rem;
+  
   h2 {
-    font-size: 2rem;
+    font-size: 1.5rem;
   }
   p {
     font-size: 1rem;
+    max-width: 40rem;
+
   }
   line-height: 2.3;
 }
 .contact {
   padding: 3rem 2rem;
   text-align: center;
-  background: #ababab;
+  background: #c3c3c3;
   width: 110vw;
   border-radius: 10px;
   font-size: 1rem;
@@ -211,19 +220,8 @@
   word-wrap: break-word;
 }
 
-.contact-btn {
-  margin-top: 1rem;
-  padding: 0.8rem 2rem;
-  background: #4f46e5;
-  border: none;
-  color: white;
-  font-weight: bold;
-  border-radius: 27px;
-  cursor: pointer;
-}
-
 footer.footer {
-  height: 80px;
+  height: 120px;
   padding: 1rem;
   background: #c5c5c5;
   color: black;

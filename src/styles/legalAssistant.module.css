@@ -103,7 +103,7 @@
 .chatImg {
   object-fit: cover;
   width: 2.5rem;
-  margin-right: 2rem;
+  margin-right: 1rem;
   border-radius: 0.5rem;
 }
 
@@ -175,4 +175,7 @@
   margin: 1rem auto;
   border-radius: 0.5rem;
   border: 1px solid rgba(98, 98, 98, 1);
+  img{
+    padding-right: 1rem;
+  }
 }
