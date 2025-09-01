@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import "../styles/auth.css";
 
 const Register = () => {
+  const navigate=useNavigate();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -36,9 +37,9 @@ const Register = () => {
         <input type="email" name="email" id="Email-input" placeholder="Enter your Email ID" value={formData.email} onChange={handleChange} required/>
         <input type="password" name="password" id="password-input" placeholder="Enter your Password" value={formData.password}onChange={handleChange} required/>
         <input type="tel" name="phone" placeholder="Enter your Phone No." value={formData.phone} onChange={handleChange} required/>
-        <div>
+        <Link to="/services">
         <button type="submit" className="register-btn">Register</button>
-        </div>
+        </Link>
         </div>
         </form>
         

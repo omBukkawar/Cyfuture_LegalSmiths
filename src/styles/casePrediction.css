@@ -1,0 +1,248 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+.case-prediction {
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  overflow: hidden;
+  font-family: 'Poppins',sans-serif;
+}
+
+.top-bar {
+  position: absolute;
+  top: 20px;
+  left: 50px;
+  right: 50px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 10;
+}
+.brand {
+  font-weight: bold;
+  color: white;
+  text-decoration: none;
+}
+.login-link {
+  font-weight: bold;
+  color: white;
+  text-decoration: none;
+}
+
+.case-container {
+  background: #f9f9f9;
+  border-radius: 15px;
+  margin-top: 100px;
+  margin-bottom: 30px;
+  padding: 30px;
+  width: 90%;
+  max-width: 900px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.title {
+  text-align: center;
+  font-size: 28px;
+  font-weight: bold;
+  margin-bottom: 25px;
+}
+
+.description {
+  font-size: 1rem;
+  font-weight: 500;
+  max-width: 450px;  
+  margin: 0 auto;     
+  line-height: 1.6;   
+  display: block;     
+  text-align: center; 
+  word-wrap: break-word; 
+}
+hr{
+    margin:10px;
+}
+.upload-section {
+  text-align: center;
+  margin: 0 auto; 
+  width:32rem;
+}
+
+.file-drop {
+  background: #e0e0e0;
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 2rem;
+  height:6rem; 
+  border: 1px solid darkgrey; 
+  font-size: 0.8rem;
+}
+
+.supported-formats {
+  font-size: 10px;
+  color: #666;
+  margin-top: 10px;
+}
+
+.progress-bar {
+  position: relative;
+  background: #d1d1d1;
+  height: 10px;
+  border-radius: 5px;
+  margin: 25px 0;
+}
+
+.progress {
+  background: #4caf50;
+  height: 15px;
+  border-radius: 20px;
+}
+
+.progress-text {
+  font-weight: bold;
+  font-size: 12px;
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.progress-info {
+  font-size: 10px;
+  color: #666;
+}
+
+.section-title {
+  font-size: 1.5rem;
+  margin: 4rem 0 1.5rem;
+  text-align: left;
+}
+
+.grid-layout{
+  display: grid;
+  grid-template-columns: 1fr 1fr;           
+  grid-auto-rows: minmax(110px, auto);
+  gap: 18px;
+
+
+  grid-template-areas:
+    "win      court"
+    "win      caseType"
+    "win      sentiment"
+    "reasons  strategy"
+    "red      strategy";
+}
+
+.grid-win{        grid-area: win; }
+.grid-case-type{  grid-area: caseType; }
+.grid-court{      grid-area: court; }
+.grid-timeline{   grid-area: timeline; }
+.grid-sentiment{  grid-area: sentiment; }
+.grid-reasons{    grid-area: reasons; }
+.grid-red{        grid-area: red; }
+.grid-strategy{   grid-area: strategy; }
+
+@media (max-width: 900px){
+  .grid-layout{
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "win"
+      "caseType"
+      "court"
+      "timeline"
+      "sentiment"
+      "reasons"
+      "red"
+      "strategy";
+  }
+}
+
+.grid-item {
+  background: #dcdcdc;
+  padding: 25px;
+  border-radius: 10px;
+  border: 1px solid darkgrey;
+}
+
+.grid-item.large {
+  grid-column: span 2;
+}
+
+.grid-item h2 {
+  font-size: 1.1rem;
+  margin-bottom: 13px;
+  text-align: left;
+  font-weight: bold;
+}
+.key{
+    color: grey;
+    font-weight: 500;
+}
+ul{
+    margin-left:40px;
+}
+.grid-item p,
+.grid-item ul {
+  font-size: 1rem;
+  text-align:left;
+  font-weight: 500;
+}
+pre{
+  font-size: 1rem;
+  color: #333;
+  margin-top: 1.5rem;
+  text-align: center;
+  font-weight: 500;
+}
+
+.winning-chart {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #f0f0f0;
+  border-radius: 50%;
+  width: 15rem;
+  height: 15rem;
+  margin: 1rem auto;
+}
+
+.percentage {
+  font-size: 22px;
+  font-weight: bold;
+}
+
+.feedback-section {
+  margin:20px;
+  text-align: left;
+  font-weight: 500; 
+}
+
+.feedback-section textarea {
+  width: 100%;
+  height: 5rem;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  padding: 10px;
+  font-size: 14px;
+  background-color: #dcdcdc;
+  margin-top: 0.5rem;
+  border: 1px solid darkgrey;
+}
+
+.back-btn {
+  display: block;
+  margin: 10px 0 0 auto;
+  background: #4b44f6;
+  color: #fff;
+  padding: 7px 30px;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+}
+
+.back-btn:hover {
+  background: #3730d0;
+}
+
+ 
