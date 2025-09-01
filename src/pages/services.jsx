@@ -74,7 +74,9 @@ const Services = () => {
         <button onClick={() => navigate("/casePrediction")}>Case Outcome Prediction</button>
         <button onClick={() => navigate("/contractAnalyzer")}>Smart Contract Analyzer</button>
       </div>
-      <button className="contact-btn">Contact Us</button>
+      <Link to="/contact">
+        <button className="contact-btn">Contact Us</button>
+      </Link>
 
       </main>
       <Footer />

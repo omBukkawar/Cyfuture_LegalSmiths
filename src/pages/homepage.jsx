@@ -92,7 +92,7 @@ const HomePage = () => {
           </p>
         </section>
 
-        <section className="contact">
+        <section className="contact1">
           <h2>Join LegalSmiths for AI-powered legal solutions.</h2>
           <p><i>
 
@@ -107,7 +107,6 @@ const HomePage = () => {
           </Link>
         </section>
       </main>
-
       <Footer />
     </div>
   );

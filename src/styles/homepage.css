@@ -13,7 +13,7 @@
 }
 .homepage .brand {
   font-weight: bold;
-  color: white;
+  color: black;
   text-decoration: none;
 }
 .homepage .login-link {
@@ -204,7 +204,7 @@ a{
   }
   line-height: 2.3;
 }
-.contact {
+.contact1 {
   padding: 3rem 2rem;
   text-align: center;
   background: #c3c3c3;
@@ -220,18 +220,6 @@ a{
   word-wrap: break-word;
 }
 
-footer.footer {
-  height: 120px;
-  padding: 1rem;
-  background: #c5c5c5;
-  color: black;
-  text-align: center;
-  margin-top: 2rem;
-  justify-content: center;
-}
-footer p {
-  margin-top: 2rem;
-}
 
 
  
