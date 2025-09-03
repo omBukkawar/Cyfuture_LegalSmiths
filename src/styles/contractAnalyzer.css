@@ -130,8 +130,8 @@ hr{
   border: 1px solid darkgrey;
   margin: 2rem 1rem;
 }
-.riskScore, .flagsFound, .mistakes{
-  width: 16rem;
+.active-tab {
+  text-decoration: underline;
 }
 .value{
   display: flex;
