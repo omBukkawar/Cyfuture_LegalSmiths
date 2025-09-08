@@ -7,7 +7,7 @@ import Services from "./pages/services";
 import Assistant from "./pages/legalAssistant";
 import Prediction from "./pages/casePrediction";
 import Analyzer from "./pages/contractAnalyzer";
-// import Contact from "./pages/contact";
+import Contact from "./pages/contact";
 
 const App = () => {
   return (
@@ -19,7 +19,7 @@ const App = () => {
       <Route path="/legalAssistant" element={<Assistant />} />
       <Route path="/casePrediction" element={<Prediction />} />
       <Route path="/contractAnalyzer" element={<Analyzer />} />
-      {/* <Route path="/contact" element={<Contact />} /> */}
+      <Route path="/contact" element={<Contact />} />
     </Routes>
   );
 };

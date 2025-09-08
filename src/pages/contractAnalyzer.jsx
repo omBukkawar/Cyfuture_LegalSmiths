@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import "../styles/contractAnalyzer.css";
 import backgroundImg from "../assets/background.jpeg";
 import { Link, useNavigate } from "react-router-dom";
@@ -6,13 +6,45 @@ import highRisk from "../assets/risk-graph.webp";
 
 const CasePrediction = () => {
   const navigate = useNavigate();
-  const [selectedTab, setSelectedTab] = useState("keyTerms"); // 'keyTerms', 'redFlags', 'mistakes'
+  const [selectedTab, setSelectedTab] = useState("keyTerms");
+  const [files, setFiles] = useState([]);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef(null)
 
-  // Function to get color based on selection
   const getColor = () => {
     if (selectedTab === "redFlags") return "red";
     if (selectedTab === "mistakes") return "orange";
     return "inherit";
+  };
+
+  const handleFiles = (newFiles) => {
+    const validFiles = Array.from(newFiles).filter((file) =>
+      [".pdf", ".docx",".doc", ".txt"].some((ext) =>
+        file.name.toLowerCase().endsWith(ext)
+      )
+    );
+    setFiles((prev) => [...prev, ...validFiles]);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer.files.length > 0) {
+      handleFiles(e.dataTransfer.files);
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleFileInputChange = (e) => {
+    handleFiles(e.target.files);
   };
 
   return (
@@ -35,16 +67,43 @@ const CasePrediction = () => {
           Leverage AI to forecast your winning probability, uncover red flags
           with explanations, and receive data-driven strategy suggestions.
         </p>
-        <hr />
-        <div className="upload-section">
-          <div className="file-drop">
+        <hr className="hr" />
+         <div className="upload-section">
+          <div
+            className={`file-drop ${isDragging ? "dragging" : ""}`}
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onClick={() => fileInputRef.current?.click()}
+          >
             <p>
-              Drag & Drop or <a href="#">Choose a File</a>
+              Drag & Drop or <span className="choose-file" ><a href="#">Choose a File</a></span>
             </p>
             <p className="supported-formats">
               Supported formats: .pdf, .docx, .txt
             </p>
-          </div>
+            <input
+              type="file"
+              ref={fileInputRef}
+              style={{ display: "none" }}
+              multiple
+              webkitdirectory=""
+              directory=""
+              accept=".pdf,.doc,.docx,.txt"
+              onChange={handleFileInputChange}
+            />
+          </div>  
+
+          {files.length > 0 && (
+            <div className="uploaded-files">
+              <h4>Uploaded Files:</h4>
+              <ul>
+                {files.map((file, index) => (
+                  <li key={index}>{file.name}</li>
+                ))}
+              </ul>
+            </div>
+          )}
           <div className="progress-bar">
             <div className="progress"></div>
             <div className="progress-text">100%...done</div>
@@ -105,9 +164,8 @@ const CasePrediction = () => {
               Mistakes
             </h3>
           </div>
-          <hr />
+          <hr className="hr1" />
 
-          {/* Conditional Rendering of Components */}
           <div style={{ color: getColor() }}>
             {selectedTab === "keyTerms" && (
               <>
@@ -164,9 +222,7 @@ const CasePrediction = () => {
 
         <h2 className="ques">Was this analysis helpful?</h2>
         <div className="feedback">
-          <div className="like">
-            {/* Like/Dislike SVGs */}
-          </div>
+          <div className="like"></div>
           <textarea placeholder="Enter your suggestions"></textarea>
         </div>
 
