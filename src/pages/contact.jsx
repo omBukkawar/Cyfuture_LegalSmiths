@@ -1,5 +1,5 @@
 import React from "react";
-import { Link,navigate } from "react-router-dom";
+import { Link,useNavigate } from "react-router-dom";
 import "../styles/contact.css";
 import Footer from "../components/Footer";
 

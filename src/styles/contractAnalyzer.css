@@ -60,9 +60,10 @@
   text-align: center; 
   word-wrap: break-word; 
 }
-hr{
+.hr{
     margin:10px;
 }
+
 .upload-section {
   text-align: center;
   margin: 0 auto; 
@@ -131,7 +132,8 @@ hr{
   margin: 2rem 1rem;
 }
 .active-tab {
-  text-decoration: underline;
+  border-bottom:3px solid blue;
+  cursor: pointer;
 }
 .value{
   display: flex;

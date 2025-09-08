@@ -22,7 +22,7 @@ const CasePrediction = () => {
           Leverage AI to forecast your winning probability, uncover red flags with explanations, 
           and receive data-driven strategy suggestions.
         </p>
-        <hr />
+        <hr className="hr" />
         <div className="upload-section">
           <div className="file-drop">
             <p>Drag & Drop or <a href="#">Choose a File</a></p>

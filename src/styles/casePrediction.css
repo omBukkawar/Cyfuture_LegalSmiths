@@ -60,7 +60,7 @@
   text-align: center; 
   word-wrap: break-word; 
 }
-hr{
+.hr{
     margin:10px;
 }
 .upload-section {
