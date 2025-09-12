@@ -57,9 +57,13 @@ const CasePrediction = () => {
         <p className="description">
           Upload your case document for AI-based analysis.
         </p>
+
         <hr />
 
         {/* Upload Section */}
+
+        <hr className="hr" />
+
         <div className="upload-section">
           <div
             className="file-drop"

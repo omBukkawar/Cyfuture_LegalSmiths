@@ -1,9 +1,10 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link,useNavigate } from "react-router-dom";
 import "../styles/contact.css";
 import Footer from "../components/Footer";
 
 const Contact = () => {
+    const navigate=useNavigate();
   return (
     <div className="contact">
       <div className="top-bar">
