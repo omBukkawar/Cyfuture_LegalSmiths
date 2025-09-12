@@ -1,9 +1,10 @@
 import { Link, useNavigate } from "react-router-dom";
 import React, { useState } from "react";
+import axios from "axios";
 import "../styles/auth.css";
 
 const Login = () => {
-  const [formData, setFormData] = useState({ Email: "", password: "" });
+  const [formData, setFormData] = useState({ email: "", password: "" });
   const navigate = useNavigate();
 
   const handleChange = (e) =>
