@@ -1,5 +1,3 @@
-
-import React, { useState } from "react";
 import axios from "axios";
 
 import React, { useState, useRef } from "react";
@@ -15,11 +13,44 @@ const CasePrediction = () => {
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState("");
 
+  //api call
+// 
+const getfromFastAPI = async (files) => {
+  const formdata = new FormData();
+  formdata.append("request", "Please analyze this contract for me.");
+  files.forEach(file => {
+    formdata.append("files", file);
+  });
+  try {
+    const response = await axios.post(
+      "https://monocable-dollishly-joannie.ngrok-free.app/contractanalyzer",
+      formdata,
+      { headers: { "Content-Type": "multipart/form-data" } }
+    );
+    const json_data = response.data;
+    console.log("Json data:", json_data);
+
+    const blob = new Blob([JSON.stringify(json_data)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "contract_analysis.json";
+    document.body.appendChild(a);
+    a.click(); //can be removed
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error("Error:", error);
+  }
+};
+//------------------------------------------------------//
+
   const handleFileChange = async (e) => {
     const selectedFile = e.target.files[0];
     if (!selectedFile) return;
 
     setFile(selectedFile);
+    setFiles((prev) => [...prev, selectedFile]);
     setUploading(true);
 
     const formData = new FormData();
@@ -37,6 +68,7 @@ const CasePrediction = () => {
     } finally {
       setUploading(false);
     }
+  };
   const [selectedTab, setSelectedTab] = useState("keyTerms");
   const [files, setFiles] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
@@ -98,8 +130,7 @@ const CasePrediction = () => {
           Leverage AI to forecast your winning probability, uncover red flags
           with explanations, and receive data-driven strategy suggestions.
         </p>
-        <hr />
-
+        <br />
         <div className="upload-section">
           <div
             className="file-drop"
@@ -118,7 +149,9 @@ const CasePrediction = () => {
               onChange={handleFileChange}
             />
           </div>
-
+          <button className="analyze-btn" onClick={() => getfromFastAPI(files)}>
+            Analyze Contract
+          </button>
           {uploading && (
             <div className="progress-bar">
               <div className="progress"></div>
@@ -128,59 +161,9 @@ const CasePrediction = () => {
 
           {message && <p className="progress-info">{message}</p>}
         </div>
-
         {/* keep your existing analysis report here */}
         <h2 className="section-title">Analysis Report</h2>
         {/* ... */}
-        <hr className="hr" />
-         <div className="upload-section">
-          <div
-            className={`file-drop ${isDragging ? "dragging" : ""}`}
-            onDrop={handleDrop}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <p>
-              Drag & Drop or <span className="choose-file" ><a href="#">Choose a File</a></span>
-            </p>
-            <p className="supported-formats">
-              Supported formats: .pdf, .docx, .txt
-            </p>
-            <input
-              type="file"
-              ref={fileInputRef}
-              style={{ display: "none" }}
-              multiple
-              webkitdirectory=""
-              directory=""
-              accept=".pdf,.doc,.docx,.txt"
-              onChange={handleFileInputChange}
-            />
-          </div>  
-
-          {files.length > 0 && (
-            <div className="uploaded-files">
-              <h4>Uploaded Files:</h4>
-              <ul>
-                {files.map((file, index) => (
-                  <li key={index}>{file.name}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-          <div className="progress-bar">
-            <div className="progress"></div>
-            <div className="progress-text">100%...done</div>
-          </div>
-          <p className="progress-info">
-            The analysis is taking longer than expected. You will be emailed
-            when the report is ready.
-          </p>
-        </div>
-
-        <h2 className="section-title">Analysis Report</h2>
-
         <div className="report">
           <div className="component grid-summary">
             <h2>Summary</h2>
@@ -298,5 +281,4 @@ const CasePrediction = () => {
     </div>
   );
 };
-
 export default CasePrediction;

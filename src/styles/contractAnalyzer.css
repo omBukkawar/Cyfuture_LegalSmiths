@@ -225,7 +225,24 @@
   cursor: pointer;
 }
 
+.analyze-btn {
+  display: block;
+  margin: 15px auto 0 auto;
+  background: #4e4d5b;
+  color: #fff;
+  padding: 12px 30px;
+  margin-top: 25px;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  text-align: center;
+}
+
 .back-btn:hover {
+  background: #3730d0;
+}
+
+.analyze-btn:hover {
   background: #3730d0;
 }
 
