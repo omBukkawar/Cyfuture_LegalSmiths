@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
 *{
   margin: 0;
@@ -41,59 +41,66 @@
 }
 
 .container {
-  height: 38rem;
-  margin: 80px 40px 40px 40px;
+  flex: 1;
+  margin: 100px auto 40px;
   border-radius: 25px;
   background-color: white;
   display: flex;
+  flex-wrap: wrap;
   overflow: hidden;
+  width: 90%;
+  max-width: 1200px;
+  height: 40rem;
 }
 
 .sidebar {
-  flex: 3;
+  flex: 1 1 250px;
   background-color: #727374;
   border-radius: 24px 0 0 24px;
   padding: 2rem;
   color: white;
+  min-width: 200px;
 }
 
 .back {
   position: absolute;
-  bottom: 80px;
-  right: 1250px;
+  bottom: 20px;
+  left: 20px;
   border-radius: 20px;
-  padding: 7px 30px;
+  padding: 7px 20px;
 }
 
-.main{
-  flex: 10;
+.main {
+  flex: 3 1 500px;
   min-height: calc(100vh - 14rem);
   display: flex;
   flex-direction: column;
   align-items: center;
   margin-bottom: 0;
-  width:70rem ;
+  padding: 1rem;
+  width: 100%;
 }
 
-.title{
+.title {
   font-size: 2rem;
   color: black;
   margin: 1.5rem;
+  text-align: center;
 }
 
 .chats {
   overflow-y: auto;
   scroll-behavior: smooth;
   width: 100%;
-  max-width: 60rem;
-  height: calc(100vh - 17rem);
-  padding-bottom: 3rem;
+  max-width: 100%;
+  height: calc(100vh - 24rem);
+  padding: 1rem;
 }
 
 .chat {
-  margin: 1rem;
-  padding: 2rem 3rem;
-  font-size: 1.2em; 
+  margin: 1rem 0;
+  padding: 1.2rem 1.5rem;
+  font-size: 0.8rem;
   display: flex;
   align-items: flex-start;
   text-align: justify;
@@ -125,20 +132,18 @@
   display: flex;
   align-items: center;
   border-radius: 1rem;
-  width: 60.5rem;
-  height: 4rem;
+  width: 90%;
+  max-width: 900px;
+  height: 3.5rem;
   border: 1px solid rgba(98, 98, 98, 1);
-  margin:3rem;
-}
-
-.inp > img {
-  padding-left: 1rem;
+  margin: 1.5rem 0;
+  padding: 0 1rem;
 }
 
 .inp > input {
-  width: calc(100% - 9rem);
+  flex: 1;
   outline: none;
-  padding: 1rem;
+  padding: 0.8rem;
   color: black;
   border: none;
   background: transparent;
@@ -148,34 +153,106 @@
 .send {
   background-color: transparent;
   border: none;
+  cursor: pointer;
 }
 
-.upperSideTop { display:flex; align-items:center; gap:12px; }
+.upperSideTop {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .midBtn {
   background: #3437C2;
   border: none;
   color: white;
   padding: 1rem;
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   font-weight: bold;
-  width: 20rem;
+  width: 100%;
+  max-width: 20rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto;
+  margin: 1rem auto;
   border-radius: 0.5rem;
 }
+
 .query {
   display: flex;
   align-items: center;
   background: transparent;
   color: rgba(222, 222, 222, 1);
   padding: 1rem;
-  width: 20rem;
+  width: 100%;
+  max-width: 20rem;
   margin: 1rem auto;
   border-radius: 0.5rem;
   border: 1px solid rgba(98, 98, 98, 1);
-  img{
-    padding-right: 1rem;
+}
+
+.query img {
+  padding-right: 1rem;
+}
+
+@media (max-width: 992px) {
+  .container {
+    flex-direction: column;
+    border-radius: 15px;
+  }
+
+  .sidebar {
+    border-radius: 15px 15px 0 0;
+    text-align: center;
+  }
+
+  .main {
+    width: 100%;
+    padding: 1rem;
+  }
+
+  .title {
+    font-size: 1.5rem;
+  }
+
+  .inp {
+    height: 3rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .legalAssistant .topBar {
+    flex-direction: column;
+    gap: 0.5rem;
+    text-align: center;
+  }
+
+  .brand, .loginLink {
+    font-size: 1rem;
+  }
+
+  .title {
+    font-size: 1.2rem;
+  }
+
+  .chat {
+    font-size: 0.9rem;
+    padding: 1rem;
+  }
+
+  .inp {
+    flex-direction: row;
+    height: auto;
+    padding: 0.5rem;
+  }
+
+  .inp > input {
+    padding: 0.5rem;
+    font-size: 0.9rem;
+  }
+
+  .midBtn {
+    font-size: 1rem;
+    padding: 0.8rem;
   }
 }

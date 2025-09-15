@@ -1,15 +1,30 @@
-import React, { useState, useRef } from "react";
+import axios from "axios";
+import React, { useState, useRef, useEffect } from "react";
 import "../styles/contractAnalyzer.css";
 import backgroundImg from "../assets/background.jpeg";
 import { Link, useNavigate } from "react-router-dom";
 import highRisk from "../assets/risk-graph.webp";
 
-const CasePrediction = () => {
+const contractAnalyzer = () => {
   const navigate = useNavigate();
-  const [selectedTab, setSelectedTab] = useState("keyTerms");
+  const [cards, setCards] = useState([])
+  
+    useEffect(() => {
+      fetch("https://fakestoreapi.com/products")
+        .then(res => res.json())
+        .then(json => setCards(json))
+    }, [])
+
+  // File handling
+  const [file, setFile] = useState(null);
   const [files, setFiles] = useState([]);
+  const [uploading, setUploading] = useState(false);
+  const [message, setMessage] = useState("");
   const [isDragging, setIsDragging] = useState(false);
-  const fileInputRef = useRef(null)
+  const fileInputRef = useRef(null);
+
+  // Tabs
+  const [selectedTab, setSelectedTab] = useState("keyTerms");
 
   const getColor = () => {
     if (selectedTab === "redFlags") return "red";
@@ -19,7 +34,7 @@ const CasePrediction = () => {
 
   const handleFiles = (newFiles) => {
     const validFiles = Array.from(newFiles).filter((file) =>
-      [".pdf", ".docx",".doc", ".txt"].some((ext) =>
+      [".pdf", ".docx", ".doc", ".txt"].some((ext) =>
         file.name.toLowerCase().endsWith(ext)
       )
     );
@@ -31,6 +46,7 @@ const CasePrediction = () => {
     setIsDragging(false);
     if (e.dataTransfer.files.length > 0) {
       handleFiles(e.dataTransfer.files);
+      handleFileUpload(e.dataTransfer.files[0]); // auto upload first file
     }
   };
 
@@ -44,7 +60,33 @@ const CasePrediction = () => {
   };
 
   const handleFileInputChange = (e) => {
-    handleFiles(e.target.files);
+    if (e.target.files.length > 0) {
+      handleFiles(e.target.files);
+      handleFileUpload(e.target.files[0]);
+    }
+  };
+
+  // Backend upload
+  const handleFileUpload = async (selectedFile) => {
+    if (!selectedFile) return;
+    setFile(selectedFile);
+    setUploading(true);
+
+    const formData = new FormData();
+    formData.append("file", selectedFile);
+
+    try {
+      const res = await axios.post("http://localhost:5000/upload-contract", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      setMessage(res.data.message || "File uploaded successfully");
+    } catch (err) {
+      console.error(err);
+      setMessage("Upload failed");
+    } finally {
+      setUploading(false);
+    }
   };
 
   return (
@@ -68,7 +110,9 @@ const CasePrediction = () => {
           with explanations, and receive data-driven strategy suggestions.
         </p>
         <hr className="hr" />
-         <div className="upload-section">
+
+        {/* Upload Section */}
+        <div className="upload-section">
           <div
             className={`file-drop ${isDragging ? "dragging" : ""}`}
             onDrop={handleDrop}
@@ -77,7 +121,7 @@ const CasePrediction = () => {
             onClick={() => fileInputRef.current?.click()}
           >
             <p>
-              Drag & Drop or <span className="choose-file" ><a href="#">Choose a File</a></span>
+              Drag & Drop or <span className="choose-file">Choose a File</span>
             </p>
             <p className="supported-formats">
               Supported formats: .pdf, .docx, .txt
@@ -87,13 +131,12 @@ const CasePrediction = () => {
               ref={fileInputRef}
               style={{ display: "none" }}
               multiple
-              webkitdirectory=""
-              directory=""
               accept=".pdf,.doc,.docx,.txt"
               onChange={handleFileInputChange}
             />
-          </div>  
+          </div>
 
+          {/* Show uploaded files */}
           {files.length > 0 && (
             <div className="uploaded-files">
               <h4>Uploaded Files:</h4>
@@ -104,26 +147,27 @@ const CasePrediction = () => {
               </ul>
             </div>
           )}
-          <div className="progress-bar">
-            <div className="progress"></div>
-            <div className="progress-text">100%...done</div>
-          </div>
-          <p className="progress-info">
-            The analysis is taking longer than expected. You will be emailed
-            when the report is ready.
-          </p>
+
+          {/* Upload status */}
+          {uploading && (
+            <div className="progress-bar">
+              <div className="progress"></div>
+              <div className="progress-text">Uploading...</div>
+            </div>
+          )}
+          {message && <p className="progress-info">{message}</p>}
         </div>
 
+        {/* Report */}
         <h2 className="section-title">Analysis Report</h2>
-
         <div className="report">
           <div className="component grid-summary">
             <h2>Summary</h2>
-            <p className="key">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras
-              ultricies, urna et semper viverra, sem metus suscipit justo, ac
-              tincidunt nunc enim sit amet justo.
-            </p>
+            {cards.slice(5,10).map((card,index) => (
+                <span className="key">           
+                  {card.description}
+                </span>
+              ))}
           </div>
 
           <div className="quickies">
@@ -137,7 +181,6 @@ const CasePrediction = () => {
               <h2>Red Flags Found</h2>
               <div className="value">5</div>
             </div>
-
             <div className="component mistakes">
               <h2>Mistakes Detected</h2>
               <div className="value">3</div>
@@ -169,52 +212,34 @@ const CasePrediction = () => {
           <div style={{ color: getColor() }}>
             {selectedTab === "keyTerms" && (
               <>
-                <div className="component keyTerms">
-                  <h2>Exclusive License</h2>
-                  <p>Key term details go here.</p>
+                {cards.slice(0,5).map((card,index) => (
+                <div key={card.id} className="component keyTerms">
+                  <h2>{card.title}</h2>
+                  <p>{card.description}</p>
                 </div>
-                <div className="component keyTerms">
-                  <h2>Non-Compete Clause</h2>
-                  <p>Key term details go here.</p>
-                </div>
-                <div className="component keyTerms">
-                  <h2>Termination Policy</h2>
-                  <p>Key term details go here.</p>
-                </div>
+              ))}
               </>
             )}
 
             {selectedTab === "redFlags" && (
               <>
-                <div className="component redFlags">
-                  <h2>Payment Delay Risk</h2>
-                  <p>This clause may cause delayed payments.</p>
+                {cards.slice(0,5).map((card,index) => (
+                <div key={card.id} className="component keyTerms">
+                  <h2>{card.title}</h2>
+                  <p>{card.description}</p>
                 </div>
-                <div className="component redFlags">
-                  <h2>Ambiguous Liability</h2>
-                  <p>Ambiguous responsibility clauses found.</p>
-                </div>
-                <div className="component redFlags">
-                  <h2>Unilateral Termination</h2>
-                  <p>Only one party has termination rights.</p>
-                </div>
+              ))}
               </>
             )}
 
             {selectedTab === "mistakes" && (
               <>
-                <div className="component mistakes">
-                  <h2>Grammar Error</h2>
-                  <p>Typographical issue found in clause 2.</p>
+                {cards.slice(0,5).map((card,index) => (
+                <div key={card.id} className="component keyTerms">
+                  <h2>{card.title}</h2>
+                  <p>{card.description}</p>
                 </div>
-                <div className="component mistakes">
-                  <h2>Incorrect Reference</h2>
-                  <p>Clause refers to a non-existent section.</p>
-                </div>
-                <div className="component mistakes">
-                  <h2>Redundant Clause</h2>
-                  <p>Duplicated section detected.</p>
-                </div>
+              ))}
               </>
             )}
           </div>
@@ -234,4 +259,4 @@ const CasePrediction = () => {
   );
 };
 
-export default CasePrediction;
+export default contractAnalyzer;

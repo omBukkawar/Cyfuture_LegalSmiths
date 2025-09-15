@@ -46,6 +46,7 @@ const Services = () => {
             The AI Legal Assistant provides instant answers to legal queries,
             enhancing accessibility and convenience for users.
           </p>
+          <button onClick={() => navigate("/legalAssistant")}>AI Legal Assistant</button>
         </div>
 
         <div className="cards">
@@ -55,6 +56,7 @@ const Services = () => {
             Predict case outcomes, identify risks, and view related cases to
             make informed decisions with the Case Outcome Prediction tool.
           </p>
+          <button onClick={() => navigate("/casePrediction")}>Case Outcome Prediction</button>
         </div>
 
         <div className="cards">
@@ -65,15 +67,10 @@ const Services = () => {
             documents are accurate and compliant with the Smart Contract
             Analyzer.
           </p>
+          <button onClick={() => navigate("/contractAnalyzer")}>Smart Contract Analyzer</button>
         </div>
       </div>
 
-      <h2>Empowering Legal Analysis and Advice.</h2>
-      <div className="buttons">
-        <button onClick={() => navigate("/legalAssistant")}>AI Legal Assistant</button>
-        <button onClick={() => navigate("/casePrediction")}>Case Outcome Prediction</button>
-        <button onClick={() => navigate("/contractAnalyzer")}>Smart Contract Analyzer</button>
-      </div>
       <Link to="/contact">
         <button className="contact-btn">Contact Us</button>
       </Link>
