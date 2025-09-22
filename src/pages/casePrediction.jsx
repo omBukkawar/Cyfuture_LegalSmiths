@@ -6,13 +6,15 @@ import { Link, useNavigate } from "react-router-dom";
 
 const CasePrediction = () => {
   const navigate = useNavigate();
-  const [cards, setCards] = useState([])
 
+  // Mock cards for demo
+  const [cards, setCards] = useState([]);
   useEffect(() => {
     fetch("https://fakestoreapi.com/products")
-      .then(res => res.json())
-      .then(json => setCards(json))
-  }, [])
+      .then((res) => res.json())
+      .then((json) => setCards(json));
+  }, []);
+
   // File handling
   const [file, setFile] = useState(null);
   const [files, setFiles] = useState([]);
@@ -21,10 +23,10 @@ const CasePrediction = () => {
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef(null);
 
-  // Sample Data
+  // Toggle similar cases
   const [showCases, setShowCases] = useState(false);
 
-  // Handle valid files
+  // Validate files
   const handleFiles = (newFiles) => {
     const validFiles = Array.from(newFiles).filter((file) =>
       [".pdf", ".docx", ".doc", ".txt"].some((ext) =>
@@ -34,26 +36,24 @@ const CasePrediction = () => {
     setFiles((prev) => [...prev, ...validFiles]);
   };
 
-  // Drag & Drop Handlers
+  // Drag & Drop
   const handleDrop = (e) => {
     e.preventDefault();
     setIsDragging(false);
     if (e.dataTransfer.files.length > 0) {
       handleFiles(e.dataTransfer.files);
-      handleFileUpload(e.dataTransfer.files[0]); // auto upload first file
+      handleFileUpload(e.dataTransfer.files[0]);
     }
   };
-
   const handleDragOver = (e) => {
     e.preventDefault();
     setIsDragging(true);
   };
-
   const handleDragLeave = () => {
     setIsDragging(false);
   };
 
-  // File Input Change
+  // File input
   const handleFileInputChange = (e) => {
     if (e.target.files.length > 0) {
       handleFiles(e.target.files);
@@ -61,11 +61,16 @@ const CasePrediction = () => {
     }
   };
 
-  // Upload to backend
+  // Upload file to backend
   const handleFileUpload = async (selectedFile) => {
-    if (!selectedFile) return;
+    if (!selectedFile) {
+      setMessage("Please choose a file first!");
+      return;
+    }
+
     setFile(selectedFile);
     setUploading(true);
+    setMessage("");
 
     const formData = new FormData();
     formData.append("file", selectedFile);
@@ -74,27 +79,39 @@ const CasePrediction = () => {
       const res = await axios.post("http://localhost:5000/upload-case", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      setMessage(res.data.message || "File uploaded successfully");
+
+      setMessage(
+        res.data.message ||
+          "File uploaded successfully: " + (res.data.doc?.originalName || "")
+      );
     } catch (err) {
       console.error(err);
-      setMessage("Upload failed");
+      setMessage("Upload failed. Try again.");
     } finally {
       setUploading(false);
     }
   };
 
   return (
-    <div className="case-prediction" style={{ backgroundImage: `url(${backgroundImg})` }}>
+    <div
+      className="case-prediction"
+      style={{ backgroundImage: `url(${backgroundImg})` }}
+    >
+      {/* Top bar */}
       <div className="top-bar">
-        <Link to="/" className="brand">LegalSmiths</Link>
-        <Link to="/login" className="login-link">Logout</Link>
+        <Link to="/" className="brand">
+          LegalSmiths
+        </Link>
+        <Link to="/login" className="login-link">
+          Logout
+        </Link>
       </div>
 
       <div className="case-container">
         <h1 className="title">Case Predictor</h1>
         <p className="description">
-          Leverage AI to forecast your winning probability, uncover red flags with explanations,
-          and receive data-driven strategy suggestions.
+          Leverage AI to forecast your winning probability, uncover red flags
+          with explanations, and receive data-driven strategy suggestions.
         </p>
         <hr className="hr" />
 
@@ -107,8 +124,13 @@ const CasePrediction = () => {
             onDragLeave={handleDragLeave}
             onClick={() => fileInputRef.current?.click()}
           >
-            <p>Drag & Drop or <span className="choose-file">Choose a File</span></p>
-            <p className="supported-formats">Supported formats: .pdf, .docx, .txt</p>
+            <p>
+              Drag & Drop or{" "}
+              <span className="choose-file">Choose a File</span>
+            </p>
+            <p className="supported-formats">
+              Supported formats: .pdf, .docx, .txt
+            </p>
             <input
               type="file"
               ref={fileInputRef}
@@ -124,8 +146,8 @@ const CasePrediction = () => {
             <div className="uploaded-files">
               <h4>Uploaded Files:</h4>
               <ul>
-                {files.map((file, index) => (
-                  <li key={index}>{file.name}</li>
+                {files.map((f, index) => (
+                  <li key={index}>{f.name}</li>
                 ))}
               </ul>
             </div>
@@ -169,37 +191,36 @@ const CasePrediction = () => {
 
           <div className="grid-item grid-reasons">
             <h2>Likely Outcome</h2>
-            {cards.slice(12,14).map((card,index) => (
-                <ul>
-                    <li>{card.description}</li>  
-                </ul>
-              ))}
+            {cards.slice(12, 14).map((card, index) => (
+              <ul key={index}>
+                <li>{card.description}</li>
+              </ul>
+            ))}
           </div>
 
           <div className="grid-item grid-strategies">
             <h2>Strategy Suggestions</h2>
-            {cards.slice(7,9).map((card,index) => (
-                <ul>
-                    <li>{card.description}</li>  
-                </ul>
-              ))}
+            {cards.slice(7, 9).map((card, index) => (
+              <ul key={index}>
+                <li>{card.description}</li>
+              </ul>
+            ))}
           </div>
 
           <div className="grid-item grid-red">
             <h2>Detected Red Flags</h2>
-            {cards.slice(7,9).map((card,index) => (
-                <ul>
-                    <li>{card.description}</li>  
-                </ul>
-              ))}
+            {cards.slice(7, 9).map((card, index) => (
+              <ul key={index}>
+                <li>{card.description}</li>
+              </ul>
+            ))}
           </div>
 
           <div className="grid-item grid-feedback">
             <h2>Final Feedback</h2>
-             {cards.slice(12,13).map((card,index) => (
-                <p> {card.description}</p>  
-                
-              ))}
+            {cards.slice(12, 13).map((card, index) => (
+              <p key={index}>{card.description}</p>
+            ))}
           </div>
         </div>
 
@@ -209,11 +230,12 @@ const CasePrediction = () => {
             See similar cases
           </span>
           {showCases && (
-
             <div className="cases-list">
-              {cards.slice(0,5).map((card,index) => (
+              {cards.slice(0, 5).map((card, index) => (
                 <div key={card.id} className="case-tag">
-                  <p>[case{index+1}] {card.description}</p>
+                  <p>
+                    [case{index + 1}] {card.description}
+                  </p>
                 </div>
               ))}
             </div>
@@ -226,7 +248,9 @@ const CasePrediction = () => {
           <textarea placeholder="Enter your suggestions"></textarea>
         </div>
 
-        <button className="back-btn" onClick={() => navigate(-1)}>Back</button>
+        <button className="back-btn" onClick={() => navigate(-1)}>
+          Back
+        </button>
       </div>
     </div>
   );
