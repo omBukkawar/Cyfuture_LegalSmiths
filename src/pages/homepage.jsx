@@ -95,7 +95,6 @@ const HomePage = () => {
         <section className="contact1">
           <h2>Join LegalSmiths for AI-powered legal solutions.</h2>
           <p><i>
-
             “LegalSmiths is a game-changer in the legal tech industry. The
             platform is intuitive, secure, and provides accurate legal analysis.
             I highly recommend it to anyone seeking legal advice.” - Victoria

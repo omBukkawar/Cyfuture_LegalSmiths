@@ -14,6 +14,7 @@
   font-weight: bold;
   color: white;
   text-decoration: none;
+  font-size:1.5rem;
 }
 .services .login-link {
   font-weight: bold;
@@ -24,7 +25,6 @@
 .intro {
   padding: 40px 20px;
   background: url("../assets/background.jpeg") center/cover no-repeat;
-  
 }
 
 .intro h1 {
@@ -44,12 +44,10 @@
 }
 
 .intro img {
-  position:relative;
-  top:10rem;
   width: 80rem;
-  /* max-width: 600px; */
+  max-width: 600px;
   border-radius: 12px;
-  margin: 20px 0;
+  margin: 7rem 0 0 0;
 }
 
 .container {
@@ -60,7 +58,7 @@
 }
 .cont_text{
   color: black;
-  margin:  12rem auto 5rem auto;
+  margin:  5rem auto 4rem auto;
   max-width: 80rem;
   word-wrap: break-word;
   font-size: 1.5rem;
@@ -98,15 +96,28 @@
   margin-top:10rem;
   font-size: 2.7rem;
 }
-.buttons {
+.cards button {
+  margin: 1rem;
+  padding: 1.2rem 2rem;
+  width: 23rem;
+  background: #6d6d6d;
+  color: white;
+  border: none;
+  border-radius: 0.7rem;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+/* .buttons {
   margin: 45px 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 1rem;
-}
+} */
 
-.buttons button {
+/* .buttons button {
   margin: 10px;
   padding: 1.5rem 2rem;
   width: 32rem;
@@ -118,32 +129,110 @@
   transition: background 0.3s ease;
   font-size: 1.5rem;
   font-weight: 600;
-}
+} */
 
 .buttons button:hover {
   background: #4a4a4a;
 }
 
 .contact-btn {
-  margin: 20px auto 5px auto;
+  display: block;
+  margin: 4rem auto 2rem auto;
   padding: 12px 25px;
   background: #3437C2;
-  color: white;
+  color: #fff;
   border: none;
   border-radius: 1rem;
-  font-size: 16px;
+  font-size: 1rem;
   cursor: pointer;
+  transition: background 0.3s ease;
 }
 
-.contact-btn:hover {
-  background: #2a2adf;
+.container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center; 
+  align-items: stretch; 
+  gap: 2rem;
+  padding: 40px 20px;
 }
 
-.top-bar .brand {
-  font-size: 1.5rem; 
+.cards {
+  flex: 1 1 300px; 
+  max-width: 27rem;
+  display: flex;
+  flex-direction: column; 
+  justify-content: space-between; 
+  background: #fff;
+  padding: 20px;
+  margin: 10px;
+  text-align: center;
+  border-radius: 1rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.cards h3 {
+  margin-top: 1rem;
+  font-size: 1.5rem;
+}
+
+.cards p {
+  flex-grow: 1; /* ✅ fills space so button stays aligned */
+  font-size: 1rem;
+  margin-top: 0.5rem;
+  word-wrap: break-word;
+}
+
+.cards button {
+  margin: auto; 
+  padding: 1rem;
+  width: 100%;
+  background: #6d6d6d;
+  color: white;
+  border: none;
+  border-radius: 0.7rem;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.cards button:hover {
+  background: #4a4a4a;
+}
+
+
+.cards img {
+  width: 100%;
+  height: 15rem; 
+  object-fit: cover; 
+  border-radius: 1rem;
+}
+
+
+@media (max-width: 768px) {
+  .intro h1 {
+    font-size: 2rem;
+    margin-top: 3rem;
   }
-.top-bar .login-link {
-  font-size: 1rem; 
+
+  .intro_text {
+    font-size: 1rem;
+    padding: 0 1rem;
+  }
+
+  .cards {
+    flex: 1 1 100%; 
+    max-width: 100%;
+  }
+
+  .cards button {
+    width: 100%;
+  }
+
+  .contact-btn {
+    width: 90%; 
+  }
 }
 
  

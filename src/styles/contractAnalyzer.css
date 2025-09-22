@@ -123,6 +123,8 @@
 .quickies{
   display: flex;
   margin: -2rem 0rem;
+  max-width: max-content;
+  justify-content: center;
 }
 .component {
   background: #dcdcdc;
@@ -130,6 +132,11 @@
   border-radius: 10px;
   border: 1px solid darkgrey;
   margin: 2rem 1rem;
+  
+}
+.riskScore{
+  max-width: 20rem;
+  word-wrap: break-word;
 }
 .active-tab {
   border-bottom:3px solid blue;
@@ -213,7 +220,21 @@
   border: 1px solid darkgrey;
   
 }
-
+.analyze-btn {
+  display: block;
+  margin: 15px auto 0 auto;
+  background: #4e4d5b;
+  color: #fff;
+  padding: 12px 30px;
+  margin-top: 25px;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  text-align: center;
+}
+.analyze-btn:hover {
+  background: #3730d0;
+}
 .back-btn {
   display: block;
   margin: 10px 0 0 auto;
