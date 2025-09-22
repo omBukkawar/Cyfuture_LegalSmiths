@@ -57,7 +57,7 @@ const ContractAnalyzer = () => {
         setMessage("No analysis data received from the server.");
       }
 
-      // (Optional) still download the result as file
+      /*// (Optional) still download the result as file
       const blob = new Blob([JSON.stringify(json_data, null, 2)], {
         type: "application/json",
       });
@@ -68,7 +68,7 @@ const ContractAnalyzer = () => {
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      URL.revokeObjectURL(url);*/
     } catch (error) {
       console.error("Error:", error);
       setMessage("Analysis failed. Please try again.");

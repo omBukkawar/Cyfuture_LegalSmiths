@@ -67,7 +67,8 @@ const CasePrediction = () => {
       console.log("First answer:", json_data.answers[0]);
       setPredictionResult(json_data.answers[0]);
       
-      const blob = new Blob([JSON.stringify(json_data, null, 2)], { type: "application/json" });
+      //Optional
+     /* const blob = new Blob([JSON.stringify(json_data, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -75,10 +76,10 @@ const CasePrediction = () => {
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      URL.revokeObjectURL(url);*/
     } catch (error) {
       console.error("Error:", error);
-      alert("Failed to analyze case. Please try again.");
+     alert("Failed to analyze case. Please try again.");
     } finally {
       setIsLoading(false);
     }
