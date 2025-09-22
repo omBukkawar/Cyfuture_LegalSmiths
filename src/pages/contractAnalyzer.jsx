@@ -12,9 +12,6 @@ const CasePrediction = () => {
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState("");
-
-  //api call
-// 
 const getfromFastAPI = async (files) => {
   const formdata = new FormData();
   formdata.append("request", "Please analyze this contract for me.");
@@ -29,7 +26,6 @@ const getfromFastAPI = async (files) => {
     );
     const json_data = response.data;
     console.log("Json data:", json_data);
-
     const blob = new Blob([JSON.stringify(json_data)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -43,7 +39,6 @@ const getfromFastAPI = async (files) => {
     console.error("Error:", error);
   }
 };
-//------------------------------------------------------//
 
   const handleFileChange = async (e) => {
     const selectedFile = e.target.files[0];
