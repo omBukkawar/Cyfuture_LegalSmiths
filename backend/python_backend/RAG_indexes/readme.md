@@ -2,10 +2,10 @@
 
 This folder stores all **retrieval indexes** used by the **Cyfuture_LegalSmiths** project to enable fast document search and question-answering.
 
-### 🔎 Purpose
+###  Purpose
 These indexes significantly speed up information retrieval for both the **Legal Assistant** and **Contract Analyzer** modules.
 
-### 📂 Index Details
+###  Index Details
 
 #### Legal Assistant
 - **FAISS** (Facebook AI Similarity Search)  
@@ -21,6 +21,6 @@ These indexes significantly speed up information retrieval for both the **Legal 
 - **BM25**  
   - `bm25_index_contracts.pkl`
 
-### ⚠️ Notes
+###  Notes
 - These are **pre-built indexes** required for fast retrieval; they are **not raw datasets**.  
 - If you rebuild indexes, make sure to update this folder and re-generate the files accordingly.
