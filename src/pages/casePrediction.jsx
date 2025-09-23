@@ -128,7 +128,6 @@ const CasePrediction = () => {
           with explanations, and receive data-driven strategy suggestions.
         </p>
        <br></br>
-        <br></br>
 
         {/* Conditionally render Case Input Section or Results */}
         {!showResults ? (
@@ -203,12 +202,7 @@ const CasePrediction = () => {
                       </div>
                     </div>
 
-                    <div className="grid-item grid-case-type">
-                      <h3>Case Type</h3>
-                      <p className="key">{analysis?.title || analysis?.caseType || "Not specified"}</p>
-                    </div>
-
-                    <div className="grid-item grid-court">
+                      <div className="grid-item grid-court">
                       <h3>Petitioner</h3>
                       <p className="key">{analysis?.petitioner || "Not specified"}</p>
                     </div>
@@ -218,6 +212,13 @@ const CasePrediction = () => {
                       <p className="key">{analysis?.respondent || "Not specified"}</p>
                     </div>
 
+                    <div className="grid-item grid-case-type">
+                      <h3>Case Type</h3>
+                      <p className="key">{analysis?.title || analysis?.caseType || "Not specified"}</p>
+                    </div>
+
+                    </div>
+                       <div className="analysis-stack">
                     <div className="grid-item grid-reasons">
                       <h3>Likely Outcome</h3>
                       {analysis?.likelyOutcome ? (
@@ -242,7 +243,7 @@ const CasePrediction = () => {
 
                     <div className="grid-item grid-red">
                       <h3>Weak Points</h3>
-                      {analysis?.weakPoints ? (
+                      {analysis?.strongPoints ? (
                         <ul>
                           {renderListItems(analysis.weakPoints)}
                         </ul>
@@ -250,6 +251,17 @@ const CasePrediction = () => {
                         <p>No weak points identified.</p>
                       )}
                     </div>
+
+                   <div className="grid-item grid-green">
+  <h3>Strong Points</h3>
+  {analysis?.strongPoints ? (
+    <ul>
+      {renderListItems(analysis.strongPoints)}
+    </ul>
+  ) : (
+    <p>No strong points identified.</p>
+  )}
+</div>
 
                     <div className="grid-item grid-feedback">
                       <h3>Final Advisory</h3>

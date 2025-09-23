@@ -122,17 +122,30 @@
 
 .grid-layout{
   display: grid;
-  grid-template-columns: 1fr 1fr;           
-  grid-auto-rows: minmax(110px, auto);
+  grid-template-columns: 1fr 1fr;
   gap: 18px;
 
-
+  /* here we name each row/column position */
   grid-template-areas:
     "win      court"
     "win      caseType"
     "win      sentiment"
-    "reasons  strategy"
-    "red      strategy";
+    "reasons  strategies"
+    "red      green"
+    "feedback feedback";
+}
+/* Stack only analysis boxes vertically */
+.analysis-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 20px; /* spacing between boxes */
+}
+
+.analysis-stack > .grid-item {
+  width: 100%;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 .grid-win{        grid-area: win; }
@@ -158,6 +171,11 @@
       "strategy";
   }
 }
+.grid-reasons    { grid-area: reasons; }
+.grid-strategies { grid-area: strategies; }
+.grid-red        { grid-area: red; }
+.grid-green      { grid-area: green; }     /* this was missing */
+.grid-feedback   { grid-area: feedback; }
 
 .grid-item {
   background: #dcdcdc;
@@ -167,32 +185,42 @@
 }
 
 .grid-item.large {
-  grid-column: span 2;
+  grid-column: auto;
 }
-.grid-reasons{
-  border:1px solid green;
-  h3{
-    color:green;
-  }
+/* ---- individual box styles ---- */
+.grid-reasons {
+  border: 1px solid green;
+}
+.grid-reasons h3 {
+  color: green;
+}
 
+.grid-strategies {
+  border: 1px solid blue;
 }
-.grid-strategies{
-  border:1px solid blue;
-  h3{
-    color:blue;
-  }
+.grid-strategies h3 {
+  color: blue;
 }
-.grid-red{
-  border:1px solid red;
-  h3{
-    color:red;
-  }
+
+.grid-red {
+  border: 1px solid red;
 }
-.grid-feedback{
-  border:1px solid rgb(69, 6, 101);
-  h3{
-    color:rgb(69, 6, 101);
-  }
+.grid-red h3 {
+  color: red;
+}
+
+.grid-green {
+  border: 1px solid darkgreen;    /* new Strong Points styling */
+}
+.grid-green h3 {
+  color: darkgreen;
+}
+
+.grid-feedback {
+  border: 1px solid rgb(69, 6, 101);
+}
+.grid-feedback h3 {
+  color: rgb(69, 6, 101);
 }
 .grid-item h2 {
   font-size: 1.1rem;
