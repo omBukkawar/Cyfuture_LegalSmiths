@@ -60,9 +60,6 @@
   text-align: center; 
   word-wrap: break-word; 
 }
-.hr{
-    margin:10px;
-}
 
 .upload-section {
   text-align: center;
@@ -120,24 +117,71 @@
   text-align: left;
 }
 
-.quickies{
+.quickies {
   display: flex;
-  margin: -2rem 0rem;
-  max-width: max-content;
-  justify-content: center;
+  justify-content: space-between;
+  align-items: stretch;
+  margin: 2rem auto;
+  padding: 1rem;
+  max-width: 100%;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
+
+/* Enhanced component styling to work better with the new quickies container */
 .component {
-  background: #dcdcdc;
-  padding: 25px;
-  border-radius: 10px;
-  border: 1px solid darkgrey;
-  margin: 2rem 1rem;
+  background: linear-gradient(145deg, #ffffff, #f0f0f0);
+  padding: 30px;
+  border-radius: 15px;
+  border: none;
+  margin: 1rem; /* Remove margin since gap handles spacing now */
+  box-shadow: 
+    0 4px 15px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  transition: all 0.3s ease;
+  flex: 1;
   
+  min-width: 240px;
 }
+
+.component:hover {
+  transform: translateY(-5px);
+  box-shadow: 
+    0 8px 25px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+/* Responsive design for smaller screens */
+@media (max-width: 768px) {
+  .quickies {
+    flex-direction: column;
+    justify-content: center;
+    gap: 1.5rem;
+    margin: 1rem auto;
+    padding: 1.5rem;
+  }
+  
+  .component {
+    min-width: auto;
+    width: 100%;
+  }
+}
+
 .riskScore{
   max-width: 20rem;
   word-wrap: break-word;
+  .val{
+    justify-content: center;
+    text-align: center;
+    font-size: 4rem;
+    font-weight: 400;
+    margin-top: 1.3rem;
+  }
 }
+  
 .active-tab {
   border-bottom:3px solid blue;
   cursor: pointer;
@@ -148,10 +192,6 @@
   text-align: center;
   font-size: 5rem;
   font-weight: 600;
-}
-.risk-chart img{
-  margin-left: 1rem;
-  width: 10rem;
 }
 .points{
   display: flex;
@@ -246,25 +286,14 @@
   cursor: pointer;
 }
 
-.analyze-btn {
-  display: block;
-  margin: 15px auto 0 auto;
-  background: #4e4d5b;
-  color: #fff;
-  padding: 12px 30px;
-  margin-top: 25px;
-  border: none;
-  border-radius: 25px;
-  cursor: pointer;
-  text-align: center;
-}
-
 .back-btn:hover {
   background: #3730d0;
 }
 
-.analyze-btn:hover {
-  background: #3730d0;
+ .tab-content .component {
+  margin-bottom: 20px;
 }
 
- 
+.tab-content .component:last-child {
+  margin-bottom: 0;
+}

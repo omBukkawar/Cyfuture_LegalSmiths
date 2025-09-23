@@ -169,7 +169,31 @@
 .grid-item.large {
   grid-column: span 2;
 }
+.grid-reasons{
+  border:1px solid green;
+  h3{
+    color:green;
+  }
 
+}
+.grid-strategies{
+  border:1px solid blue;
+  h3{
+    color:blue;
+  }
+}
+.grid-red{
+  border:1px solid red;
+  h3{
+    color:red;
+  }
+}
+.grid-feedback{
+  border:1px solid rgb(69, 6, 101);
+  h3{
+    color:rgb(69, 6, 101);
+  }
+}
 .grid-item h2 {
   font-size: 1.1rem;
   margin-bottom: 13px;
@@ -276,5 +300,3 @@ pre{
 .back-btn:hover {
   background: #3730d0;
 }
-
- 

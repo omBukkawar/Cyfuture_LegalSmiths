@@ -1,322 +1,276 @@
+import axios from "axios";
 import React, { useState } from "react";
 import "../styles/casePrediction.css";
 import backgroundImg from "../assets/background.jpeg";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
 
 const CasePrediction = () => {
   const navigate = useNavigate();
-  const [file, setFile] = useState(null);
-  const [uploading, setUploading] = useState(false);
+
+  // State management
+  const [analyzing, setAnalyzing] = useState(false);
   const [message, setMessage] = useState("");
-  const [caseinput, setCaseInput] = useState("");
-  const [predictionResult, setPredictionResult] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [showResults, setShowResults] = useState(false); // New state to control visibility
+  
+  // Case input for text-based analysis
+  const [caseInput, setCaseInput] = useState("");
 
-  const handleFileChange = (e) => {
-    const selectedFile = e.target.files[0];
-    if (!selectedFile) return;
-    setFile(selectedFile);
-  };
+  // Analysis data (from FastAPI response)
+  const [analysis, setAnalysis] = useState(null);
 
-  const handleUpload = async () => {
-    if (!file) {
-      setMessage("Please choose a file first!");
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append("file", file);
-
+  // FastAPI integration for case prediction
+  const analyzeCaseText = async () => {
     try {
-      setUploading(true);
+      setAnalyzing(true);
       setMessage("");
-
-      const res = await axios.post("http://localhost:5000/upload-case", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-
-      setMessage(res.data.message || "File uploaded successfully: " + res.data.doc.originalName);
-    } catch (err) {
-      console.error(err);
-      setMessage("Upload failed. Try again.");
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const getfromFastAPI = async () => {
-    try {
-      setIsLoading(true);
       
-      if (!caseinput.trim()) {
-        alert("Please enter case details first!");
+      if (!caseInput.trim()) {
+        setMessage("Please enter case details first!");
         return;
       }
       
       const response = await axios.post(
         "https://stylish-onie-slung.ngrok-free.app/caseoutcomeprediction",
         {
-          questions: [caseinput]
+          questions: [caseInput]
         },
-        { headers: { "Content-Type": "application/json" } }
+        { 
+          headers: { 
+            "Content-Type": "application/json",
+            "ngrok-skip-browser-warning": "true"
+          } 
+        }
       );
       
-      const json_data = response.data;
-      console.log("Json data:", json_data);
-      console.log("First answer:", json_data.answers[0]);
-      setPredictionResult(json_data.answers[0]);
+      const jsonData = response.data;
+      console.log("Analysis data:", jsonData);
       
-      //Optional
-     /* const blob = new Blob([JSON.stringify(json_data, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "caseoutcomeprediction.json";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);*/
+      if (jsonData.answers && jsonData.answers.length > 0) {
+        setAnalysis(jsonData.answers[0]);
+        setMessage("Analysis completed successfully!");
+        setShowResults(true); // Show results and hide input section
+      } else {
+        setMessage("No analysis data received from the server.");
+      }
+      
     } catch (error) {
       console.error("Error:", error);
-     alert("Failed to analyze case. Please try again.");
+      setMessage(`Failed to analyze case: ${error.response?.data?.message || error.message}`);
     } finally {
-      setIsLoading(false);
+      setAnalyzing(false);
     }
   };
 
-  // Results view when prediction is available
-  if (predictionResult) {
-    return (
-      <div
-        className="case-prediction"
-        style={{ backgroundImage: `url(${backgroundImg})` }}
-      >
-        <div className="top-bar">
-          <Link to="/" className="brand">LegalSmiths</Link>
-          <Link to="/login" className="login-link">Logout</Link>
-        </div>
+  // Function to start a new analysis (reset to input view)
+  const startNewAnalysis = () => {
+    setShowResults(false);
+    setAnalysis(null);
+    setCaseInput("");
+    setMessage("");
+  };
 
-        <div className="case-container">
-          <h1 className="title">Case Analysis Results</h1>
-          
-          <div style={{ 
-            backgroundColor: '#f0f0f0', 
-            padding: '20px', 
-            borderRadius: '8px',
-            margin: '20px 0',
-            maxHeight: '70vh',
-            overflowY: 'auto',
-            fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-            fontSize: '14px',
-            lineHeight: '1.6'
-          }}>
-            <div style={{ marginBottom: '30px' }}>
-              {/* Title Section */}
-              <div style={{
-                marginBottom: '20px',
-                padding: '15px',
-                backgroundColor: 'white',
-                borderRadius: '5px',
-                border: '2px solid #3498db'
-              }}>
-                <h2 style={{ color: '#2c3e50', margin: '0', textAlign: 'center', fontSize: '18px', fontWeight: 'normal', fontFamily: 'inherit' }}>
-                  {predictionResult.title || "Legal Case Analysis"}
-                </h2>
-              </div>
+  // Helper function to render formatted text
+  const renderFormattedText = (text) => {
+    if (!text) return "N/A";
+    if (typeof text === 'string') {
+      return text.split('\n').map((paragraph, index) => (
+        <span key={index}>
+          {paragraph.split(/(\*\*[^*]+\*\*)/).map((part, i) => {
+            if (part.startsWith('**') && part.endsWith('**')) {
+              return <strong key={i}>{part.slice(2, -2)}</strong>;
+            }
+            return part;
+          })}
+          {index < text.split('\n').length - 1 && <br />}
+        </span>
+      ));
+    }
+    return text;
+  };
 
-              {/* Case Parties */}
-              <div style={{ display: 'flex', gap: '15px', marginBottom: '20px' }}>
-                <div style={{ flex: 1, padding: '15px', backgroundColor: 'white', borderRadius: '5px', border: '1px solid #ddd' }}>
-                  <h4 style={{ color: '#2c3e50', margin: '0 0 10px 0', fontSize: '14px', fontWeight: 'normal', fontFamily: 'inherit' }}>Petitioner</h4>
-                  <p style={{ margin: 0, color: '#555', fontSize: '14px', lineHeight: '1.6', fontFamily: 'inherit' }}>{predictionResult.petitioner || 'Not specified'}</p>
-                </div>
-                <div style={{ flex: 1, padding: '15px', backgroundColor: 'white', borderRadius: '5px', border: '1px solid #ddd' }}>
-                  <h4 style={{ color: '#2c3e50', margin: '0 0 10px 0', fontSize: '14px', fontWeight: 'normal', fontFamily: 'inherit' }}>Respondent</h4>
-                  <p style={{ margin: 0, color: '#555', fontSize: '14px', lineHeight: '1.6', fontFamily: 'inherit' }}>{predictionResult.respondent || 'Not specified'}</p>
-                </div>
-              </div>
+  // Helper function to render array as list items
+  const renderListItems = (items) => {
+    if (!items) return [];
+    if (Array.isArray(items)) {
+      return items.map((item, index) => (
+        <li key={index}>{typeof item === 'string' ? item : JSON.stringify(item)}</li>
+      ));
+    }
+    if (typeof items === 'string') {
+      // Split by numbered points or line breaks
+      const points = items.split(/(?=\d+\.\s)|\n/).filter(point => point.trim().length > 0);
+      return points.map((point, index) => (
+        <li key={index}>{point.replace(/^\d+\.\s*/, '').trim()}</li>
+      ));
+    }
+    return [<li key={0}>{JSON.stringify(items)}</li>];
+  };
 
-            
-              {/* Display all available fields dynamically */}
-              {Object.keys(predictionResult).map((key) => {
-                // Skip already displayed fields
-                if (['title', 'petitioner', 'respondent', 'success_probability', 'SuccessProbability'].includes(key)) {
-                  return null;
-                }
-
-                const value = predictionResult[key];
-                if (!value) return null;
-
-                // Handle objects that are showing as [object Object]
-                let displayValue;
-                if (Array.isArray(value)) {
-                  // Handle array of objects (like Legal Precedents)
-                  displayValue = value.map((item, index) => {
-                    if (typeof item === 'object' && item !== null) {
-                      // For objects, try to extract meaningful fields or format nicely
-                      const objStr = Object.entries(item)
-                        .map(([k, v]) => `${k}: ${v}`)
-                        .join('\n');
-                      return `${index + 1}. ${objStr}`;
-                    }
-                    return `${index + 1}. ${String(item)}`;
-                  }).join('\n\n');
-                } else if (typeof value === 'object' && value !== null) {
-                  // If it's a single object, try to stringify it nicely or extract meaningful content
-                  displayValue = Object.entries(value)
-                    .map(([k, v]) => `${k}: ${v}`)
-                    .join('\n');
-                } else {
-                  displayValue = String(value);
-                }
-
-                // Skip empty or meaningless values
-                if (!displayValue || displayValue === '{}' || displayValue === '[]') {
-                  return null;
-                }
-
-                // Format the key for display - handle both camelCase and snake_case
-                const displayKey = key
-                  .replace(/([A-Z])/g, ' $1') // Add space before capital letters
-                  .replace(/_/g, ' ') // Replace underscores with spaces
-                  .replace(/^\w/, c => c.toUpperCase()) // Capitalize first letter
-                  .trim();
-
-                // Different styling based on content type
-                let borderColor = '#ddd';
-                let headerColor = '#2c3e50';
-                let borderWidth = '1px';
-
-                if (key.toLowerCase().includes('strong') || key.toLowerCase().includes('advantage')) {
-                  borderColor = '#27ae60';
-                  headerColor = '#27ae60';
-                  borderWidth = '2px';
-                } else if (key.toLowerCase().includes('weak') || key.toLowerCase().includes('risk') || key.toLowerCase().includes('penalt')) {
-                  borderColor = '#e74c3c';
-                  headerColor = '#e74c3c';
-                  borderWidth = '2px';
-                } else if (key.toLowerCase().includes('advisory') || key.toLowerCase().includes('recommendation') || key.toLowerCase().includes('final')) {
-                  borderColor = '#8e44ad';
-                  headerColor = '#8e44ad';
-                  borderWidth = '3px';
-                } else if (key.toLowerCase().includes('precedent') || key.toLowerCase().includes('case') || key.toLowerCase().includes('legal')) {
-                  borderColor = '#3498db';
-                  headerColor = '#3498db';
-                  borderWidth = '2px';
-                } else if (key.toLowerCase().includes('outcome') || key.toLowerCase().includes('likely')) {
-                  borderColor = '#f39c12';
-                  headerColor = '#f39c12';
-                  borderWidth = '2px';
-                } else if (key.toLowerCase().includes('strateg')) {
-                  borderColor = '#17a2b8';
-                  headerColor = '#17a2b8';
-                  borderWidth = '2px';
-                }
-
-                return (
-                  <div key={key} style={{ 
-                    marginBottom: '20px', 
-                    padding: '15px', 
-                    backgroundColor: 'white', 
-                    borderRadius: '5px', 
-                    border: `${borderWidth} solid ${borderColor}` 
-                  }}>
-                    <h4 style={{ color: headerColor, margin: '0 0 10px 0', fontSize: '14px', fontWeight: 'normal', fontFamily: 'inherit' }}>{displayKey}</h4>
-                    <div style={{ 
-                      lineHeight: '1.6', 
-                      color: '#555', 
-                      whiteSpace: 'pre-line',
-                      fontFamily: 'inherit',
-                      fontSize: '14px'
-                    }}>
-                      {displayValue}
-                    </div>
-                  </div>
-                );
-              })}
-
-              {/* Fallback for raw JSON display if structured data is not available */}
-              {!predictionResult.title && !predictionResult.likely_outcome && (
-                <div>
-                  <h3 style={{ color: '#2c3e50', marginBottom: '10px', fontFamily: 'inherit', fontSize: '18px', fontWeight: '600' }}>Analysis Result:</h3>
-                  <pre style={{ 
-                    whiteSpace: 'pre-wrap', 
-                    backgroundColor: 'white', 
-                    padding: '15px', 
-                    borderRadius: '5px',
-                    lineHeight: '1.6',
-                    color: '#2c3e50',
-                    fontFamily: 'inherit',
-                    fontSize: '14px'
-                  }}>
-                    {JSON.stringify(predictionResult, null, 2)}
-                  </pre>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <button className="back-btn" onClick={() => navigate(-1)}>
-            Back to Dashboard
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // Input form view when no prediction result
   return (
     <div
       className="case-prediction"
       style={{ backgroundImage: `url(${backgroundImg})` }}
     >
+      {/* Top bar */}
       <div className="top-bar">
-        <Link to="/" className="brand">LegalSmiths</Link>
-        <Link to="/login" className="login-link">Logout</Link>
+        <Link to="/" className="brand">
+          LegalSmiths
+        </Link>
+        <Link to="/login" className="login-link">
+          Logout
+        </Link>
       </div>
 
       <div className="case-container">
-        <h1 className="title">Case Predictor</h1>
+        <h1 className="title">Case Outcome Prediction</h1>
         <p className="description">
-          Enter your case details for AI-based analysis.
+          Leverage AI to forecast your winning probability, uncover red flags
+          with explanations, and receive data-driven strategy suggestions.
         </p>
-        <br />
-        
-        <textarea 
-          id="caseinput" 
-          value={caseinput} 
-          onChange={(e) => setCaseInput(e.target.value)} 
-          placeholder="Please enter case details" 
-          style={{
-            backgroundColor: "#f0f0f0",
-            width: "100%",
-            height: "200px",
-            borderRadius: "5px",
-            border: "1px solid #ccc",
-            padding: "10px"
-          }}
-        />
-        
-        <div className="upload-section">
-          {message && <p className="progress-info">{message}</p>}
-        </div>
-        
-        <button 
-          className="analyze-btn" 
-          onClick={getfromFastAPI}
-          disabled={isLoading || !caseinput.trim()}
-          style={{
-            opacity: (isLoading || !caseinput.trim()) ? 0.6 : 1,
-            cursor: (isLoading || !caseinput.trim()) ? 'not-allowed' : 'pointer'
-          }}
-        >
-          {isLoading ? "Analyzing Case..." : "Predict Case Outcome"}
+       <br></br>
+        <br></br>
+
+        {/* Conditionally render Case Input Section or Results */}
+        {!showResults ? (
+          <>
+            {/* Case Input Section */}
+            <div className="input-section">
+              <h3>Enter Case Details</h3>
+              <textarea
+                className="case-input"
+                value={caseInput}
+                onChange={(e) => setCaseInput(e.target.value)}
+                placeholder="Enter your case details here..."
+                rows={15}
+                style={{
+                  width: '100%',
+                  minWidth: '100%',
+                  maxWidth: '100%',
+                  border: '1px solid #ccc',
+                  padding: '8px',
+                  borderRadius: '4px',
+                  resize: 'vertical',
+                }}
+              />
+              <button
+                className="analyze-btn"
+                onClick={analyzeCaseText}
+                disabled={analyzing || !caseInput.trim()}
+              >
+                {analyzing ? "Analyzing..." : "Predict Case Outcome"}
+              </button>
+            </div>
+
+            {/* Progress and status messages */}
+            {analyzing && (
+              <div className="progress-section">
+                <div className="progress-bar">
+                  <div className="progress"></div>
+                </div>
+                <div className="progress-text">
+                  Analyzing case...
+                </div>
+              </div>
+            )}
+            
+            {message && (
+              <div className={`message ${message.includes('failed') || message.includes('error') ? 'error' : 'success'}`}>
+                {message}
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+           <p style={{
+    color: 'green',
+    fontWeight: 'bold',
+    textAlign: 'center', // centers the text
+    fontSize: '20px',    // increase font size
+    marginTop: '10px'
+  }}>{message}</p>
+            {/* Case Report */}
+            <div className="report-section">
+              <h2 className="section-title">Case Prediction Report</h2>
+              {analysis && (
+                <div className="analysis-results">
+                  <div className="grid-layout">
+                    <div className="grid-item grid-win">
+                      <h3>Winning Probability</h3>
+                      <div className="winning-chart">
+                        <span className="percentage">
+                          {analysis?.successProbability || analysis?.winningProbability || "N/A"}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="grid-item grid-case-type">
+                      <h3>Case Type</h3>
+                      <p className="key">{analysis?.title || analysis?.caseType || "Not specified"}</p>
+                    </div>
+
+                    <div className="grid-item grid-court">
+                      <h3>Petitioner</h3>
+                      <p className="key">{analysis?.petitioner || "Not specified"}</p>
+                    </div>
+
+                    <div className="grid-item grid-sentiment">
+                      <h3>Respondent</h3>
+                      <p className="key">{analysis?.respondent || "Not specified"}</p>
+                    </div>
+
+                    <div className="grid-item grid-reasons">
+                      <h3>Likely Outcome</h3>
+                      {analysis?.likelyOutcome ? (
+                        <div>
+                          {renderFormattedText(analysis.likelyOutcome)}
+                        </div>
+                      ) : (
+                        <p>No outcome prediction available.</p>
+                      )}
+                    </div>
+
+                    <div className="grid-item grid-strategies">
+                      <h3>Strategy Suggestions</h3>
+                      {analysis?.strategies ? (
+                        <ul>
+                          {renderListItems(analysis.strategies)}
+                        </ul>
+                      ) : (
+                        <p>No strategy suggestions available.</p>
+                      )}
+                    </div>
+
+                    <div className="grid-item grid-red">
+                      <h3>Weak Points</h3>
+                      {analysis?.weakPoints ? (
+                        <ul>
+                          {renderListItems(analysis.weakPoints)}
+                        </ul>
+                      ) : (
+                        <p>No weak points identified.</p>
+                      )}
+                    </div>
+
+                    <div className="grid-item grid-feedback">
+                      <h3>Final Advisory</h3>
+                      {analysis?.finalAdvisory ? (
+                        <div>
+                          {renderFormattedText(analysis.finalAdvisory)}
+                        </div>
+                      ) : (
+                        <p>No advisory available.</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </>
+        )}
+
+        <button className="back-btn" onClick={() => navigate(-1)}>
+          Back
         </button>
-        <br />
-        <br />
-        
-        <button className="back-btn" onClick={() => navigate(-1)}>Back</button>
       </div>
     </div>
   );
