@@ -8,19 +8,6 @@ LegalSmiths is a three-layered system (Frontend, Backend, Database) designed for
 
 ⚖️ Case Outcome Predictor → Predicts the likely outcome of legal cases using AI models.
 
-📂 Project Structure
-├── backend/
-│   ├── node-backend/        # Node.js backend (server.js for auth & MySQL handling)
-│   ├── python-backend/
-│   │   ├── scripts/         # backend.py (core FastAPI script)
-│   │   ├── notebooks/       # Notebooks for APIs
-│   │   │   ├── legalsmiths_legalassistant_contractanalyzer_fastapi.ipynb
-│   │   │   ├── legalsmiths_caseoutcomeprediction_fastapi.ipynb
-│   │   │   └── ...
-│   │   ├── variables.env    # Contains GEMINI API key
-│   │   └── requirements.txt
-
-
 🖥️ Frontend Layer
 🔧 Tech Used
 
