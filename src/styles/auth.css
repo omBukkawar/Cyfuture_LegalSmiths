@@ -79,6 +79,9 @@ button {
   cursor: pointer;
   font-size: 16px;
   margin-top: 15px;
+  a{
+    color:white;
+  }
 }
 
 .link {

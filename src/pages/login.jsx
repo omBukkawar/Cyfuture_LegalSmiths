@@ -10,9 +10,24 @@ const Login = () => {
   const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log("Login Data:", formData);
+  const handleSubmit = async(e) => {
+   e.preventDefault();
+  try {
+    const res = await axios.post("http://localhost:5000/login", {
+      email: formData.email,
+      password: formData.password,
+    });
+
+    alert(res.data.message);
+
+    if (res.data.success) {
+      alert("Login succesful.");
+      navigate("/services");
+    }
+  } catch (err) {
+    console.error("Login error:", err);
+    alert("Login failed. Check console for details.");
+  }
   };
 
   return (
@@ -29,7 +44,7 @@ const Login = () => {
 
       <form onSubmit={handleSubmit}>
         <div>
-          <input type="email" name="Email" id="Email-input" placeholder="Enter your Email" value={formData.Email} onChange={handleChange} required/>
+          <input type="email" name="email" id="email-input" placeholder="Enter your Email" value={formData.Email} onChange={handleChange} required/>
         
         
           <label htmlFor="password-input"></label>
@@ -37,7 +52,7 @@ const Login = () => {
         
         </div>
         
-          <button type="submit"><Link to="/services">Login</Link></button>
+          <button type="submit">Login</button>
         
       </form>
 
