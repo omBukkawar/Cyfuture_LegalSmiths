@@ -1,66 +1,54 @@
-LegalSmiths – AI-Powered Legal Assistant & Case Outcome Predictor
+Cyfuture LegalSmiths
 
-LegalSmiths is a three-layered system (Frontend, Backend, Database) designed for the Cyfuture AI Hackathon 1.0. It provides:
+LegalSmiths is an AI-powered legal assistant and case outcome prediction system built for the Cyfuture AI Hackathon 1.0.
 
-🧑‍⚖️ Legal Assistant → Answers legal queries in plain language.
+It provides:
+1] Legal Assistant – Answers legal queries in plain language.
+2] Contract Analyzer – Analyzes uploaded contracts and extracts structured insights.
+3] Case Outcome Predictor – Predicts the likely outcome of legal cases using AI models.
 
-📑 Contract Analyzer → Analyzes uploaded contracts and extracts structured insights.
+Repository Structure
+<img width="808" height="635" alt="image" src="https://github.com/user-attachments/assets/16e4ef9e-bbdc-4bfd-8841-b7e126dbac46" />
 
-⚖️ Case Outcome Predictor → Predicts the likely outcome of legal cases using AI models.
-
-🖥️ Frontend Layer
-🔧 Tech Used
-
+Frontend Layer
+ Tech Used
 React + Vite
-
 Axios (API calls)
-
 Bcrypt (password hashing)
-
 Node.js
 
-MySQL (for auth integration)
-
-⚙️ Setup
-# Go to frontend folder
-cd frontend
-
+Setup
 # Install dependencies
 npm install
 
-# Install Vite
-npm install vite
-
-# Additional libraries
-npm install axios bcrypt
+# Install additional packages
+npm install vite axios bcrypt
 
 # Node.js runtime
 npm install node
 
-# Database libraries (choose one depending on backend)
+# Database libraries 
 npm install mysql        # for SQL
-# OR
 npm install mongoose     # if using MongoDB
 
-🚀 Run Frontend
+ Run Frontend
 npm run dev
 
 Components
-
-Login/Register → Auth with MySQL (bcrypt-hashed passwords).
-
-Legal Assistant → Asks AI legal queries.
-
-Contract Analyzer → Uploads contracts for AI review.
-
-Case Prediction → Predicts outcomes.
-
-Contact Us → Basic static page.
+Login / Register – Uses MySQL (cyfuture_db.users) with bcrypt-hashed passwords.
+Services-Provides list of services offered by our application.
+Legal Assistant – Asks legal questions, gets AI answers.
+Contract Analyzer – Uploads contracts, gets structured analysis.
+Case Outcome Predictor – Predicts case outcomes.
+Contact Us – Basic contact form/page.
 
 
-🗄️ Database Layer
+Database Layer
 MySQL (User Authentication)
-
+Install mysql 
+Then open command prompt and type mysql -u root -p
+Enter your username and password
+Create database as follows:
 Database: cyfuture_db
 Table: users
 
@@ -71,49 +59,36 @@ CREATE TABLE users (
     password VARCHAR(255),
     phone_number VARCHAR(255)
 );
-
-
 Stores login & register user details.
-
-Passwords hashed with bcrypt.
-
-MongoDB (Legal Data)
-
-Stores uploaded contracts, chat history, and user case details.
+Passwords are hashed with bcrypt.
 
 
-🤖 Backend + AI Layer
-🔧 Tech Used
+MongoDB
+This NoSQL database handles our legal data as follows:
+Contract documents
+Legal assistant chats
+Case details
+
+Backend + AI Layer
+ Tech Used
 
 FastAPI (REST APIs)
-
 LangChain (RAG pipeline)
-
 FAISS + BM25 (semantic + keyword search)
-
 HuggingFace Embeddings (BAAI/bge-base-en-v1.5)
-
 CrossEncoder (BAAI/bge-reranker-base)
-
 Unstructured (document parsing)
-
 Google Generative AI (Gemini 2.5) (LLM for legal Q&A & contracts)
-
 HuggingFace Datasets (Indian law datasets)
-
-dotenv, pickle, JSON, regex (config & parsing)
-
+dotenv, pickle, JSON
 CORS Middleware (frontend-backend communication)
 
-📦 Install Dependencies
+Install Dependencies
 
-From python-backend/:
-
+From /backend/:
 pip install -r requirements.txt
 
-
-If requirements.txt is missing, manually install:
-
+If you need to install manually:
 pip install pyngrok
 pip install "unstructured[all-docs]"
 pip install langchain
@@ -126,87 +101,76 @@ pip install fastapi
 pip install uvicorn
 pip install "pydantic>=2"
 
-⚙️ AI Layer Workflow
+ AI Layer Workflow
 1. Legal Assistant (/legalassistant)
-
 Retrieves legal texts & QAs.
-
-Runs RAG (Retriever-Augmented Generation).
-
+Runs RAG (Retriever-Augmented Generation) using FAISS ( Facebook Similarity Search Database).
 Returns plain-language legal answers with references.
 
 2. Contract Analyzer (/contractanalyzer)
-
 Uploads contracts → parses text.
-
 Splits into chunks → builds FAISS + BM25 indexes.
-
 Uses Gemini LLM to output structured JSON:
-
 Parties, Dates, Payment terms, Obligations, Termination clauses, Ambiguities, Red flags, Plain summary, Risk level, Recommendations.
 
-3. Case Outcome Predictor (/caseoutcomeprediction)
-
-Takes case facts as input.
-
-Preprocesses → passes through ML model.
-
-Predicts favorable/unfavorable outcome.
-
-🌍 Deployment (with Ngrok)
-
-Since AI models run on Colab/Kaggle (GPU needed), we expose APIs via Ngrok tunnels:
-
-Case Outcome Prediction → https://stylish-onie-slung.ngrok-free.app/caseoutcomeprediction
-
+This is the colab file link for legal assistant and smart contract analyzer:
+https://colab.research.google.com/drive/1EtG6lfml7WMJUNBrByXRkDWLbNajbKcO#scrollTo=Bj43NmKboq-5
 Contract Analyzer → https://monocable-dollishly-joannie.ngrok-free.app/contractanalyzer
 
-🔑 Steps:
+3. Case Outcome Predictor (/caseoutcomeprediction)
+Takes case facts as input.
+Preprocesses → passes through ML model.
+Predicts favorable/unfavorable outcome.
 
-Create Ngrok account
-.
+ Deployment (with Ngrok)
+Since AI models run on Colab/Kaggle (GPU needed), we expose APIs via Ngrok tunnels:
+Case Outcome Prediction → https://stylish-onie-slung.ngrok-free.app/caseoutcomeprediction
+Kaggle File Link: https://www.kaggle.com/code/pavankumar1185/legalsmiths-case-outcome-prediction-fastapi/edit
 
+ Steps:
+Create Ngrok account.
 Install Ngrok & set auth token.
-
 Run backend with uvicorn:
-
+Eg:
 uvicorn backend:app --host 0.0.0.0 --port 8000
+This command is already listed in notebooks.
 
-
-Expose port via Ngrok:
-
-ngrok http 8000
-
-📁 Requirements File
+ Requirements File
 
 All essential Python dependencies are listed in requirements.txt.
 
-🚀 Running Full System
+Running the System
+1. Start Databases
 
-Start Databases
+Run MySQL (cyfuture_db) for user login.
+Run MongoDB for contracts, chats, cases.
 
-MySQL for users (cyfuture_db).
-
-MongoDB for contracts & cases.
-
-Run Python Backend (FastAPI + Gemini AI)
-
+2. Run Python Backend (AI APIs)
 uvicorn backend.scripts.backend:app --reload --port 8000
 
-
-Expose API via Ngrok
-
+3. Expose via Ngrok
 ngrok http 8000
 
-
-Run Node.js Backend (for MySQL auth)
-
+4. Run Node.js Backend (Auth APIs)
 node server.js
 
-
-Run Frontend (React + Vite)
-
+5. Run React Frontend
 npm run dev
 
+Deployment with Ngrok
 
+Because models are GPU-heavy and run on Colab/Kaggle, we use Ngrok tunnels to expose APIs:
 
+Case Outcome Prediction →
+https://stylish-onie-slung.ngrok-free.app/caseoutcomeprediction
+
+Contract Analyzer →
+https://monocable-dollishly-joannie.ngrok-free.app/contractanalyzer
+
+Key Features
+
+Secure login/register (MySQL + bcrypt).
+AI Legal Assistant with Indian law datasets.
+Contract Analyzer with JSON-structured results.
+Case Outcome Prediction using gemini 2.5 flash llm model.
+Ngrok-based deployment for Colab/Kaggle-hosted models.
