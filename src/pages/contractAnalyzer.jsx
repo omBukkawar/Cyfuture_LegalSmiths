@@ -1,5 +1,5 @@
 import axios from "axios";
-import React, { useState, useRef } from "react";
+import { useState, useRef } from "react";
 import "../styles/contractAnalyzer.css";
 import backgroundImg from "../assets/background.jpeg";
 import { Link, useNavigate } from "react-router-dom";
@@ -24,94 +24,50 @@ const ContractAnalyzer = () => {
 
   // FastAPI integration
   const analyzeWithFastAPI = async (files) => {
-    // METHOD 1: Use FastAPI Backend (UNCOMMENT TO USE)
+    if (files.length === 0) {
+      setMessage("Please upload at least one file before analyzing.");
+      return;
+    }
 
-    // if (files.length === 0) {
-    //   setMessage("Please upload at least one file before analyzing.");
-    //   return;
-    // }
-
-    // setAnalyzing(true);
-    // const formdata = new FormData();
-    // formdata.append("request", "Please analyze this contract for me.");
-    // files.forEach((file) => {
-    //   formdata.append("files", file);
-    // });
-
-    // try {
-    //   const response = await axios.post(
-    //     "https://monocable-dollishly-joannie.ngrok-free.app/contractanalyzer",
-    //     formdata,
-    //     { headers: { "Content-Type": "multipart/form-data" } }
-    //   );
-
-    //   const json_data = response.data;
-    //   console.log("Json data:", json_data);
-
-    //   if (json_data.answers && json_data.answers.length > 0) {
-    //     setAnalysis(json_data.answers[0]);
-    //     setMessage("Analysis completed successfully!");
-    //   } else {
-    //     setMessage("No analysis data received from the server.");
-    //   }
-
-    //   // (Optional) still download the result as file
-    //   const blob = new Blob([JSON.stringify(json_data, null, 2)], {
-    //     type: "application/json",
-    //   });
-    //   const url = URL.createObjectURL(blob);
-    //   const a = document.createElement("a");
-    //   a.href = url;
-    //   a.download = "contract_analysis.json";
-    //   document.body.appendChild(a);
-    //   a.click();
-    //   document.body.removeChild(a);
-    //   URL.revokeObjectURL(url);
-    // } catch (error) {
-    //   console.error("Error:", error);
-    //   setMessage("Analysis failed. Please try again.");
-    // } finally {
-    //   setAnalyzing(false);
-    // }
-
-
-    // METHOD 2: Use Local JSON File for Testing (COMMENT OUT WHEN USING FASTAPI)
     setAnalyzing(true);
+    const formdata = new FormData();
+    formdata.append("request", "Please analyze this contract for me.");
+    files.forEach((file) => {
+      formdata.append("files", file);
+    });
+
     try {
-      // Simulate API delay for realistic testing
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const response = await axios.post(
+        "https://monocable-dollishly-joannie.ngrok-free.app/contractanalyzer",
+        formdata,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
 
-      // Fetch the local JSON file from public folder
-      const response = await fetch('/contract_analysis.json');
-      if (!response.ok) {
-        throw new Error('Failed to load test data');
-      }
-
-      const json_data = await response.json();
-      console.log("Local Json data:", json_data);
+      const json_data = response.data;
+      console.log("Json data:", json_data);
 
       if (json_data.answers && json_data.answers.length > 0) {
         setAnalysis(json_data.answers[0]);
-        setMessage("Analysis completed successfully! (Using test data)");
+        setMessage("Analysis completed successfully!");
       } else {
-        setMessage("No analysis data found in test file.");
+        setMessage("No analysis data received from the server.");
       }
 
-      // Optional: still download the result as file for testing
+      // (Optional) still download the result as file
       const blob = new Blob([JSON.stringify(json_data, null, 2)], {
         type: "application/json",
       });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "contract_analysis_test.json";
+      a.download = "contract_analysis.json";
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (error) {
-      console.error("Error loading test data:", error);
-      setMessage("Failed to load test data. Make sure contract_analysis.json is in the public folder.");
+      console.error("Error:", error);
+      setMessage("Analysis failed. Please try again.");
     } finally {
       setAnalyzing(false);
     }
@@ -160,7 +116,7 @@ const ContractAnalyzer = () => {
       handleFileUpload(e.dataTransfer.files[0]);
     }
   };
-
+  //UI Helpers
   const getItemCount = (data) => {
     if (!data) return 0;
     if (Array.isArray(data)) return data.length;
@@ -203,7 +159,7 @@ const ContractAnalyzer = () => {
       <p key={index} style={{ marginBottom: '10px' }}>
         {paragraph.split(/(\\[^]+\\*)/).map((part, i) => {
           if (part.startsWith('') && part.endsWith('')) {
-            return <strong key={i}>{part.slice(2, -2)}</strong>;
+            return <p key={i}>{part.slice(2, -2)}</p>;
           }
           return part;
         })}
@@ -273,7 +229,7 @@ const ContractAnalyzer = () => {
             onClick={() => fileInputRef.current?.click()}
           >
             <p>
-              Drag & Drop or <span className="choose-file">Choose a File</span>
+              Drag & Drop or <span>Choose a File</span>
             </p>
             <p className="supported-formats">
               Supported formats: .pdf, .docx, .txt
@@ -290,7 +246,7 @@ const ContractAnalyzer = () => {
 
           {/* Show uploaded files */}
           {files.length > 0 && (
-            <div className="uploaded-files">
+            <div>
               <h4>Uploaded Files:</h4>
               <ul>
                 {files.map((file, index) => (
@@ -305,8 +261,6 @@ const ContractAnalyzer = () => {
             className="analyze-btn"
             onClick={() => analyzeWithFastAPI(files)}
             disabled={analyzing}
-          // Remove file length check for testing with local file
-          // disabled={analyzing || files.length === 0}
           >
             {analyzing ? "Analyzing..." : "Analyze Contract"}
           </button>
@@ -325,7 +279,7 @@ const ContractAnalyzer = () => {
 
         {/* Report */}
         <h2 className="section-title">Analysis Report</h2>
-        <div className="report">
+        <div>
           {analysis ? (
             <>
               {/* Title Section */}
@@ -430,7 +384,7 @@ const ContractAnalyzer = () => {
                       return redFlagItems.length > 0 ? (
                         redFlagItems.map((flag, index) => (
                           <div key={index} className="component redFlags">
-                            
+
                             <div style={{
                               padding: '10px',
                               margin: "-1rem",
@@ -439,8 +393,8 @@ const ContractAnalyzer = () => {
                               backgroundColor: '#fff5f5',
                               color: '#d63031'
                             }}><h4 style={{ color: '#6e0303ff', marginBottom: '8px' }}>
-                                        Red Flag #{index + 1}
-                                      </h4>
+                                Red Flag #{index + 1}
+                              </h4>
                               {renderFormattedText(flag)}
                             </div>
                           </div>
@@ -470,7 +424,7 @@ const ContractAnalyzer = () => {
                       return mistakeItems.length > 0 ? (
                         mistakeItems.map((mistake, index) => (
                           <div key={index} className="component mistakes">
-                            
+
                             <div style={{
                               padding: '10px',
                               margin: "-1rem",
@@ -480,8 +434,8 @@ const ContractAnalyzer = () => {
                               color: '#e17055'
                             }}>
                               <h4 style={{ color: '#871a0dff', marginBottom: '8px' }}>
-                                        Mistake #{index + 1}
-                                      </h4>
+                                Mistake #{index + 1}
+                              </h4>
                               {renderFormattedText(mistake)}
                             </div>
                           </div>
@@ -497,49 +451,49 @@ const ContractAnalyzer = () => {
                 )}
 
                 {selectedTab === "recommendations" && (
-  <div className="tab-content">
-    {(() => {
-      let recommendationItems = [];
-      
-      if (analysis.recommendations) {
-        if (typeof analysis.recommendations === 'string') {
-          const recommendationPoints = parseNumberedPoints(analysis.recommendations);
-          recommendationItems = recommendationPoints.length > 0 ? recommendationPoints : [analysis.recommendations];
-        } else if (Array.isArray(analysis.recommendations)) {
-          recommendationItems = analysis.recommendations;
-        } else {
-          recommendationItems = [JSON.stringify(analysis.recommendations)];
-        }
-      }
-      
-      return recommendationItems.length > 0 ? (
-        recommendationItems.map((recommendation, index) => (
-          <div key={index} className="component recommendations">
-            
-            <div style={{ 
-              padding: '10px', 
-              margin: "-1rem",
-              border: '2px solid #00b894', 
-              borderRadius: '8px',
-              backgroundColor: '#f0fff4',
-              color: '#00b894'
-            }}>
-              <h4 style={{ color: '#046753ff', marginBottom: '8px' }}>
-                                        Recommendation #{index + 1}
-                                      </h4>
-              {renderFormattedText(recommendation)}
-            </div>
-          </div>
-        ))
-      ) : (
-        <div className="component recommendations">
-          <h2>Recommendations</h2>
-          <p>No recommendations available.</p>
-        </div>
-      );
-    })()}
-  </div>
-)}
+                  <div className="tab-content">
+                    {(() => {
+                      let recommendationItems = [];
+
+                      if (analysis.recommendations) {
+                        if (typeof analysis.recommendations === 'string') {
+                          const recommendationPoints = parseNumberedPoints(analysis.recommendations);
+                          recommendationItems = recommendationPoints.length > 0 ? recommendationPoints : [analysis.recommendations];
+                        } else if (Array.isArray(analysis.recommendations)) {
+                          recommendationItems = analysis.recommendations;
+                        } else {
+                          recommendationItems = [JSON.stringify(analysis.recommendations)];
+                        }
+                      }
+
+                      return recommendationItems.length > 0 ? (
+                        recommendationItems.map((recommendation, index) => (
+                          <div key={index} className="component recommendations">
+
+                            <div style={{
+                              padding: '10px',
+                              margin: "-1rem",
+                              border: '2px solid #00b894',
+                              borderRadius: '8px',
+                              backgroundColor: '#f0fff4',
+                              color: '#00b894'
+                            }}>
+                              <h4 style={{ color: '#046753ff', marginBottom: '8px' }}>
+                                Recommendation #{index + 1}
+                              </h4>
+                              {renderFormattedText(recommendation)}
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="component recommendations">
+                          <h2>Recommendations</h2>
+                          <p>No recommendations available.</p>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                )}
               </div>
             </>
           ) : (

@@ -1,5 +1,5 @@
 import axios from "axios";
-import React, { useState } from "react";
+import { useState } from "react";
 import "../styles/casePrediction.css";
 import backgroundImg from "../assets/background.jpeg";
 import { Link, useNavigate } from "react-router-dom";
@@ -11,7 +11,7 @@ const CasePrediction = () => {
   const [analyzing, setAnalyzing] = useState(false);
   const [message, setMessage] = useState("");
   const [showResults, setShowResults] = useState(false); // New state to control visibility
-  
+
   // Case input for text-based analysis
   const [caseInput, setCaseInput] = useState("");
 
@@ -23,28 +23,28 @@ const CasePrediction = () => {
     try {
       setAnalyzing(true);
       setMessage("");
-      
+
       if (!caseInput.trim()) {
         setMessage("Please enter case details first!");
         return;
       }
-      
+
       const response = await axios.post(
         "https://stylish-onie-slung.ngrok-free.app/caseoutcomeprediction",
         {
           questions: [caseInput]
         },
-        { 
-          headers: { 
+        {
+          headers: {
             "Content-Type": "application/json",
             "ngrok-skip-browser-warning": "true"
-          } 
+          }
         }
       );
-      
+
       const jsonData = response.data;
       console.log("Analysis data:", jsonData);
-      
+
       if (jsonData.answers && jsonData.answers.length > 0) {
         setAnalysis(jsonData.answers[0]);
         setMessage("Analysis completed successfully!");
@@ -52,7 +52,7 @@ const CasePrediction = () => {
       } else {
         setMessage("No analysis data received from the server.");
       }
-      
+
     } catch (error) {
       console.error("Error:", error);
       setMessage(`Failed to analyze case: ${error.response?.data?.message || error.message}`);
@@ -127,7 +127,7 @@ const CasePrediction = () => {
           Leverage AI to forecast your winning probability, uncover red flags
           with explanations, and receive data-driven strategy suggestions.
         </p>
-       <br></br>
+        <br></br>
 
         {/* Conditionally render Case Input Section or Results */}
         {!showResults ? (
@@ -171,7 +171,7 @@ const CasePrediction = () => {
                 </div>
               </div>
             )}
-            
+
             {message && (
               <div className={`message ${message.includes('failed') || message.includes('error') ? 'error' : 'success'}`}>
                 {message}
@@ -180,13 +180,13 @@ const CasePrediction = () => {
           </>
         ) : (
           <>
-           <p style={{
-    color: 'green',
-    fontWeight: 'bold',
-    textAlign: 'center', // centers the text
-    fontSize: '20px',    // increase font size
-    marginTop: '10px'
-  }}>{message}</p>
+            <p style={{
+              color: 'green',
+              fontWeight: 'bold',
+              textAlign: 'center',
+              fontSize: '20px',
+              marginTop: '10px'
+            }}>{message}</p>
             {/* Case Report */}
             <div className="report-section">
               <h2 className="section-title">Case Prediction Report</h2>
@@ -202,7 +202,7 @@ const CasePrediction = () => {
                       </div>
                     </div>
 
-                      <div className="grid-item grid-court">
+                    <div className="grid-item grid-court">
                       <h3>Petitioner</h3>
                       <p className="key">{analysis?.petitioner || "Not specified"}</p>
                     </div>
@@ -217,8 +217,8 @@ const CasePrediction = () => {
                       <p className="key">{analysis?.title || analysis?.caseType || "Not specified"}</p>
                     </div>
 
-                    </div>
-                       <div className="analysis-stack">
+                  </div>
+                  <div className="analysis-stack">
                     <div className="grid-item grid-reasons">
                       <h3>Likely Outcome</h3>
                       {analysis?.likelyOutcome ? (
@@ -252,16 +252,16 @@ const CasePrediction = () => {
                       )}
                     </div>
 
-                   <div className="grid-item grid-green">
-  <h3>Strong Points</h3>
-  {analysis?.strongPoints ? (
-    <ul>
-      {renderListItems(analysis.strongPoints)}
-    </ul>
-  ) : (
-    <p>No strong points identified.</p>
-  )}
-</div>
+                    <div className="grid-item grid-green">
+                      <h3>Strong Points</h3>
+                      {analysis?.strongPoints ? (
+                        <ul>
+                          {renderListItems(analysis.strongPoints)}
+                        </ul>
+                      ) : (
+                        <p>No strong points identified.</p>
+                      )}
+                    </div>
 
                     <div className="grid-item grid-feedback">
                       <h3>Final Advisory</h3>

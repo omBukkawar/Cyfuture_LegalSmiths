@@ -1,40 +1,48 @@
-import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import Footer from "../components/Footer";
 import "../styles/homepage.css";
 
+// Image imports
 import img1 from "../assets/homepage_img1.jpg";
 import img2 from "../assets/homepage_img4.webp";
 import img3 from "../assets/homepage_img3.jpg";
 import img4 from "../assets/homepage_img4.jpeg";
 
 const HomePage = () => {
-  const [showMore, setShowMore] = useState(false);
+  // NOTE: `showMore` was unused — removed to keep code clean
 
   return (
     <div className="homepage">
+      {/* ---------- TOP NAVIGATION BAR ---------- */}
       <div className="top-bar">
+        {/* Brand Logo / Name */}
         <Link to="/" className="brand">
           LegalSmiths
         </Link>
+
+        {/* Login Link */}
         <Link to="/login" className="login-link">
           Login
         </Link>
       </div>
 
+      {/* ---------- MAIN CONTENT ---------- */}
       <main>
+        {/* ----- ABOUT SECTION ----- */}
         <section className="about">
           <h1>About LegalSmiths</h1>
           <p className="about_text">
             Welcome to LegalSmiths! We are committed to providing modern,
             secure, and confidence-inspiring legal tech solutions for all users.
           </p>
+
           <div className="translucent">
             <h2>Trusted Legal Analysis Platform</h2>
             <p>
               LegalSmiths is trusted by users for accurate legal analysis and
               advice, ensuring confidence in legal matters.
             </p>
+            {/* Security/verification icon */}
             <svg
               xmlns="http://www.w3.org/2000/svg"
               height="85px"
@@ -47,30 +55,44 @@ const HomePage = () => {
           </div>
         </section>
 
+        {/* ----- PRINCIPLES SECTION ----- */}
         <section className="principles">
           <div className="principles-content">
+            {/* Text & Button */}
             <div className="principles-text">
               <h2>Our Legal Principles</h2>
               <ul>
+                <li>LegalSmiths upholds integrity and accuracy in legal analysis.</li>
                 <li>
-                LegalSmiths upholds integrity and accuracy in legal analysis.
-                </li>
-                <li>
-                We believe in empowering individuals with accessible legal
-                advice and analysis through innovative technology.
+                  We believe in empowering individuals with accessible legal
+                  advice and analysis through innovative technology.
                 </li>
               </ul>
-                
+
+              {/* Button to Services Page */}
               <Link to="/services">
-                <button className="services-btn">Go To Our Services<svg xmlns="http://www.w3.org/2000/svg" height="44px" viewBox="0 -960 960 960" width="44px" fill="#e3e3e3"><path d="M647-440H160v-80h487L423-744l57-56 320 320-320 320-57-56 224-224Z"/></svg></button>
+                <button className="services-btn">
+                  Go To Our Services
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    height="44px"
+                    viewBox="0 -960 960 960"
+                    width="44px"
+                    fill="#e3e3e3"
+                  >
+                    <path d="M647-440H160v-80h487L423-744l57-56 320 320-320 320-57-56 224-224Z" />
+                  </svg>
+                </button>
               </Link>
             </div>
 
+            {/* Main image beside text */}
             <div className="principles-image-main">
               <img src={img1} alt="principle main" />
             </div>
           </div>
 
+          {/* Principles gallery images */}
           <div className="principles-gallery">
             <div className="gallery-item left">
               <img src={img4} alt="principle 2" />
@@ -84,6 +106,7 @@ const HomePage = () => {
           </div>
         </section>
 
+        {/* ----- TEAM SECTION ----- */}
         <section className="meet">
           <h2>Meet Our Team</h2>
           <p>
@@ -92,20 +115,24 @@ const HomePage = () => {
           </p>
         </section>
 
+        {/* ----- CONTACT SECTION ----- */}
         <section className="contact1">
           <h2>Join LegalSmiths for AI-powered legal solutions.</h2>
-          <p><i>
-            “LegalSmiths is a game-changer in the legal tech industry. The
-            platform is intuitive, secure, and provides accurate legal analysis.
-            I highly recommend it to anyone seeking legal advice.” - Victoria
-            White
-          </i>
+          <p>
+            <i>
+              “LegalSmiths is a game-changer in the legal tech industry. The
+              platform is intuitive, secure, and provides accurate legal
+              analysis. I highly recommend it to anyone seeking legal advice.”
+              — Victoria White
+            </i>
           </p>
           <Link to="/contact">
             <button className="contact-btn">Contact Us</button>
           </Link>
         </section>
       </main>
+
+      {/* ---------- FOOTER ---------- */}
       <Footer />
     </div>
   );

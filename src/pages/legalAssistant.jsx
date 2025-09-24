@@ -1,17 +1,21 @@
-import React from "react";
-import { Link,useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import styles from "../styles/legalAssistant.module.css";
+// Import all necessary images for the component
 import msgIcon from "../assets/message.svg";
 import sendBtn from "../assets/send.svg";
 import userIcon from "../assets/user-icon.png";
 import gptImgLogo from "../assets/chatgptLogo.svg";
 import addLogo from "../assets/add.svg";
 
-
+// Define the LegalAssistant functional component
 const LegalAssistant = () => {
-  const navigate=useNavigate();
+  // Get the navigate function from react-router-dom to handle navigation
+  const navigate = useNavigate();
+
+  // Return the JSX for the component
   return (
     <div className={styles.legalAssistant}>
+      {/* Top navigation bar */}
       <div className={styles.topBar}>
         <Link to="/" className={styles.brand}>
           LegalSmiths
@@ -20,15 +24,20 @@ const LegalAssistant = () => {
           Logout
         </Link>
       </div>
+
+      {/* Main container for the chat interface */}
       <div className={styles.container}>
+        {/* Sidebar section */}
         <div className={styles.sidebar}>
+          {/* Upper part of the sidebar */}
           <div className={styles.upperSide}>
             <div className={styles.upperSideTop}>
+              {/* Logo section, currently empty */}
               <img src="" alt="" className={styles.logo} />
             </div>
-            <button className={styles.midBtn}>
-              New Chat
-            </button>
+            {/* Button to start a new chat */}
+            <button className={styles.midBtn}>New Chat</button>
+            {/* Saved queries section */}
             <div className={styles.upperSiderBottom}>
               <button className={styles.query}>
                 <img src={msgIcon} alt="Query" />
@@ -40,23 +49,36 @@ const LegalAssistant = () => {
               </button>
             </div>
           </div>
-            <button className={styles.back} onClick={() => navigate(-1)}>Back</button>
+          {/* Button to navigate back to the previous page */}
+          <button className={styles.back} onClick={() => navigate(-1)}>
+            Back
+          </button>
         </div>
+
+        {/* Main chat area */}
         <div className={styles.main}>
+          {/* Title of the chat assistant */}
           <div className={styles.title}>
-          <h5>AI Legal Assistant</h5>
+            <h5>AI Legal Assistant</h5>
           </div>
+          {/* Container for chat messages */}
           <div className={styles.chats}>
+            {/* User chat message */}
             <div className={styles.chat}>
-              <img className={styles.chatImg} src={userIcon} alt="" />
+              <img className={styles.chatImg} src={userIcon} alt="User" />
               <p className={styles.txt}>
                 Lorem ipsum dolor sit amet consectetur adipisicing elit. Itaque,
                 dolores? Possimus enim reprehenderit expedita pariatur, ullam
                 neque aliquam fuga illum.
               </p>
             </div>
+            {/* Bot's response message */}
             <div className={`${styles.chat} ${styles.bot}`}>
-              <img className={styles.chatImg} src={gptImgLogo} alt="" />
+              <img
+                className={styles.chatImg}
+                src={gptImgLogo}
+                alt="AI Assistant"
+              />
               <p className={styles.txt}>
                 Lorem ipsum dolor, sit amet consectetur adipisicing elit.
                 Nostrum illo impedit sed optio error aperiam tempora itaque,
@@ -73,16 +95,22 @@ const LegalAssistant = () => {
                 repudiandae aut numquam quas consequatur?
               </p>
             </div>
+            {/* Another user chat message */}
             <div className={styles.chat}>
-              <img className={styles.chatImg} src={userIcon} alt="" />
+              <img className={styles.chatImg} src={userIcon} alt="User" />
               <p className={styles.txt}>
                 Lorem ipsum dolor sit amet consectetur adipisicing elit. Itaque,
                 dolores? Possimus enim reprehenderit expedita pariatur, ullam
                 neque aliquam fuga illum.
               </p>
             </div>
+            {/* Another bot's response message */}
             <div className={`${styles.chat} ${styles.bot}`}>
-              <img className={styles.chatImg} src={gptImgLogo} alt="" />
+              <img
+                className={styles.chatImg}
+                src={gptImgLogo}
+                alt="AI Assistant"
+              />
               <p className={styles.txt}>
                 Lorem ipsum dolor, sit amet consectetur adipisicing elit.
                 Nostrum illo impedit sed optio error aperiam tempora itaque,
@@ -100,19 +128,19 @@ const LegalAssistant = () => {
               </p>
             </div>
           </div>
+          {/* Chat input footer */}
           <div className={styles.chatFooter}>
             <div className={styles.inp}>
-              <img src={addLogo} alt="" />
-              <input type="text" name="" placeholder="Enter a prompt here" />
+              <img src={addLogo} alt="Add" />
+              <input type="text" placeholder="Enter a prompt here" />
               <button className={styles.send}>
-                <img src={sendBtn} alt="" />
+                <img src={sendBtn} alt="Send" />
               </button>
             </div>
           </div>
         </div>
-            </div>
       </div>
-    
+    </div>
   );
 };
 

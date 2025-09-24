@@ -1,4 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+/* --------------------------------
+   PAGE WRAPPER
+-------------------------------- */
 .case-prediction {
   background-size: cover;
   background-position: center;
@@ -8,9 +12,12 @@
   justify-content: center;
   align-items: flex-start;
   overflow: hidden;
-  font-family: 'Poppins',sans-serif;
+  font-family: 'Poppins', sans-serif;
 }
 
+/* --------------------------------
+   HEADER
+-------------------------------- */
 .case-prediction .top-bar {
   position: absolute;
   top: 20px;
@@ -21,11 +28,13 @@
   align-items: center;
   z-index: 10;
 }
+
 .case-prediction .brand {
   font-weight: bold;
   color: white;
   text-decoration: none;
 }
+
 .case-prediction .login-link {
   font-weight: bold;
   color: white;
@@ -43,6 +52,9 @@
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
+/* --------------------------------
+   MAIN CONTAINER
+-------------------------------- */
 .title {
   text-align: center;
   font-size: 28px;
@@ -53,18 +65,21 @@
 .description {
   font-size: 1rem;
   font-weight: 500;
-  max-width: 450px;  
-  margin: 0 auto;     
-  line-height: 1.6;   
-  display: block;     
-  text-align: center; 
-  word-wrap: break-word; 
+  max-width: 450px;
+  margin: 0 auto;
+  line-height: 1.6;
+  display: block;
+  text-align: center;
+  word-wrap: break-word;
 }
 
+/* --------------------------------
+   UPLOAD SECTION
+-------------------------------- */
 .upload-section {
   text-align: center;
-  margin: 0 auto; 
-  width:32rem;
+  margin: 0 auto;
+  width: 32rem;
 }
 
 .file-drop {
@@ -72,8 +87,8 @@
   padding: 15px;
   border-radius: 10px;
   margin-bottom: 2rem;
-  height:6rem; 
-  border: 1px solid darkgrey; 
+  height: 6rem;
+  border: 1px solid darkgrey;
   font-size: 0.8rem;
 }
 
@@ -81,6 +96,23 @@
   font-size: 10px;
   color: #666;
   margin-top: 10px;
+}
+
+.analyze-btn {
+  display: block;
+  margin: 15px auto 0 auto;
+  background: #4e4d5b;
+  color: #fff;
+  padding: 12px 30px;
+  margin-top: 25px;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  text-align: center;
+}
+
+.analyze-btn:hover {
+  background: #3730d0;
 }
 
 .progress-bar {
@@ -117,6 +149,9 @@
   text-align: left;
 }
 
+/* --------------------------------
+   QUICKIES SECTION & COMPONENTS
+-------------------------------- */
 .quickies {
   display: flex;
   justify-content: space-between;
@@ -131,27 +166,21 @@
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-/* Enhanced component styling to work better with the new quickies container */
 .component {
   background: linear-gradient(145deg, #ffffff, #f0f0f0);
   padding: 30px;
   border-radius: 15px;
   border: none;
-  margin: 1rem; /* Remove margin since gap handles spacing now */
-  box-shadow: 
-    0 4px 15px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  margin: 1rem;
+  box-shadow:0 4px 15px rgba(0, 0, 0, 0.1),inset 0 1px 0 rgba(255, 255, 255, 0.6);
   transition: all 0.3s ease;
   flex: 1;
-  
   min-width: 240px;
 }
 
 .component:hover {
   transform: translateY(-5px);
-  box-shadow: 
-    0 8px 25px rgba(0, 0, 0, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  box-shadow:0 8px 25px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
 /* Responsive design for smaller screens */
@@ -163,17 +192,18 @@
     margin: 1rem auto;
     padding: 1.5rem;
   }
-  
+
   .component {
     min-width: auto;
     width: 100%;
   }
 }
 
-.riskScore{
+.riskScore {
   max-width: 20rem;
   word-wrap: break-word;
-  .val{
+
+  .val {
     justify-content: center;
     text-align: center;
     font-size: 4rem;
@@ -181,100 +211,40 @@
     margin-top: 1.3rem;
   }
 }
-  
+
 .active-tab {
-  border-bottom:3px solid blue;
+  border-bottom: 3px solid blue;
   cursor: pointer;
 }
-.value{
+
+.value {
   display: flex;
   justify-content: center;
   text-align: center;
   font-size: 5rem;
   font-weight: 600;
 }
-.points{
+
+.points {
   display: flex;
-  gap:1rem;
+  gap: 1rem;
   margin-top: 2rem;
-  margin-left:1rem;
+  margin-left: 1rem;
 }
-.select{
-  background-color: #3730d0;
-  height: 1rem;
-}
+
 .component h2 {
   font-size: 1.1rem;
   margin-bottom: 13px;
   text-align: left;
   font-weight: bold;
 }
-.ques{
-  font-size: 1.1rem;
-  text-align: left;
-  font-weight: bold;
-  margin-left: 1rem;
-}
-.key{
-    color: black;
-    font-weight: 500;
-}
 
-.component p{
+.component p {
   font-size: 1rem;
-  text-align:left;
+  text-align: left;
   font-weight: 500;
 }
 
-.feedback {
-  display: flex;
-  flex-direction: row;
-  margin:20px;
-  font-weight: 500; 
-  gap: 1.5rem;
-}
-.like{
-  display: flex;
-  width: 20%;
-  height: 3rem;
-  border: 1px solid #ccc;
-  border-radius: 10px;
-  justify-content: center;
-  align-items: center;
-  background-color: #dcdcdc;
-  border: 1px solid darkgrey;
-  gap:1.5rem;
-  
-}
-.like svg{
-  color: black;  
-}
-.feedback textarea {
-  width: 80%;
-  height: 3rem;
-  border: 1px solid #ccc;
-  border-radius: 10px;
-  padding: 10px;
-  font-size: 17px;
-  background-color: #dcdcdc;
-  border: 1px solid darkgrey;
-  
-}
-.analyze-btn {
-  display: block;
-  margin: 15px auto 0 auto;
-  background: #4e4d5b;
-  color: #fff;
-  padding: 12px 30px;
-  margin-top: 25px;
-  border: none;
-  border-radius: 25px;
-  cursor: pointer;
-  text-align: center;
-}
-.analyze-btn:hover {
-  background: #3730d0;
-}
 .back-btn {
   display: block;
   margin: 10px 0 0 auto;
@@ -290,7 +260,7 @@
   background: #3730d0;
 }
 
- .tab-content .component {
+.tab-content .component {
   margin-bottom: 20px;
 }
 

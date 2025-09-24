@@ -1,11 +1,13 @@
+/* Import Google Fonts for the 'Poppins' font family */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
-*{
+* {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
+/* Styles for the main legal assistant container */
 .legalAssistant {
   font-size: 10px;
   background: url("../assets/background.jpeg") center/cover no-repeat fixed;
@@ -15,6 +17,9 @@
   font-family: 'Poppins', sans-serif;
 }
 
+/* ------------------------------
+   TOP NAVIGATION BAR
+---------------------------------*/
 .legalAssistant .topBar {
   position: absolute;
   top: 20px;
@@ -40,6 +45,7 @@
   text-decoration: none;
 }
 
+/* Main content container */
 .container {
   flex: 1;
   margin: 100px auto 40px;
@@ -53,6 +59,7 @@
   height: 40rem;
 }
 
+/* SIDEBAR */
 .sidebar {
   flex: 1 1 250px;
   background-color: #727374;
@@ -64,12 +71,13 @@
 
 .back {
   position: absolute;
-  bottom: 20px;
-  left: 20px;
+  bottom: 5rem;
+  left: 17rem;
   border-radius: 20px;
   padding: 7px 20px;
 }
 
+/* MAIN CHAT AREA */
 .main {
   flex: 3 1 500px;
   min-height: calc(100vh - 14rem);
@@ -88,6 +96,7 @@
   text-align: center;
 }
 
+/* Styles for the chat messages container, with scroll functionality */
 .chats {
   overflow-y: auto;
   scroll-behavior: smooth;
@@ -97,6 +106,7 @@
   padding: 1rem;
 }
 
+/* Common styles for a single chat message */
 .chat {
   margin: 1rem 0;
   padding: 1.2rem 1.5rem;
@@ -128,6 +138,7 @@
   justify-content: center;
 }
 
+/* Styles for the input box and send button container */
 .inp {
   display: flex;
   align-items: center;
@@ -140,7 +151,7 @@
   padding: 0 1rem;
 }
 
-.inp > input {
+.inp>input {
   flex: 1;
   outline: none;
   padding: 0.8rem;
@@ -178,6 +189,7 @@
   border-radius: 0.5rem;
 }
 
+/* Styles for the saved query buttons */
 .query {
   display: flex;
   align-items: center;
@@ -194,6 +206,8 @@
 .query img {
   padding-right: 1rem;
 }
+
+/* Media queries for responsiveness on different screen sizes */
 
 @media (max-width: 992px) {
   .container {
@@ -227,7 +241,8 @@
     text-align: center;
   }
 
-  .brand, .loginLink {
+  .brand,
+  .loginLink {
     font-size: 1rem;
   }
 
@@ -246,7 +261,7 @@
     padding: 0.5rem;
   }
 
-  .inp > input {
+  .inp>input {
     padding: 0.5rem;
     font-size: 0.9rem;
   }

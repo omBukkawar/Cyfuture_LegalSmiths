@@ -1,20 +1,20 @@
 import React from "react";
-import { Link,useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "../styles/contact.css";
 import Footer from "../components/Footer";
 
 const Contact = () => {
-    const navigate=useNavigate();
+  const navigate = useNavigate();
   return (
     <div className="contact">
       <div className="top-bar">
-              <Link to="/" className="brand">
-                LegalSmiths
-              </Link>
-              <Link to="/login" className="login-link">
-                Login
-              </Link>
-            </div>
+        <Link to="/" className="brand">
+          LegalSmiths
+        </Link>
+        <Link to="/login" className="login-link">
+          Login
+        </Link>
+      </div>
 
       <section className="forms">
         <h1>Contact LegalSmiths</h1>
