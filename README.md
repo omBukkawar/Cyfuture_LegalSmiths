@@ -1,11 +1,11 @@
 # Cyfuture LegalSmiths
 
-**LegalSmiths** is an AI-powered legal assistant and case outcome prediction system built for the **Cyfuture AI Hackathon 1.0**.  
-It combines advanced AI, secure authentication, and legal domain datasets to provide the following:
+**LegalSmiths** is an AI-powered legal assistant, contract analyzer, and case outcome prediction system built for the **Cyfuture AI Hackathon 1.0**.  
+It combines advanced LLM models, secure authentication, and legal domain datasets to provide the following features:
 
-- **Legal Assistant** – Answers legal queries in simpler user friendly language.  
+- **Legal Assistant** – Answers legal queries in simple, user-friendly language.  
 - **Contract Analyzer** – Analyzes uploaded contracts and extracts structured insights.  
-- **Case Outcome Predictor** – Use AI models to predict the likely outcomes and potential consequences of legal cases and contract breaches  
+- **Case Outcome Predictor** – Uses LLM models to predict the likely outcomes and potential consequences of legal cases and contract breaches.  
 
 ## A] Table of Contents
 - [Features](#features)
