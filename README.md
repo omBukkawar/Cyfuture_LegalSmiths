@@ -115,8 +115,8 @@ npm run dev
 
 ## G] AI Layer Workflow
 ## 1. Legal Assistant (/legalassistant)
-### Uses Retriever-Augmented Generation (RAG) with FAISS(FACEBOOK SIMILARITY SEARCH).
-### Returns plain-language legal answers with references.
+### Uses Retriever-Augmented Generation (RAG) with FAISS(FACEBOOK SIMILARITY SEARCH) Vector Database.
+### Returns plain-language legal answers with references through GEMINI 2.5 FLASH LLM Model.
 ## 2. Contract Analyzer (/contractanalyzer)
 ### 1. Upload contract → parse text → chunk into FAISS + BM25 indexes.
 ### 2. Uses Gemini 2.5 LLM Model for structured JSON output as follows:
@@ -135,9 +135,55 @@ npm run dev
 [Colab Notebook Link for legal assistant and contract analzyer](https://colab.research.google.com/drive/1EtG6lfml7WMJUNBrByXRkDWLbNajbKcO#scrollTo=Bj43NmKboq-5)
 
 ## 3. Case Outcome Predictor (/caseoutcomeprediction)
-### Takes case facts as input → Preprocess → ML model → Predicts outcome.
+### Takes case facts as input → Preprocess → Gemini 2.5 LLM model → Predicts outcome.
 
 [Kaggle Notebook Link](https://www.kaggle.com/code/pavankumar1185/legalsmiths-case-outcome-prediction-fastapi/edit)
+
+### Models used:
+| **Model / Component**            | **Purpose**                                                      | **Library / Source**                        |
+| -------------------------------- | ---------------------------------------------------------------- | ------------------------------------------- |
+| `ChatGoogleGenerativeAI`         | Large Language Model (LLM) for QA, RAG, and query generation     | `langchain_google_genai`                    |
+| `HuggingFaceEmbeddings`          | Generates embeddings for documents to store in vector database   | `langchain_huggingface`                     |
+| `HuggingFaceCrossEncoder`        | Cross-encoder model for reranking retrieved documents            | `langchain_community.cross_encoders`        |
+| `FAISS`                          | Vector store retriever for embedding-based search                | `langchain_community.vectorstores`          |
+| `BM25Retriever`                  | Keyword-based retriever for traditional search                   | `langchain_community.retrievers`            |
+| `EnsembleRetriever`              | Combines multiple retrievers with weights                        | `langchain.retrievers`                      |
+| `CrossEncoderReranker`           | Reranks top retrieved documents based on relevance               | `langchain.retrievers.document_compressors` |
+| `ContextualCompressionRetriever` | Compresses retrieved context before feeding to LLM               | `langchain.retrievers`                      |
+| `MultiQueryRetriever`            | Generates multiple search queries using LLM to improve retrieval | `langchain.retrievers.multi_query`          |
+| `RecursiveCharacterTextSplitter` | Splits long text into chunks for retrieval and embedding         | `langchain.text_splitter`                   |
+| `PromptTemplate`                 | Template prompts for LLM input                                   | `langchain.prompts`                         |
+| `Document`                       | Wrapper for text and metadata of documents                       | `langchain.docstore.document`               |
+
+
+### Essential Python libraries used:
+| **Library / Module**                        | **Purpose in Code**                                               |
+| ------------------------------------------- | ----------------------------------------------------------------- |
+| `os`                                        | File system operations, path handling                             |
+| `time`                                      | Measure execution time                                            |
+| `io`                                        | Handle in-memory file streams                                     |
+| `json`                                      | Parse and generate JSON                                           |
+| `re`                                        | Regular expressions for text parsing                              |
+| `pickle`                                    | Save/load Python objects like retrievers                          |
+| `dotenv`                                    | Load environment variables (e.g., API keys)                       |
+| `typing`                                    | Type hints (`List`, `Dict`, `Any`)                                |
+| `pydantic`                                  | Define request and response models (`BaseModel`, `Field`)         |
+| `torch`                                     | Model computation, GPU/CPU device selection                       |
+| `datasets`                                  | Load datasets from Hugging Face                                   |
+| `unstructured.partition.auto`               | Extract elements from documents (tables, text, etc.)              |
+| `fastapi`                                   | Create API endpoints (`FastAPI`, `UploadFile`, `Form`, `File`)    |
+| `fastapi.middleware.cors`                   | Enable Cross-Origin Resource Sharing (`CORSMiddleware`)           |
+| `langchain.docstore.document`               | Represent documents with content and metadata (`Document`)        |
+| `langchain.text_splitter`                   | Split text into smaller chunks (`RecursiveCharacterTextSplitter`) |
+| `langchain_community.vectorstores`          | Store and retrieve embeddings (`FAISS`)                           |
+| `langchain_community.retrievers`            | BM25 retriever (`BM25Retriever`)                                  |
+| `langchain.retrievers`                      | Ensemble, compression, and multi-query retrievers                 |
+| `langchain.retrievers.document_compressors` | Cross-encoder reranker (`CrossEncoderReranker`)                   |
+| `langchain_community.cross_encoders`        | HuggingFace cross-encoder model (`HuggingFaceCrossEncoder`)       |
+| `langchain.retrievers.multi_query`          | Multi-query retriever (`MultiQueryRetriever`)                     |
+| `langchain.prompts`                         | Create prompt templates for LLM (`PromptTemplate`)                |
+| `langchain_huggingface`                     | Generate embeddings (`HuggingFaceEmbeddings`)                     |
+| `langchain_google_genai`                    | Interface with Gemini LLM (`ChatGoogleGenerativeAI`)              |
 
 
 # E] Deployment with Ngrok
