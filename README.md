@@ -3,14 +3,13 @@
 **LegalSmiths** is an AI-powered legal assistant and case outcome prediction system built for the **Cyfuture AI Hackathon 1.0**.  
 It combines advanced AI, secure authentication, and legal domain datasets to provide the following:
 
-- **Legal Assistant** – Answers legal queries in plain language.  
+- **Legal Assistant** – Answers legal queries in simpler user friendly language.  
 - **Contract Analyzer** – Analyzes uploaded contracts and extracts structured insights.  
-- **Case Outcome Predictor** – Predicts the likely outcome of legal cases using AI models.  
+- **Case Outcome Predictor** – Use AI models to predict the likely outcomes and potential consequences of legal cases and contract breaches  
 
 ## A] Table of Contents
-- [Project Structure](#project-structure)
 - [Features](#features)
-- [Technologies](#technologies)
+- [Tech Stack](#Tech-Stack)
 - [Installation](#installation)
   - [Frontend Setup](#frontend-setup)
   - [Backend Setup](#backend-setup)
@@ -19,26 +18,16 @@ It combines advanced AI, secure authentication, and legal domain datasets to pro
 - [AI Layer Workflow](#ai-layer-workflow)
 - [Deployment with Ngrok](#deployment-with-ngrok)
 - [Package Breakdown](#package-breakdown)
-- [Contributors](#contributors)
+- [Contributors](#contributors)  
 
-## B] Project Structure
-The repository is divided into three major layers:
-
-1. **Frontend Layer (React + Vite)**  
-2. **Backend Layer (Node.js + Express for Auth APIs)**  
-3. **AI Layer (FastAPI, LangChain, Gemini LLM, FAISS, BM25)**  
-4. **Databases**  
-   - **MySQL**: For user authentication.  
-   - **MongoDB**: For legal data (contracts, chats, case details).  
-
-## C] Features
+## B] Features
 -  **Secure login/register** (MySQL + bcrypt)  
 -  **AI Legal Assistant** (Answers legal Q&A)  
 -  **Contract Analyzer** (JSON-structured insights + red flags in  contract docuemnts)  
 -  **Case Outcome Prediction** (Predicts outcome of cases with next steps)  
 -  **Ngrok-based deployment** (Colab/Kaggle GPU-powered models)  
 
-## D] Technologies
+## C] Tech Stack
 - **Frontend:** React, Vite, React Router, Axios  
 - **Backend (Auth APIs):** Node.js, Express, CORS, Multer, MySQL2, Mongoose, Bcrypt  
 - **AI Backend:** FastAPI, LangChain, FAISS, BM25, HuggingFace embeddings, Gemini 2.5 LLM  
@@ -46,7 +35,7 @@ The repository is divided into three major layers:
   - MySQL (authentication)  
   - MongoDB (contracts, chats, case details)  
 
-## E] Installation
+## D] Installation
 ### 1] Frontend Setup
 ```bash
 # Install core dependencies
@@ -95,7 +84,7 @@ CREATE TABLE users (
 ## MongoDB (for legal data)
 ### Stores contract documents, chat logs, and case details of user.
 
-# F] Running the System
+# E] Running the System
 ### Start Databases
 1. Run MySQL (cyfuture_db)
 2. Run MongoDB
@@ -113,7 +102,7 @@ node server.js
 npm run dev
 ```
 
-## G] AI Layer Workflow
+## F] AI Layer Workflow
 ## 1. Legal Assistant (/legalassistant)
 ### Uses Retriever-Augmented Generation (RAG) with FAISS(FACEBOOK SIMILARITY SEARCH) Vector Database.
 ### Returns plain-language legal answers with references through GEMINI 2.5 FLASH LLM Model.
@@ -186,9 +175,9 @@ npm run dev
 | `langchain_google_genai`                    | Interface with Gemini LLM (`ChatGoogleGenerativeAI`)              |
 
 
-# E] Deployment with Ngrok
+# G] Deployment with Ngrok
 
-## Since GPU models run on Colab/Kaggle, APIs are exposed via Ngrok.
+## Since GPU models run on Colab/Kaggle, APIs are hosted via Ngrok.
 
 ## Steps:
 
@@ -199,7 +188,7 @@ npm run dev
 uvicorn backend:app --host 0.0.0.0 --port 8000
 ```
 
-# F] Package Breakdown
+# H] Package Breakdown
 ## Backend (Node.js)
 | Package           | Purpose              |
 | ----------------- | -------------------- |
@@ -238,9 +227,14 @@ eslint-plugin-react-hooks eslint-plugin-react-refresh globals \
 @types/react @types/react-dom
 ``` 
 
-# G] Contributors
+# I] Contributors
 
-Developed by Team HackSmiths for the Cyfuture AI Hackathon 1.0.
+Developed by Team HackSmiths :
+1. [Pavankumar-Batchu1185](https://github.com/Pavankumar-Batchu1185)
+2. [AnvitaChougule](https://github.com/AnvitaChougule)
+3. [Gaurang2805](https://github.com/Gaurang2805)
+4. [omBukkawar](https://github.com/omBukkawar)
+5. [Shivam2407-Hub](https://github.com/Shivam2407-Hub)
 
 
 
