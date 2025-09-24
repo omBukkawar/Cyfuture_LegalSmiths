@@ -26,7 +26,7 @@ Allows cross-origin requests from frontend applications.
 
 Runs on http://localhost:5000.
 
-##Collections in MongoDB:
+## Collections in MongoDB:
 
 contracts – Stores uploaded contract files.
 
@@ -34,6 +34,6 @@ cases – Stores uploaded case files.
 
 summaries – Stores summaries or notes.
 
-Technologies & Libraries Used:
+## Technologies & Libraries Used:
 
 Node.js, Express, MySQL2, Mongoose, bcrypt, Multer, CORS
