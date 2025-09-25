@@ -23,7 +23,7 @@ It combines advanced LLM models, secure authentication, and legal domain dataset
 ## B] Features
 -  **Secure login/register** (MySQL + bcrypt)  
 -  **AI Legal Assistant** (Answers legal Q&A)  
--  **Contract Analyzer** (JSON-structured insights + red flags in  contract docuemnts)  
+-  **Contract Analyzer** (JSON-structured insights + red flags in  contract documents)  
 -  **Case Outcome Prediction** (Predicts outcome of cases with next steps)  
 -  **Ngrok-based deployment** (Colab/Kaggle GPU-powered models)  
 
@@ -89,8 +89,9 @@ CREATE TABLE users (
 1. Run MySQL (cyfuture_db)
 2. Run MongoDB
 3. Run Python AI Backend
+Eg:
 ```bash
-uvicorn backend.scripts.backend:app --reload --port 8000
+uvicorn backend:app --reload --port 8000
 ```
 4. Run Node.js Backend 
 ```bash
@@ -104,11 +105,11 @@ npm run dev
 
 ## F] AI Layer Workflow
 ## 1. Legal Assistant (/legalassistant)
-### Uses Retriever-Augmented Generation (RAG) with FAISS(FACEBOOK SIMILARITY SEARCH) Vector Database.
+### Uses Retriever-Augmented Generation (RAG) with FAISS(FACEBOOK AI SIMILARITY SEARCH) Vector Database.
 ### Returns plain-language legal answers with references through GEMINI 2.5 FLASH LLM Model.
 ## 2. Contract Analyzer (/contractanalyzer)
 ### 1. Upload contract → parse text → chunk into FAISS + BM25 indexes.
-### 2. Uses Gemini 2.5 LLM Model for structured JSON output as follows:
+### 2. The Gemini 2.5 LLM Model queries these indexes to retrieve specific clauses and information, and generates a structured JSON output based directly on the retrieved content as follows:
 - Parties
 - Dates
 - Payment Terms
@@ -121,12 +122,29 @@ npm run dev
 
 ---
 
-[Colab Notebook Link for legal assistant and contract analzyer](https://colab.research.google.com/drive/1EtG6lfml7WMJUNBrByXRkDWLbNajbKcO#scrollTo=Bj43NmKboq-5)
+[Colab Notebook Link for legal assistant and contract analyzer](https://colab.research.google.com/drive/1EtG6lfml7WMJUNBrByXRkDWLbNajbKcO#scrollTo=Bj43NmKboq-5)
+
+### RAG (Retrieval Augmented Generation Architecture):
+| Stage                              | Legal Assistant (General)                                                                                       | Contract Analyzer (Focused)                                                                     |
+| :--------------------------------- | :-------------------------------------------------------------------------------------------------------------- | :---------------------------------------------------------------------------------------------- |
+| **1. Indexing & Storage**        | Public legal docs chunked & vectorized with `HuggingFaceEmbeddings`, stored in **FAISS** + **BM25** for search. | Contract chunked & vectorized in-memory; temporary **FAISS** + **BM25** built for one-time use. |
+| **2. Retrieval & Re-ranking**    | **Hybrid Search** (FAISS + BM25) retrieves docs → **Cross-Encoder** re-ranks for precision.                     | Same Hybrid Search runs on temp index → **Cross-Encoder** re-ranks contract clauses.            |
+| **3. Augmentation & Prompting**  | Top passages + user query → rich prompt for LLM.                                                                | Top clauses + structured prompt → JSON-ready context.                                           |
+| **4. Generation**              | LLM outputs a **conversational answer**.                                                                        | LLM outputs a **structured JSON report** (parties, red_flags, recommendations,etc).                 |
+
+We have created faiss(Facebook AI Similarity Search) vector database indexes and bm25 indexes in order to speed up retrieval and avoid rebuilding the retriever for every new request.
+
+The indexes are stored in drive.
+
+[RAG Indexes](https://drive.google.com/drive/folders/1yGgNFrt3KH9APPRaeD29fO9Iyz6e6dak?usp=sharing)
 
 ## 3. Case Outcome Predictor (/caseoutcomeprediction)
-### Takes case facts as input → Preprocess → Gemini 2.5 LLM model → Predicts outcome.
+### Takes case facts as input → Preprocess → Gemini 2.5 Flash LLM model → Predicts outcome.
 
 [Kaggle Notebook Link](https://www.kaggle.com/code/pavankumar1185/legalsmiths-case-outcome-prediction-fastapi/edit)
+
+
+
 
 ### Models used:
 | **Model / Component**            | **Purpose**                                                      | **Library / Source**                        |
@@ -187,7 +205,10 @@ npm run dev
 ```python
 uvicorn backend:app --host 0.0.0.0 --port 8000
 ```
-
+### 3]Endpoints:
+- https://monocable-dollishly-joannie.ngrok-free.app/contractanalyzer
+- https://monocable-dollishly-joannie.ngrok-free.app/legalassistant
+- https://stylish-onie-slung.ngrok-free.app/caseoutcomeprediction
 # H] Package Breakdown
 ## Backend (Node.js)
 | Package           | Purpose              |
