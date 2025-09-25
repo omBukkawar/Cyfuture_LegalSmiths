@@ -136,7 +136,7 @@ We have created faiss(Facebook AI Similarity Search) vector database indexes and
 
 The indexes are stored in drive.
 
-[RAG Indexes](https://drive.google.com/drive/folders/1yGgNFrt3KH9APPRaeD29fO9Iyz6e6dak?usp=sharing)
+[RAG Indexes Link](https://drive.google.com/drive/folders/1yGgNFrt3KH9APPRaeD29fO9Iyz6e6dak?usp=sharing)
 
 ## 3. Case Outcome Predictor (/caseoutcomeprediction)
 ### Takes case facts as input → Preprocess → Gemini 2.5 Flash LLM model → Predicts outcome.
