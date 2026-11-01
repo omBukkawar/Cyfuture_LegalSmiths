@@ -3,12 +3,13 @@ import { useState, useRef } from "react";
 import "../styles/contractAnalyzer.css";
 import backgroundImg from "../assets/background.jpeg";
 import { Link, useNavigate } from "react-router-dom";
+import { AI_API_URL, NODE_API_URL } from "../config/api";
+import { logout } from "../utils/auth";
 
 const ContractAnalyzer = () => {
   const navigate = useNavigate();
 
   // File handling
-  const [file, setFile] = useState(null);
   const [files, setFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
@@ -38,7 +39,7 @@ const ContractAnalyzer = () => {
 
     try {
       const response = await axios.post(
-        "https://monocable-dollishly-joannie.ngrok-free.app/contractanalyzer",
+        `${AI_API_URL}/contractanalyzer`,
         formdata,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
@@ -76,7 +77,6 @@ const ContractAnalyzer = () => {
   // File upload to backend
   const handleFileUpload = async (selectedFile) => {
     if (!selectedFile) return;
-    setFile(selectedFile);
     setUploading(true);
 
     const formData = new FormData();
@@ -84,7 +84,7 @@ const ContractAnalyzer = () => {
 
     try {
       const res = await axios.post(
-        "http://localhost:5000/upload-contract",
+        `${NODE_API_URL}/upload-contract`,
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
@@ -167,20 +167,6 @@ const ContractAnalyzer = () => {
     ));
   };
 
-  // Helper function to render array items
-  const renderArrayItems = (items) => {
-    if (!Array.isArray(items)) return null;
-
-    return (
-      <ul style={{ paddingLeft: '20px', marginTop: '10px' }}>
-        {items.map((item, index) => (
-          <li key={index} style={{ marginBottom: '8px' }}>
-            {typeof item === 'string' ? renderFormattedText(item) : JSON.stringify(item)}
-          </li>
-        ))}
-      </ul>
-    );
-  };
 
   // Helper function to parse numbered points from text
   const parseNumberedPoints = (text) => {
@@ -205,9 +191,7 @@ const ContractAnalyzer = () => {
         <Link to="/" className="brand">
           LegalSmiths
         </Link>
-        <Link to="/login" className="login-link">
-          Logout
-        </Link>
+        <button onClick={() => logout(navigate)} className="login-link" style={{ background: "transparent", border: "none", cursor: "pointer", fontSize: "1rem", fontFamily: "inherit" }}>Logout</button>
       </div>
 
       {/* Main Container */}

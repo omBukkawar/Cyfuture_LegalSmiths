@@ -1,5 +1,7 @@
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import Footer from "../components/Footer";
+import { isAuthenticated, logout } from "../utils/auth";
 import "../styles/homepage.css";
 
 // Image imports
@@ -9,7 +11,22 @@ import img3 from "../assets/homepage_img3.jpg";
 import img4 from "../assets/homepage_img4.jpeg";
 
 const HomePage = () => {
-  // NOTE: `showMore` was unused — removed to keep code clean
+  const navigate = useNavigate();
+  const [loggedIn, setLoggedIn] = useState(() => isAuthenticated());
+
+  const handleLogout = () => {
+    logout();
+    setLoggedIn(false);
+  };
+
+  const handleServicesClick = (e) => {
+    e.preventDefault();
+    if (loggedIn) {
+      navigate("/services");
+    } else {
+      navigate("/login");
+    }
+  };
 
   return (
     <div className="homepage">
@@ -20,10 +37,33 @@ const HomePage = () => {
           LegalSmiths
         </Link>
 
-        {/* Login Link */}
-        <Link to="/login" className="login-link">
-          Login
-        </Link>
+        {/* Dynamic Auth Navigation */}
+        <div style={{ display: "flex", gap: "20px", alignItems: "center" }}>
+          {loggedIn ? (
+            <>
+              <Link to="/services" className="login-link">
+                Dashboard
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="login-link"
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  cursor: "pointer",
+                  fontSize: "1rem",
+                  fontFamily: "inherit",
+                }}
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <Link to="/login" className="login-link">
+              Login
+            </Link>
+          )}
+        </div>
       </div>
 
       {/* ---------- MAIN CONTENT ---------- */}
@@ -70,20 +110,18 @@ const HomePage = () => {
               </ul>
 
               {/* Button to Services Page */}
-              <Link to="/services">
-                <button className="services-btn">
-                  Go To Our Services
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    height="44px"
-                    viewBox="0 -960 960 960"
-                    width="44px"
-                    fill="#e3e3e3"
-                  >
-                    <path d="M647-440H160v-80h487L423-744l57-56 320 320-320 320-57-56 224-224Z" />
-                  </svg>
-                </button>
-              </Link>
+              <button className="services-btn" onClick={handleServicesClick}>
+                Go To Our Services
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  height="44px"
+                  viewBox="0 -960 960 960"
+                  width="44px"
+                  fill="#e3e3e3"
+                >
+                  <path d="M647-440H160v-80h487L423-744l57-56 320 320-320 320-57-56 224-224Z" />
+                </svg>
+              </button>
             </div>
 
             {/* Main image beside text */}
@@ -120,9 +158,9 @@ const HomePage = () => {
           <h2>Join LegalSmiths for AI-powered legal solutions.</h2>
           <p>
             <i>
-              “LegalSmiths is a game-changer in the legal tech industry. The
+              "LegalSmiths is a game-changer in the legal tech industry. The
               platform is intuitive, secure, and provides accurate legal
-              analysis. I highly recommend it to anyone seeking legal advice.”
+              analysis. I highly recommend it to anyone seeking legal advice."
               — Victoria White
             </i>
           </p>

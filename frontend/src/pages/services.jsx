@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import Footer from "../components/Footer";
+import { logout } from "../utils/auth";
 import "../styles/services.css";
 
 // Image imports
@@ -9,7 +10,11 @@ import img3 from "../assets/services_img3.webp";
 import img4 from "../assets/services_img4.jpeg";
 
 const Services = () => {
-  const navigate = useNavigate(); // used for programmatic navigation
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout(navigate);
+  };
 
   return (
     <div className="services">
@@ -20,10 +25,20 @@ const Services = () => {
           LegalSmiths
         </Link>
 
-        {/* Logout button (links to login page here — consider changing path if actual logout logic is added) */}
-        <Link to="/login" className="login-link">
+        {/* Proper logout button — clears localStorage and redirects to /login */}
+        <button
+          className="login-link"
+          onClick={handleLogout}
+          style={{
+            background: "transparent",
+            border: "none",
+            cursor: "pointer",
+            fontSize: "1rem",
+            fontFamily: "inherit",
+          }}
+        >
           Logout
-        </Link>
+        </button>
       </div>
 
       {/* ---------- MAIN CONTENT ---------- */}

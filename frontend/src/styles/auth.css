@@ -1,0 +1,241 @@
+/* Import Google Font: Poppins */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap');
+
+/* Main auth page container */
+.auth-page {
+  min-height: 100vh;
+  margin: 0;
+  font-family: 'Poppins', Helvetica, sans-serif;
+  background: url("../assets/background.jpeg") no-repeat center center fixed;
+  background-size: cover;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Navbar section */
+.navbar {
+  position: absolute;
+  top: 20px;
+  left: 30px;
+}
+
+.nav-link {
+  color: white;
+  text-decoration: none;
+}
+
+.navbar h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: bold;
+  color: white;
+}
+
+/* Page header */
+.header {
+  text-align: center;
+  margin-top: 100px;
+}
+
+.header h1 {
+  font-size: 36px;
+  font-weight: 500;
+  color: black;
+}
+
+/* Auth alert badges */
+.auth-error {
+  background-color: rgba(220, 53, 69, 0.85);
+  color: #ffffff;
+  border: 1px solid #dc3545;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  width: 340px;
+  box-sizing: border-box;
+  margin: 10px 0 0 0;
+  text-align: center;
+  font-weight: 500;
+}
+
+.auth-success {
+  background-color: rgba(40, 167, 69, 0.85);
+  color: #ffffff;
+  border: 1px solid #28a745;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  width: 340px;
+  box-sizing: border-box;
+  margin: 10px 0 0 0;
+  text-align: center;
+  font-weight: 500;
+}
+
+/* Login form styling */
+.auth-page form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 15px;
+}
+
+form div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+/* Text input fields */
+form input:not([type="checkbox"]) {
+  width: 340px;
+  box-sizing: border-box;
+  padding: 12px 16px;
+  margin: 8px 0;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  background-color: #ffffff;
+  color: #333333;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+form input:not([type="checkbox"]):focus {
+  border-color: #2f3bdd;
+  box-shadow: 0 0 0 3px rgba(47, 59, 221, 0.2);
+}
+
+/* Password wrapper & show/hide toggle button */
+.password-wrapper {
+  position: relative;
+  width: 340px;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  margin: 8px 0 !important;
+}
+
+.password-wrapper input {
+  width: 100% !important;
+  margin: 0 !important;
+  padding-right: 48px !important;
+}
+
+.password-wrapper .toggle-password {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent !important;
+  border: none !important;
+  color: #555555 !important;
+  padding: 6px !important;
+  margin: 0 !important;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: opacity 0.2s, background-color 0.2s;
+}
+
+.password-wrapper .toggle-password:hover {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+  opacity: 0.85;
+}
+
+/* Remember me row */
+.remember-row {
+  width: 340px;
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: flex-start !important;
+  align-items: center !important;
+  margin: 4px 0 8px 0 !important;
+}
+
+.remember-label {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #e0e0e0;
+  cursor: pointer;
+  user-select: none;
+}
+
+.remember-label input[type="checkbox"] {
+  width: 16px !important;
+  height: 16px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  cursor: pointer;
+  accent-color: #2f3bdd;
+}
+
+/* Submit button */
+form button[type="submit"] {
+  background-color: #2f3bdd;
+  color: white;
+  border: none;
+  padding: 12px 28px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  margin-top: 10px;
+  width: 340px;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+form button[type="submit"]:hover {
+  background-color: #242eb8;
+}
+
+form button[type="submit"]:disabled {
+  background-color: #7b84eb;
+  cursor: not-allowed;
+}
+
+/* Back button (bottom right) */
+.back {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  border-radius: 20px;
+  padding: 7px 30px;
+  background-color: #2f3bdd;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.back:hover {
+  background-color: #242eb8;
+}
+
+/* Register/login link text */
+.link {
+  text-align: center;
+  margin-top: 15px;
+  font-size: 14px;
+  color: #cfd8dc;
+}
+
+.link a {
+  color: #89c1f6;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.link a:hover {
+  text-decoration: underline;
+}
