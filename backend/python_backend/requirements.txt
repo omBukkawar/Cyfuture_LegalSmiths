@@ -1,24 +1,26 @@
-# Core LangChain Framework
-langchain               # The main framework for building LLM-powered applications.
-langchain_community     # Community-contributed integrations for LangChain.
-langchain_huggingface   # Integrations for using Hugging Face models and services.
-langchain_google_genai  # Integrations for Google's generative AI models (e.g., Gemini).
+# Core Frameworks
+fastapi>=0.110.0
+uvicorn>=0.28.0
+pydantic>=2.0.0
+python-multipart>=0.0.9
+python-dotenv>=1.0.1
 
-# Document Processing
-unstructured[all-docs]  # Parses various document types (PDFs, DOCX, etc.) into clean text.
+# AI & LLM (OpenRouter)
+openai>=1.0.0
+requests>=2.31.0
+langchain>=0.2.0
+langchain-community>=0.2.0
 
-# Embeddings & Vector Stores
-sentence-transformers   # Creates high-quality text embeddings for semantic search.
-faiss-cpu             # For systems without a dedicated NVIDIA GPU.
-faiss-gpu               # For systems with a CUDA-enabled NVIDIA GPU.
+# Embeddings, Vector Search & Reranking
+langchain-huggingface>=0.0.3
+sentence-transformers>=2.7.0
+faiss-cpu>=1.8.0
+rank-bm25>=0.2.2
+torch>=2.0.0
 
-# Retrieval
-rank-bm25               # Implements the BM25 keyword-based search algorithm.
+# Document Parsing
+pypdf>=4.0.0
+unstructured>=0.14.0
 
-# API & Web Server
-fastapi                 # A modern, high-performance framework for building the backend API.
-uvicorn                 # ASGI server used to run the FastAPI application.
-pydantic>=2             # Handles data validation and settings for FastAPI.
-
-# Utilities
-pyngrok                 # Exposes the local server to the internet for demos and testing.
+# Optional Testing & Tunneling
+pyngrok>=7.0.0
