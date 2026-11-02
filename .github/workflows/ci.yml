@@ -1,4 +1,4 @@
-name: Full-Stack CI Pipeline
+name: CI/CD Pipeline — LegalSmiths
 
 on:
   push:
@@ -7,7 +7,9 @@ on:
     branches: [ main ]
 
 jobs:
-  # 1. Validate React Frontend
+  # ──────────────────────────────────────────
+  # 1. Frontend — Lint & Build
+  # ──────────────────────────────────────────
   frontend-check:
     name: Frontend Lint & Build
     runs-on: ubuntu-latest
@@ -32,9 +34,15 @@ jobs:
 
       - name: Run Production Vite Build
         working-directory: frontend
+        env:
+          # Dummy values so Vite build doesn't fail on undefined env vars
+          VITE_NODE_API_URL: https://placeholder.onrender.com
+          VITE_AI_API_URL: https://placeholder.onrender.com
         run: npm run build
 
-  # 2. Validate Node.js Backend
+  # ──────────────────────────────────────────
+  # 2. Node.js Backend — Syntax & Load Check
+  # ──────────────────────────────────────────
   node-backend-check:
     name: Node.js Backend Verification
     runs-on: ubuntu-latest
@@ -57,7 +65,9 @@ jobs:
         working-directory: backend/node_backend
         run: node -e "const app = require('./src/app'); console.log('App loaded successfully.');"
 
-  # 3. Validate Python AI Backend
+  # ──────────────────────────────────────────
+  # 3. Python AI Backend — Import Check
+  # ──────────────────────────────────────────
   python-backend-check:
     name: Python AI Backend Verification
     runs-on: ubuntu-latest
@@ -80,7 +90,9 @@ jobs:
         working-directory: backend/python_backend
         run: python -c "from main import app; print('FastAPI imported cleanly.')"
 
-  # 4. Verify Docker Container Builds
+  # ──────────────────────────────────────────
+  # 4. Docker Build Verification
+  # ──────────────────────────────────────────
   docker-build:
     name: Docker Containerization Build Check
     runs-on: ubuntu-latest
@@ -105,3 +117,54 @@ jobs:
           push: false
           tags: legalsmiths-python:test
 
+  # ──────────────────────────────────────────
+  # 5. Deploy Frontend → Render Static Site
+  #    Runs only on push to main (not PRs)
+  #    Requires: frontend-check to pass
+  # ──────────────────────────────────────────
+  deploy-frontend:
+    name: Deploy Frontend to Render
+    needs: frontend-check
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Trigger Render Deploy Hook
+        run: |
+          curl -s -o /dev/null -w "%{http_code}" \
+            --request POST \
+            "${{ secrets.RENDER_DEPLOY_HOOK_FRONTEND }}" \
+          | grep -qE "^2" && echo "Frontend deploy triggered." || (echo "Deploy hook failed!" && exit 1)
+
+  # ──────────────────────────────────────────
+  # 6. Deploy Node Backend → Render Web Service
+  #    Requires: node-backend-check + docker-build to pass
+  # ──────────────────────────────────────────
+  deploy-node-backend:
+    name: Deploy Node Backend to Render
+    needs: [node-backend-check, docker-build]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Trigger Render Deploy Hook
+        run: |
+          curl -s -o /dev/null -w "%{http_code}" \
+            --request POST \
+            "${{ secrets.RENDER_DEPLOY_HOOK_NODE }}" \
+          | grep -qE "^2" && echo "Node backend deploy triggered." || (echo "Deploy hook failed!" && exit 1)
+
+  # ──────────────────────────────────────────
+  # 7. Deploy Python AI Backend → Render Web Service
+  #    Requires: python-backend-check + docker-build to pass
+  # ──────────────────────────────────────────
+  deploy-python-backend:
+    name: Deploy Python AI Backend to Render
+    needs: [python-backend-check, docker-build]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Trigger Render Deploy Hook
+        run: |
+          curl -s -o /dev/null -w "%{http_code}" \
+            --request POST \
+            "${{ secrets.RENDER_DEPLOY_HOOK_PYTHON }}" \
+          | grep -qE "^2" && echo "Python backend deploy triggered." || (echo "Deploy hook failed!" && exit 1)
