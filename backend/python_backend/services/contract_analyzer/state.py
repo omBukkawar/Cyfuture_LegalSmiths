@@ -7,8 +7,10 @@ class ContractAnalyzerState(TypedDict):
     request_text: str
     is_valid_doc: bool
     doc_error: Optional[str]
+    full_document_text: str
+    document_length: int
+    retrieval_strategy: str
     retrieved_clauses: str
     extracted_terms: Dict[str, Any]
     risk_audit: Dict[str, Any]
     final_analysis: Dict[str, Any]
-

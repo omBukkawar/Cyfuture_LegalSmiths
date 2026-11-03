@@ -1,4 +1,5 @@
 import re
+import time
 from typing import List, Dict, Any
 from services.contract_analyzer.state import ContractAnalyzerState
 from models.llm import get_llm
@@ -16,7 +17,7 @@ try:
     from langchain.text_splitter import RecursiveCharacterTextSplitter
 except ImportError:
     class RecursiveCharacterTextSplitter:
-        def __init__(self, chunk_size=1000, chunk_overlap=250):
+        def __init__(self, chunk_size=1200, chunk_overlap=300):
             self.chunk_size = chunk_size
             self.chunk_overlap = chunk_overlap
 
@@ -43,16 +44,21 @@ except ImportError:
             return _T(template)
 
 
+# Threshold under which we provide complete document analysis
+# 65,000 characters (~13,000 words) easily fits in GPT-4o-mini (128k context) & Llama 3.3 70B (128k context)
+MAX_COMPLETE_DOC_CHARS = 65000
+
+
 def build_hybrid_contract_retriever(documents: List[Document]):
     """
-    Builds the Advanced Hybrid RAG Retriever for contract analysis:
+    Builds the Advanced Hybrid RAG Retriever for large contracts:
     - BM25 sparse keyword retriever
     - FAISS dense vector store with Maximal Marginal Relevance (MMR)
     - Ensemble combining sparse and dense signals
     - Cross-Encoder reranker
     - Multi-query expansion via OpenRouter LLM
     """
-    splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=250)
+    splitter = RecursiveCharacterTextSplitter(chunk_size=1200, chunk_overlap=300)
     split_docs = splitter.split_documents(documents)
 
     if not split_docs:
@@ -83,11 +89,11 @@ def build_hybrid_contract_retriever(documents: List[Document]):
         # Ensemble hybrid
         ensemble = EnsembleRetriever(
             retrievers=[bm25_retriever, faiss_retriever],
-            weights=[0.7, 0.3],
+            weights=[0.6, 0.4],
         )
 
         # CrossEncoder reranker
-        compressor = CrossEncoderReranker(model=reranker_model, top_n=12)
+        compressor = CrossEncoderReranker(model=reranker_model, top_n=14)
         reranked_retriever = ContextualCompressionRetriever(
             base_compressor=compressor,
             base_retriever=ensemble,
@@ -98,7 +104,7 @@ def build_hybrid_contract_retriever(documents: List[Document]):
             retriever=reranked_retriever,
             llm=llm,
             prompt=PromptTemplate.from_template(
-                "Generate 3 distinct search queries to identify all legal clauses, liabilities, and terms for:\n\n{question}"
+                "Generate 3 distinct search queries to identify all legal clauses, liabilities, exceptions, and terms for:\n\n{question}"
             ),
         )
         return multi_query_retriever
@@ -125,15 +131,31 @@ def build_hybrid_contract_retriever(documents: List[Document]):
         return FallbackRetriever(split_docs)
 
 
+def extract_critical_sections_outline(full_text: str) -> str:
+    """Extracts section titles and high-risk clause headings to preserve structural cross-clause navigation."""
+    outline_lines = []
+    # Identify headings like 'Section 1', 'Article II', 'Clause 3', '4. Limitation of Liability'
+    pattern = re.compile(r"^(?:(?:Section|Article|Clause|\d+\.|\d+\))\s+[A-Za-z0-9\s,\-\(\)]{3,60})", re.MULTILINE | re.IGNORECASE)
+    matches = pattern.findall(full_text)
+    if matches:
+        outline_lines.append("=== CONTRACT STRUCTURAL OUTLINE / CLAUSE MAP ===")
+        for m in matches[:40]:
+            clean_m = m.strip()
+            if len(clean_m) > 4:
+                outline_lines.append(f"• {clean_m}")
+    return "\n".join(outline_lines)
+
+
 def retrieve_multi_dimensional_clauses(retriever, user_request: str) -> str:
     """Queries retriever across key contract dimensions to ensure comprehensive clause extraction."""
     dimensions = [
         user_request or "General legal contract audit",
-        "Parties, execution dates, effective date, duration, renewal, governing law",
-        "Payment terms, fee structure, compensation, invoice schedules, financial penalties",
-        "Core obligations, representations, warranties, deliverable milestones",
-        "Termination conditions, breach, default, cure periods, dispute resolution",
-        "Indemnification, limitation of liability, intellectual property, red flags, ambiguities",
+        "Parties, execution dates, effective date, duration, renewal, governing law, jurisdiction",
+        "Payment terms, fee structure, compensation, invoice schedules, financial penalties, interest",
+        "Core obligations, representations, warranties, deliverable milestones, covenants",
+        "Termination conditions, termination for convenience, breach, default, cure periods, remedies",
+        "Indemnification, defense obligations, uncapped liability, liability cap exceptions, carve-outs",
+        "Intellectual property assignment, confidentiality exceptions, non-compete, liquidated damages",
     ]
 
     collected = []
@@ -155,37 +177,67 @@ def retrieve_multi_dimensional_clauses(retriever, user_request: str) -> str:
 
 def ingestion_node(state: ContractAnalyzerState) -> ContractAnalyzerState:
     """
-    Node 1: Validates uploaded contract files, chunks documents, builds the hybrid index,
-    and retrieves clauses across all operational and risk dimensions.
+    Node 1: Advanced Hybrid Ingestion & Adaptive Context Strategy.
+    
+    ENGINEERING IMPROVEMENTS (Gaps A & E):
+    1. Retrieval Completeness: For contracts within safe context limits (<=65k chars),
+       we use Complete-Document Analysis so cross-clause interactions (e.g. Section 18
+       carve-out overriding Section 14 liability cap) are never missed by chunking filters.
+    2. Retrieval Efficiency: Avoids expensive redundant chunking/reranking passes on
+       standard-length contracts, saving latency and token costs.
+    3. For larger contracts, combines Hybrid RAG with a Structural Clause Map and
+       verbatim critical sections.
     """
+    start_time = time.time()
     documents = state.get("documents", [])
     user_request = state.get("request_text", "")
 
-    # If documents is empty but user_request contains substantial text (e.g. pasted contract), wrap it as a Document
+    # If documents is empty but user_request contains substantial text (e.g. pasted contract), wrap as Document
     if not documents and len(user_request.strip()) > 80:
         documents = [Document(page_content=user_request.strip(), metadata={"source": "pasted_text"})]
         state["documents"] = documents
 
     if not documents or not any(getattr(d, "page_content", "").strip() for d in documents):
-
         print("[Ingestion Node] Error: No readable contract text found in uploaded files.")
         state["is_valid_doc"] = False
         state["doc_error"] = "No readable contract text found in uploaded files."
         state["retrieved_clauses"] = ""
+        state["full_document_text"] = ""
+        state["document_length"] = 0
+        state["retrieval_strategy"] = "failed"
         return state
 
     state["is_valid_doc"] = True
     state["doc_error"] = None
 
-    print(f"[Ingestion Node] Indexing {len(documents)} document pages with Hybrid RAG...")
-    retriever = build_hybrid_contract_retriever(documents)
-    retrieved = retrieve_multi_dimensional_clauses(retriever, user_request)
+    # Assemble complete document text
+    full_text = "\n\n".join([getattr(doc, "page_content", "").strip() for doc in documents if getattr(doc, "page_content", "").strip()])
+    total_chars = len(full_text)
+    state["full_document_text"] = full_text
+    state["document_length"] = total_chars
 
-    if not retrieved.strip():
-        # Fallback to direct document text
-        retrieved = "\n\n".join([doc.page_content for doc in documents[:10]])
+    print(f"[Ingestion Node] Document assembled: {total_chars:,} characters (~{total_chars // 4:,} tokens).")
 
+    # Strategy Selection:
+    if total_chars <= MAX_COMPLETE_DOC_CHARS:
+        # STRATEGY 1: COMPLETE DOCUMENT CONTEXT (Eliminates Gap A: Zero missed cross-clause carve-outs)
+        strategy = "complete_document_context"
+        retrieved = full_text
+        print(f"[Ingestion Node] Using Complete-Document Analysis ({total_chars:,} chars) - preserves all cross-clause interactions.")
+    else:
+        # STRATEGY 2: HYBRID RAG + STRUCTURAL OUTLINE FOR LARGE CONTRACTS
+        strategy = "hybrid_rag_with_structural_context"
+        print(f"[Ingestion Node] Document exceeds {MAX_COMPLETE_DOC_CHARS:,} chars. Building Hybrid RAG with Structural Outline...")
+        structural_map = extract_critical_sections_outline(full_text)
+        retriever = build_hybrid_contract_retriever(documents)
+        retrieved_chunks = retrieve_multi_dimensional_clauses(retriever, user_request)
+
+        # Prepend structural map so LLM knows full document layout and all clause locations
+        retrieved = f"{structural_map}\n\n=== RETRIEVED HIGH-RELEVANCE CLAUSES ===\n\n{retrieved_chunks}"
+
+    state["retrieval_strategy"] = strategy
     state["retrieved_clauses"] = retrieved
-    print(f"[Ingestion Node] Successfully retrieved {len(retrieved)} characters of clause context.")
-    return state
 
+    elapsed = time.time() - start_time
+    print(f"[Ingestion Node] Completed in {elapsed:.2f}s | Strategy: {strategy} | Context: {len(retrieved):,} chars.")
+    return state
