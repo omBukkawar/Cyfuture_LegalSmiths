@@ -5,12 +5,19 @@
   font-family: 'Poppins', sans-serif;
   color: #333;
   text-align: center;
+  position: relative;
+  overflow-x: hidden;
+  width: 100%;
 }
 
 /* ------------------------------
    TOP NAVIGATION BAR
 ---------------------------------*/
 .services .top-bar {
+  position: absolute;
+  top: 20px;
+  left: 40px;
+  right: 40px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -55,10 +62,10 @@
 }
 
 .intro img {
-  width: 80rem;
+  width: 100%;
   max-width: 600px;
   border-radius: 12px;
-  margin: 7rem 0 0 0;
+  margin: 5rem 0 0 0;
 }
 
 .container {
@@ -84,31 +91,45 @@
 ---------------------------------*/
 .cards {
   width: 27rem;
-  height: 34rem;
+  max-width: 95%;
+  min-height: 34rem;
   background: #fff;
   padding: 20px;
   margin: 20px;
   text-align: center;
+  border-radius: 1.5rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.cards:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 32px rgba(52, 55, 194, 0.15);
 }
 
 .cards img {
   width: 100%;
-  height: 30rem;
+  height: 22rem;
   object-fit: cover;
-  border-radius: 2rem;
+  border-radius: 1.2rem;
 }
 
 .cards h3 {
-  margin-top: 2rem;
-  font-size: 1.5rem;
+  margin-top: 1.5rem;
+  font-size: 1.4rem;
+  color: #1e293b;
 }
 
 .cards p {
   font-size: 15px;
-  margin-top: 10px;
-  margin-left: 3.2rem;
-  width: 18rem;
+  margin: 10px auto;
+  max-width: 20rem;
   word-wrap: break-word;
+  color: #64748b;
+  line-height: 1.6;
 }
 
 .services h2 {
@@ -117,21 +138,25 @@
 }
 
 .cards button {
-  margin: 1rem;
-  padding: 1.2rem 2rem;
-  width: 23rem;
-  background: #6d6d6d;
+  margin: 1.5rem auto 0.5rem;
+  padding: 1rem 1.8rem;
+  width: 90%;
+  max-width: 22rem;
+  background: #3437C2;
   color: white;
   border: none;
   border-radius: 0.7rem;
   cursor: pointer;
-  transition: background 0.3s ease;
-  font-size: 1.5rem;
+  transition: all 0.3s ease;
+  font-size: 1.15rem;
   font-weight: 600;
+  box-shadow: 0 4px 12px rgba(52, 55, 194, 0.25);
 }
 
-.buttons button:hover {
-  background: #4a4a4a;
+.cards button:hover {
+  background: #2b2ea6;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(52, 55, 194, 0.35);
 }
 
 /* ------------------------------
@@ -140,123 +165,45 @@
 .contact-btn {
   display: block;
   margin: 4rem auto 2rem auto;
-  padding: 12px 25px;
+  padding: 14px 35px;
   background: #3437C2;
   color: #fff;
   border: none;
   border-radius: 1rem;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background 0.3s ease;
-}
-
-.container {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: stretch;
-  gap: 2rem;
-  padding: 40px 20px;
-}
-
-.cards {
-  flex: 1 1 300px;
-  max-width: 27rem;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  background: #fff;
-  padding: 20px;
-  margin: 10px;
-  text-align: center;
-  border-radius: 1rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.cards h3 {
-  margin-top: 1rem;
-  font-size: 1.5rem;
-}
-
-.cards p {
-  flex-grow: 1;
-  font-size: 1rem;
-  margin-top: 0.5rem;
-  word-wrap: break-word;
-}
-
-.cards button {
-  margin: auto;
-  padding: 1rem;
-  width: 100%;
-  background: #6d6d6d;
-  color: white;
-  border: none;
-  border-radius: 0.7rem;
-  cursor: pointer;
-  transition: background 0.3s ease;
-  font-size: 1.5rem;
+  font-size: 1.1rem;
   font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 14px rgba(52, 55, 194, 0.3);
 }
 
-.cards button:hover {
-  background: #4a4a4a;
-}
-
-
-.cards img {
-  width: 100%;
-  height: 15rem;
-  object-fit: cover;
-  border-radius: 1rem;
-}
-
-/* Responsive Adjustments */
-@media (max-width: 1024px) {
-  .intro h1 {
-    font-size: 2.5rem;
-    margin-top: 4rem;
-  }
+.contact-btn:hover {
+  background: #2b2ea6;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(52, 55, 194, 0.4);
 }
 
 @media (max-width: 768px) {
-
-  /* Top-bar stacks vertically */
   .services .top-bar {
-    flex-direction: column;
-    gap: 1rem;
-    text-align: center;
+    left: 20px;
+    right: 20px;
   }
 
   .intro h1 {
     font-size: 2rem;
-    margin-top: 3rem;
+    margin-top: 4rem;
   }
 
   .intro_text {
-    font-size: 1rem;
+    font-size: 1.1rem;
   }
 
   .cards {
-    flex: 1 1 100%;
-    max-width: 100%;
+    width: 100%;
+    margin: 15px 0;
   }
 
-  .contact-btn {
-    width: 90%;
-  }
-}
-
-@media (max-width: 480px) {
-  .intro h1 {
-    font-size: 1.8rem;
-  }
-
-  .intro_text {
-    font-size: 0.95rem;
-  }
-
-  .cards button {
-    font-size: 1rem;
+  .cards img {
+    height: 16rem;
   }
 }
