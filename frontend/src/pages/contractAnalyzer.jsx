@@ -16,7 +16,6 @@ const ContractAnalyzer = () => {
 
   // File handling
   const [files, setFiles] = useState([]);
-  const [uploading, setUploading] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [message, setMessage] = useState("");
   const [isDragging, setIsDragging] = useState(false);
@@ -54,7 +53,8 @@ const ContractAnalyzer = () => {
   }, [currentUser?.id]);
 
   useEffect(() => {
-    fetchPastContracts();
+    const load = async () => { await fetchPastContracts(); };
+    load();
   }, [fetchPastContracts]);
 
   // 2. Start a fresh new audit (clears old outputs, inputs, and selection)
@@ -143,7 +143,7 @@ const ContractAnalyzer = () => {
   // 6. Run FastAPI Contract Analysis
   const analyzeWithFastAPI = async () => {
     let filesToSubmit = [...files];
-    let contractTitle = "";
+    let contractTitle;
     let textContent = "";
 
     // Clear previous output so user does not see stale results
@@ -307,7 +307,7 @@ const ContractAnalyzer = () => {
 
     const renderStringOrArray = (value) => {
       if (typeof value === "string") return value.replace(/\n/g, "<br/>");
-      if (Array.isArray(value)) return value.map((v, i) => `<li style="margin-bottom:4px;">${typeof v === "string" ? v : JSON.stringify(v)}</li>`).join("");
+      if (Array.isArray(value)) return value.map((v) => `<li style="margin-bottom:4px;">${typeof v === "string" ? v : JSON.stringify(v)}</li>`).join("");
       if (value && typeof value === "object") return `<pre style="font-size:12px; white-space:pre-wrap;">${JSON.stringify(value, null, 2)}</pre>`;
       return String(value || "—");
     };
