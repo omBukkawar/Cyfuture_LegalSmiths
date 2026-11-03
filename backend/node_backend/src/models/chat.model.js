@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const MessageSchema = new mongoose.Schema({
   sender: {
     type: String,
-    enum: ["user", "assistant"],
+    enum: ["user", "assistant", "bot"],
     required: true,
   },
   text: {
@@ -29,7 +29,7 @@ const ChatSessionSchema = new mongoose.Schema(
     },
     title: {
       type: String,
-      default: "New Legal Query",
+      default: "New Legal Consultation",
       trim: true,
     },
     messages: [MessageSchema],
