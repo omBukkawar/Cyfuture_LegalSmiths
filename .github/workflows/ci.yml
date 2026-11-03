@@ -117,5 +117,53 @@ jobs:
           push: false
           tags: legalsmiths-python:test
 
+  # ──────────────────────────────────────────
+  # 5. Deploy Frontend → Render Static Site
+  #    Requires: frontend-check to pass
+  # ──────────────────────────────────────────
+  deploy-frontend:
+    name: Deploy Frontend to Render
+    needs: frontend-check
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Trigger Frontend Deploy Hook
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --request POST "${{ secrets.RENDER_DEPLOY_HOOK_FRONTEND }}")
+          echo "Render response code: $STATUS"
+          echo "$STATUS" | grep -qE "^2" && echo "Frontend deploy triggered." || (echo "Deploy hook failed!" && exit 1)
+
+  # ──────────────────────────────────────────
+  # 6. Deploy Node Backend → Render Web Service
+  #    Requires: node-backend-check + docker-build to pass
+  # ──────────────────────────────────────────
+  deploy-node-backend:
+    name: Deploy Node Backend to Render
+    needs: [node-backend-check, docker-build]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Trigger Node Backend Deploy Hook
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --request POST "${{ secrets.RENDER_DEPLOY_HOOK_NODE }}")
+          echo "Render response code: $STATUS"
+          echo "$STATUS" | grep -qE "^2" && echo "Node backend deploy triggered." || (echo "Deploy hook failed!" && exit 1)
+
+  # ──────────────────────────────────────────
+  # 7. Deploy Python AI Backend → Render Web Service
+  #    Requires: python-backend-check + docker-build to pass
+  # ──────────────────────────────────────────
+  deploy-python-backend:
+    name: Deploy Python AI Backend to Render
+    needs: [python-backend-check, docker-build]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Trigger Python Backend Deploy Hook
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --request POST "${{ secrets.RENDER_DEPLOY_HOOK_PYTHON }}")
+          echo "Render response code: $STATUS"
+          echo "$STATUS" | grep -qE "^2" && echo "Python backend deploy triggered." || (echo "Deploy hook failed!" && exit 1)
+
 
 
