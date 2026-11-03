@@ -1,13 +1,13 @@
 import axios from "axios";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import "../styles/contractAnalyzer.css";
-import backgroundImg from "../assets/background.jpeg";
 import { Link, useNavigate } from "react-router-dom";
-import { AI_API_URL, NODE_API_URL } from "../config/api";
-import { logout } from "../utils/auth";
+import { AI_API_URL, NODE_API_URL, getAuthHeaders } from "../config/api";
+import { getUser, logout } from "../utils/auth";
 
 const ContractAnalyzer = () => {
   const navigate = useNavigate();
+  const currentUser = getUser();
 
   // Mode: file upload vs text paste
   const [inputMode, setInputMode] = useState("file"); // "file" | "text"
@@ -23,37 +23,132 @@ const ContractAnalyzer = () => {
   const fileInputRef = useRef(null);
   const resultsRef = useRef(null);
 
-  // Tabs: keyTerms | redFlags | missingProtections | mistakes | recommendations
+  // Sidebar & Past Contracts
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [pastContracts, setPastContracts] = useState([]);
+  const [loadingHistory, setLoadingHistory] = useState(true);
+  const [currentContractId, setCurrentContractId] = useState(null);
+
+  // Tabs: redFlags | missingProtections | keyTerms | mistakes | recommendations
   const [selectedTab, setSelectedTab] = useState("redFlags");
 
-  // Analysis data (from FastAPI response)
+  // Analysis data (from FastAPI response or loaded from database)
   const [analysis, setAnalysis] = useState(null);
 
-  // File upload to Node backend (optional persistence)
-  const handleFileUpload = async (selectedFile) => {
-    if (!selectedFile) return;
-    setUploading(true);
-
-    const formData = new FormData();
-    formData.append("file", selectedFile);
-
+  // 1. Fetch user's saved contracts from Node backend (MongoDB Atlas)
+  const fetchPastContracts = useCallback(async () => {
     try {
-      const res = await axios.post(
-        `${NODE_API_URL}/upload-contract`,
-        formData,
-        { headers: { "Content-Type": "multipart/form-data" } }
-      );
-      setMessage(res.data.message || "File uploaded successfully to vault.");
+      const headers = {
+        ...getAuthHeaders(),
+        "x-user-id": currentUser?.id || "anonymous",
+      };
+      const res = await axios.get(`${NODE_API_URL}/contracts`, { headers });
+      if (res.data?.success && Array.isArray(res.data.data)) {
+        setPastContracts(res.data.data);
+      }
     } catch (err) {
-      console.warn("Backend file upload warning (non-fatal):", err.message);
+      console.warn("Could not fetch past contracts:", err.message);
     } finally {
-      setUploading(false);
+      setLoadingHistory(false);
+    }
+  }, [currentUser?.id]);
+
+  useEffect(() => {
+    fetchPastContracts();
+  }, [fetchPastContracts]);
+
+  // 2. Start a fresh new audit (clears old outputs, inputs, and selection)
+  const handleStartNewAudit = () => {
+    setAnalysis(null);
+    setCurrentContractId(null);
+    setFiles([]);
+    setPastedText("");
+    setIsTextCollapsed(false);
+    setMessage("");
+    setSelectedTab("redFlags");
+    setSidebarOpen(false);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
     }
   };
 
-  // FastAPI integration
+  // 3. Load a previous upload and its saved audit from the database
+  const handleSelectContract = (contract) => {
+    if (!contract) return;
+    setCurrentContractId(contract._id);
+    setFiles([]);
+    setPastedText(contract.contractText || "");
+    setIsTextCollapsed(true);
+    setSelectedTab("redFlags");
+    setMessage("");
+    setSidebarOpen(false);
+
+    if (contract.analysis) {
+      setAnalysis(contract.analysis);
+      setTimeout(() => {
+        resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 150);
+    } else {
+      setAnalysis(null);
+      setMessage("This contract has no saved audit analysis yet.");
+    }
+  };
+
+  // 4. Delete an old contract from the database vault
+  const handleDeleteContract = async (contractId, e) => {
+    e.stopPropagation();
+    if (!window.confirm("Are you sure you want to delete this contract from your vault?")) return;
+
+    try {
+      const headers = {
+        ...getAuthHeaders(),
+        "x-user-id": currentUser?.id || "anonymous",
+      };
+      await axios.delete(`${NODE_API_URL}/contracts/${contractId}`, { headers });
+      setPastContracts((prev) => prev.filter((c) => c._id !== contractId));
+      if (currentContractId === contractId) {
+        handleStartNewAudit();
+      }
+    } catch (err) {
+      console.error("Error deleting contract:", err);
+      alert("Failed to delete contract from vault.");
+    }
+  };
+
+  // 5. Automatically save new contract & full analysis to MongoDB Atlas
+  const saveContractToDatabase = async (finalAnalysis, contractTitle, textContent) => {
+    try {
+      const headers = {
+        ...getAuthHeaders(),
+        "x-user-id": currentUser?.id || "anonymous",
+      };
+
+      const payload = {
+        contractId: currentContractId || undefined,
+        originalName: contractTitle || finalAnalysis.title || "Commercial Contract",
+        contractText: textContent || "",
+        analysis: finalAnalysis,
+      };
+
+      const res = await axios.post(`${NODE_API_URL}/contracts/save-audit`, payload, { headers });
+      if (res.data?.success && res.data.doc) {
+        setCurrentContractId(res.data.doc._id);
+        fetchPastContracts(); // Refresh sidebar list
+      }
+    } catch (err) {
+      console.warn("Could not save contract analysis to database vault:", err.message);
+    }
+  };
+
+  // 6. Run FastAPI Contract Analysis
   const analyzeWithFastAPI = async () => {
     let filesToSubmit = [...files];
+    let contractTitle = "";
+    let textContent = "";
+
+    // Clear previous output so user does not see stale results
+    setAnalysis(null);
+    setMessage("");
 
     // If text mode, convert pasted text into a virtual text file
     if (inputMode === "text") {
@@ -61,7 +156,9 @@ const ContractAnalyzer = () => {
         setMessage("Please paste the contract text before analyzing.");
         return;
       }
-      const textBlob = new Blob([pastedText.trim()], { type: "text/plain" });
+      textContent = pastedText.trim();
+      contractTitle = `Pasted Contract (${new Date().toLocaleDateString()})`;
+      const textBlob = new Blob([textContent], { type: "text/plain" });
       const virtualFile = new File([textBlob], "pasted_contract.txt", { type: "text/plain" });
       filesToSubmit = [virtualFile];
     } else {
@@ -69,10 +166,10 @@ const ContractAnalyzer = () => {
         setMessage("Please upload at least one contract file (.pdf, .docx, .txt).");
         return;
       }
+      contractTitle = filesToSubmit[0].name;
     }
 
     setAnalyzing(true);
-    setMessage("");
 
     const formdata = new FormData();
     formdata.append("request", "Please perform a complete evidence-backed contract risk audit.");
@@ -98,7 +195,10 @@ const ContractAnalyzer = () => {
           setIsTextCollapsed(true);
         }
 
-        // UX ENHANCEMENT: Auto-scroll directly to results so user doesn't have to scroll manually!
+        // Save to MongoDB database
+        await saveContractToDatabase(result, contractTitle, textContent);
+
+        // Auto-scroll directly to results
         setTimeout(() => {
           resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
         }, 150);
@@ -113,7 +213,7 @@ const ContractAnalyzer = () => {
     }
   };
 
-  // JSON Export
+  // Export JSON
   const handleDownloadJSON = () => {
     if (!analysis) return;
     const blob = new Blob([JSON.stringify(analysis, null, 2)], {
@@ -129,14 +229,12 @@ const ContractAnalyzer = () => {
     URL.revokeObjectURL(url);
   };
 
-  // PDF Export (Native Print Memorandum View)
+  // Export PDF (Native Print Memorandum View)
   const handleDownloadPDF = () => {
     if (!analysis) return;
 
-    // Create a styled print window for executive PDF rendering
     const printWindow = window.open("", "_blank");
     if (!printWindow) {
-      // Fallback to direct window.print()
       window.print();
       return;
     }
@@ -145,15 +243,22 @@ const ContractAnalyzer = () => {
       ? analysis.red_flags
           .map((flag, idx) => {
             if (typeof flag === "object" && flag !== null) {
+              const sevColor = {
+                critical: { bg: "#fee2e2", border: "#dc2626", text: "#991b1b" },
+                high: { bg: "#fef3c7", border: "#f59e0b", text: "#92400e" },
+                medium: { bg: "#fefce8", border: "#eab308", text: "#713f12" },
+                low: { bg: "#f0fdf4", border: "#22c55e", text: "#166534" },
+              }[(flag.severity || "high").toLowerCase()] || { bg: "#fee2e2", border: "#dc2626", text: "#991b1b" };
               return `
-              <div style="border: 1px solid #dc2626; border-left: 6px solid #dc2626; border-radius: 8px; padding: 14px; margin-bottom: 14px; background: #fff;">
-                <div style="display: flex; justify-content: space-between; font-weight: bold; color: #991b1b; font-size: 14px;">
+              <div style="border: 1px solid ${sevColor.border}; border-left: 6px solid ${sevColor.border}; border-radius: 8px; padding: 14px; margin-bottom: 14px; background: #fff;">
+                <div style="display: flex; justify-content: space-between; align-items: center; font-weight: bold; color: ${sevColor.text}; font-size: 14px;">
                   <span>#${idx + 1} ${flag.title || "Contract Risk"}</span>
-                  <span style="background: #fee2e2; color: #991b1b; padding: 2px 8px; border-radius: 12px; font-size: 11px;">${(flag.severity || "HIGH").toUpperCase()}</span>
+                  <span style="background: ${sevColor.bg}; color: ${sevColor.text}; padding: 2px 8px; border-radius: 12px; font-size: 11px;">${(flag.severity || "HIGH").toUpperCase()}</span>
                 </div>
-                ${flag.clause_reference ? `<div style="font-size: 12px; color: #64748b; margin-top: 4px;">Clause: <strong>${flag.clause_reference}</strong></div>` : ""}
+                ${flag.clause_reference ? `<div style="font-size: 12px; color: #64748b; margin-top: 4px;">📌 Clause Reference: <strong>${flag.clause_reference}</strong></div>` : ""}
                 ${flag.evidence ? `<div style="background: #f8fafc; border-left: 3px solid #64748b; padding: 8px 12px; margin: 8px 0; font-family: Georgia, serif; font-style: italic; font-size: 13px; color: #334155;">&ldquo;${flag.evidence}&rdquo;</div>` : ""}
-                <div style="font-size: 13px; color: #1e293b; margin-top: 6px;"><strong>Legal Impact:</strong> ${flag.impact || flag.explanation || ""}</div>
+                ${flag.explanation ? `<div style="font-size: 13px; color: #1e293b; margin-top: 6px;"><strong>Legal Analysis:</strong> ${flag.explanation}</div>` : ""}
+                <div style="font-size: 13px; color: #1e293b; margin-top: 6px;"><strong>Impact:</strong> ${flag.impact || ""}</div>
                 <div style="font-size: 13px; color: #047857; margin-top: 6px;"><strong>Recommended Amendment:</strong> ${flag.recommendation || ""}</div>
               </div>`;
             }
@@ -161,6 +266,51 @@ const ContractAnalyzer = () => {
           })
           .join("")
       : "<p>No critical red flags recorded.</p>";
+
+    const missingProtectionsHtml = Array.isArray(analysis.missing_protections)
+      ? analysis.missing_protections
+          .map((item, idx) => {
+            if (typeof item === "object" && item !== null) {
+              return `
+              <div style="border: 1px solid #f59e0b; border-left: 6px solid #f59e0b; border-radius: 8px; padding: 14px; margin-bottom: 14px; background: #fffbeb;">
+                <div style="display: flex; justify-content: space-between; align-items: center; font-weight: bold; color: #92400e; font-size: 14px;">
+                  <span>#${idx + 1} ${item.title || "Missing Protection"}</span>
+                  <span style="background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 12px; font-size: 11px;">${(item.severity || "HIGH").toUpperCase()}</span>
+                </div>
+                <div style="font-size: 13px; color: #1e293b; margin-top: 6px;"><strong>Gap:</strong> ${item.explanation || ""}</div>
+                <div style="font-size: 13px; color: #1e293b; margin-top: 4px;"><strong>Vulnerability:</strong> ${item.impact || ""}</div>
+                <div style="font-size: 13px; color: #047857; margin-top: 6px;"><strong>Suggested Clause:</strong> ${item.recommendation || ""}</div>
+              </div>`;
+            }
+            return `<div style="padding: 10px; border: 1px solid #fef3c7; border-radius: 6px; margin-bottom: 8px;">${item}</div>`;
+          })
+          .join("")
+      : "";
+
+    const ambiguitiesHtml = Array.isArray(analysis.mistakes_ambiguities)
+      ? analysis.mistakes_ambiguities
+          .map((item, idx) => {
+            if (typeof item === "object" && item !== null) {
+              return `
+              <div style="border: 1px solid #cbd5e1; border-left: 6px solid #94a3b8; border-radius: 8px; padding: 14px; margin-bottom: 14px; background: #f8fafc;">
+                <div style="font-weight: bold; color: #334155; font-size: 14px;">#${idx + 1} ${item.title || "Drafting Issue"}</div>
+                ${item.clause_reference ? `<div style="font-size: 12px; color: #64748b; margin-top: 4px;">📌 Clause: <strong>${item.clause_reference}</strong></div>` : ""}
+                ${item.evidence ? `<div style="background: #fff; border-left: 3px solid #94a3b8; padding: 8px 12px; margin: 8px 0; font-family: Georgia, serif; font-style: italic; font-size: 13px; color: #475569;">&ldquo;${item.evidence}&rdquo;</div>` : ""}
+                <div style="font-size: 13px; color: #1e293b; margin-top: 6px;"><strong>Issue:</strong> ${item.explanation || ""}</div>
+                <div style="font-size: 13px; color: #047857; margin-top: 6px;"><strong>Suggested Fix:</strong> ${item.recommendation || ""}</div>
+              </div>`;
+            }
+            return `<div style="padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; margin-bottom: 8px;">${typeof item === "string" ? item : JSON.stringify(item)}</div>`;
+          })
+          .join("")
+      : (typeof analysis.mistakes_ambiguities === "string" ? `<p style="font-size: 13px; color: #334155;">${analysis.mistakes_ambiguities.replace(/\n/g, "<br/>")}</p>` : "");
+
+    const renderStringOrArray = (value) => {
+      if (typeof value === "string") return value.replace(/\n/g, "<br/>");
+      if (Array.isArray(value)) return value.map((v, i) => `<li style="margin-bottom:4px;">${typeof v === "string" ? v : JSON.stringify(v)}</li>`).join("");
+      if (value && typeof value === "object") return `<pre style="font-size:12px; white-space:pre-wrap;">${JSON.stringify(value, null, 2)}</pre>`;
+      return String(value || "—");
+    };
 
     const rubric = analysis.risk_assessment?.rubric_breakdown || {};
 
@@ -228,19 +378,38 @@ const ContractAnalyzer = () => {
           ${redFlagsHtml}
         </div>
 
+        ${missingProtectionsHtml ? `
         <div class="section">
-          <h2>3. Recommended Contract Amendments</h2>
+          <h2>3. Missing Protective Provisions</h2>
+          ${missingProtectionsHtml}
+        </div>` : ""}
+
+        ${ambiguitiesHtml ? `
+        <div class="section">
+          <h2>${missingProtectionsHtml ? "4" : "3"}. Drafting Ambiguities & Unclear Provisions</h2>
+          ${ambiguitiesHtml}
+        </div>` : ""}
+
+        <div class="section">
+          <h2>${[missingProtectionsHtml, ambiguitiesHtml].filter(Boolean).length + 3}. Recommended Contract Amendments</h2>
           <div style="background: #f0fdf4; border-left: 4px solid #10b981; padding: 14px; border-radius: 6px; font-size: 13px; color: #065f46;">
-            ${typeof analysis.recommendations === "string" ? analysis.recommendations.replace(/\n/g, "<br/>") : JSON.stringify(analysis.recommendations)}
+            ${typeof analysis.recommendations === "string"
+              ? analysis.recommendations.replace(/\n/g, "<br/>")
+              : Array.isArray(analysis.recommendations)
+                ? `<ol style="margin:0; padding-left:16px;">${analysis.recommendations.map(r => `<li style="margin-bottom:6px;">${typeof r === "string" ? r : JSON.stringify(r)}</li>`).join("")}</ol>`
+                : JSON.stringify(analysis.recommendations)}
           </div>
         </div>
 
         <div class="section">
-          <h2>4. Core Operational Clauses</h2>
-          <p><strong>Parties:</strong> ${typeof analysis.parties === "string" ? analysis.parties : JSON.stringify(analysis.parties)}</p>
-          <p><strong>Important Dates:</strong> ${typeof analysis.dates === "string" ? analysis.dates : JSON.stringify(analysis.dates)}</p>
-          <p><strong>Payment Terms:</strong> ${typeof analysis.payment_terms === "string" ? analysis.payment_terms : JSON.stringify(analysis.payment_terms)}</p>
-          <p><strong>Termination Triggers:</strong> ${typeof analysis.termination === "string" ? analysis.termination : JSON.stringify(analysis.termination)}</p>
+          <h2>${[missingProtectionsHtml, ambiguitiesHtml].filter(Boolean).length + 4}. Core Operational Clauses</h2>
+          <table style="width:100%; border-collapse: collapse; font-size: 13px;">
+            <tr style="background:#f1f5f9;"><td style="padding:8px 12px;font-weight:bold;width:160px;color:#64748b;border:1px solid #e2e8f0;">Parties</td><td style="padding:8px 12px;border:1px solid #e2e8f0;">${renderStringOrArray(analysis.parties)}</td></tr>
+            <tr><td style="padding:8px 12px;font-weight:bold;color:#64748b;border:1px solid #e2e8f0;">Important Dates</td><td style="padding:8px 12px;border:1px solid #e2e8f0;">${renderStringOrArray(analysis.dates)}</td></tr>
+            <tr style="background:#f1f5f9;"><td style="padding:8px 12px;font-weight:bold;color:#64748b;border:1px solid #e2e8f0;">Payment Terms</td><td style="padding:8px 12px;border:1px solid #e2e8f0;">${renderStringOrArray(analysis.payment_terms)}</td></tr>
+            <tr><td style="padding:8px 12px;font-weight:bold;color:#64748b;border:1px solid #e2e8f0;">Termination Triggers</td><td style="padding:8px 12px;border:1px solid #e2e8f0;">${renderStringOrArray(analysis.termination)}</td></tr>
+            ${analysis.obligations ? `<tr style="background:#f1f5f9;"><td style="padding:8px 12px;font-weight:bold;color:#64748b;border:1px solid #e2e8f0;">Key Obligations</td><td style="padding:8px 12px;border:1px solid #e2e8f0;">${renderStringOrArray(analysis.obligations)}</td></tr>` : ""}
+          </table>
         </div>
 
         <div style="font-size: 11px; color: #94a3b8; text-align: center; margin-top: 40px; border-top: 1px solid #e2e8f0; padding-top: 10px;">
@@ -260,14 +429,19 @@ const ContractAnalyzer = () => {
     printWindow.document.close();
   };
 
-  // File utilities
+  // Automatically clear previous analysis on selecting new file(s)
   const handleFiles = (newFiles) => {
     const validFiles = Array.from(newFiles).filter((file) =>
       [".pdf", ".docx", ".doc", ".txt"].some((ext) =>
         file.name.toLowerCase().endsWith(ext)
       )
     );
-    setFiles((prev) => [...prev, ...validFiles]);
+    if (validFiles.length > 0) {
+      setAnalysis(null);
+      setCurrentContractId(null);
+      setMessage("");
+      setFiles(validFiles);
+    }
   };
 
   const handleDrop = (e) => {
@@ -275,7 +449,6 @@ const ContractAnalyzer = () => {
     setIsDragging(false);
     if (e.dataTransfer.files.length > 0) {
       handleFiles(e.dataTransfer.files);
-      handleFileUpload(e.dataTransfer.files[0]);
     }
   };
 
@@ -291,7 +464,6 @@ const ContractAnalyzer = () => {
   const handleFileInputChange = (e) => {
     if (e.target.files.length > 0) {
       handleFiles(e.target.files);
-      handleFileUpload(e.target.files[0]);
     }
   };
 
@@ -345,7 +517,7 @@ const ContractAnalyzer = () => {
     });
   };
 
-  // Clean risk level helper with rubric insight
+  // Clean risk level helper
   const renderRiskBadge = (riskStr) => {
     const raw = String(riskStr || "Medium");
     const isHigh = raw.toLowerCase().includes("high");
@@ -381,603 +553,696 @@ const ContractAnalyzer = () => {
     );
   };
 
+  const activeContract = pastContracts.find((c) => c._id === currentContractId);
+  const currentTitle = activeContract?.originalName || (analysis ? analysis.title : "Smart Contract Risk Auditor");
+
   return (
-    <div
-      className="case-prediction"
-      style={{ backgroundImage: `url(${backgroundImg})` }}
-    >
-      {/* Top Bar */}
-      <div className="top-bar">
+    <div className="contractAnalyzerPage">
+      {/* -------------------------------------------------------------
+          TOP NAVIGATION BAR (Uniform with Legal Assistant)
+         ------------------------------------------------------------- */}
+      <nav className="topBar">
         <Link to="/" className="brand">
-          LegalSmiths
+          ⚖️ LegalSmiths
         </Link>
-        <button
-          onClick={() => logout(navigate)}
-          className="login-link"
-          style={{
-            background: "transparent",
-            border: "none",
-            cursor: "pointer",
-            fontSize: "1rem",
-            fontFamily: "inherit",
-          }}
-        >
-          Logout
-        </button>
-      </div>
 
-      {/* Main Container */}
-      <div className="case-container">
-        <h1 className="title">Smart Contract Risk Auditor</h1>
-        <p className="description">
-          Evidence-backed legal auditing: cross-clause carve-out detection, uncapped liability auditing, and actionable amendment recommendations.
-        </p>
-        <br />
-
-        {/* Input Mode Selector */}
-        <div style={{ display: "flex", justifyContent: "center", gap: "12px", marginBottom: "15px" }}>
-          <button
-            onClick={() => setInputMode("file")}
-            style={{
-              padding: "8px 20px",
-              borderRadius: "20px",
-              border: inputMode === "file" ? "2px solid #3730d0" : "1px solid #ccc",
-              background: inputMode === "file" ? "#3730d0" : "#fff",
-              color: inputMode === "file" ? "#fff" : "#333",
-              fontWeight: "600",
-              cursor: "pointer",
-            }}
-          >
-            📁 Upload Contract File
-          </button>
-          <button
-            onClick={() => setInputMode("text")}
-            style={{
-              padding: "8px 20px",
-              borderRadius: "20px",
-              border: inputMode === "text" ? "2px solid #3730d0" : "1px solid #ccc",
-              background: inputMode === "text" ? "#3730d0" : "#fff",
-              color: inputMode === "text" ? "#fff" : "#333",
-              fontWeight: "600",
-              cursor: "pointer",
-            }}
-          >
-            📝 Paste Contract Text
+        <div className="topBarNav">
+          <Link to="/services" className="navLink">
+            Services
+          </Link>
+          <button onClick={() => logout(navigate)} className="navLink">
+            Logout
           </button>
         </div>
+      </nav>
 
-        {/* Upload / Input Section */}
-        <div className="upload-section">
-          {inputMode === "file" ? (
-            <>
-              <div
-                className={`file-drop ${isDragging ? "dragging" : ""}`}
-                onDrop={handleDrop}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <p>
-                  Drag & Drop or <span>Choose a File</span>
-                </p>
-                <p className="supported-formats">Supported formats: .pdf, .docx, .txt</p>
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  style={{ display: "none" }}
-                  multiple
-                  accept=".pdf,.doc,.docx,.txt"
-                  onChange={handleFileInputChange}
-                />
+      {/* -------------------------------------------------------------
+          MAIN CARD CONTAINER (White rounded card matching app design)
+         ------------------------------------------------------------- */}
+      <div className="mainContainer">
+        {/* -----------------------------------------------------------
+            SIDEBAR (#727374 App Color - Uniform with Legal Assistant)
+           ----------------------------------------------------------- */}
+        <aside className={`sidebar ${sidebarOpen ? "sidebarOpen" : ""}`}>
+          {/* + New Contract Audit Button (#3437C2) */}
+          <button className="newAuditBtn" onClick={handleStartNewAudit}>
+            <span style={{ fontSize: "1.2rem", lineHeight: 1 }}>+</span>
+            <span>New Contract Audit</span>
+          </button>
+
+          {/* Past Contracts Header */}
+          <div className="sessionSectionHeader">
+            <span className="sectionTitle">Previous Contracts</span>
+            <span className="sessionBadge">{pastContracts.length}</span>
+          </div>
+
+          {/* Scrollable Contracts List */}
+          <div className="contractList">
+            {loadingHistory ? (
+              <div className="emptyContracts">Loading saved contracts...</div>
+            ) : pastContracts.length === 0 ? (
+              <div className="emptyContracts">
+                No saved contracts yet.
+                <br />
+                Upload or paste a contract to begin!
               </div>
+            ) : (
+              pastContracts.map((c) => {
+                const isActive = c._id === currentContractId;
+                const riskRaw = c.analysis?.risk_level || "";
+                const isHigh = riskRaw.toLowerCase().includes("high");
+                const isLow = riskRaw.toLowerCase().includes("low");
+                const riskIcon = isHigh ? "🔴" : isLow ? "🟢" : "🟡";
 
-              {files.length > 0 && (
-                <div style={{ textAlign: "left", marginBottom: "15px" }}>
-                  <h4 style={{ fontSize: "0.85rem", color: "#444" }}>Selected File(s):</h4>
-                  <ul style={{ fontSize: "0.8rem", color: "#666" }}>
-                    {files.map((file, index) => (
-                      <li key={index}>📄 {file.name} ({(file.size / 1024).toFixed(1)} KB)</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </>
-          ) : (
-            <div style={{ marginBottom: "15px" }}>
-              {/* UX ENHANCEMENT: Collapsible Textarea when analyzed */}
-              {isTextCollapsed && analysis ? (
-                <div
-                  style={{
-                    background: "#f1f5f9",
-                    border: "1px solid #cbd5e1",
-                    borderRadius: "10px",
-                    padding: "12px 18px",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                  }}
-                >
-                  <span style={{ fontSize: "0.85rem", color: "#334155" }}>
-                    📄 <strong>Pasted Contract Loaded:</strong> {pastedText.split(/\s+/).length} words ({pastedText.length} chars)
-                  </span>
-                  <button
-                    onClick={() => setIsTextCollapsed(false)}
-                    style={{
-                      background: "#3b82f6",
-                      color: "#fff",
-                      border: "none",
-                      padding: "4px 12px",
-                      borderRadius: "6px",
-                      fontSize: "0.8rem",
-                      cursor: "pointer",
-                    }}
+                return (
+                  <div
+                    key={c._id}
+                    className={`contractItem ${isActive ? "contractItemActive" : ""}`}
+                    onClick={() => handleSelectContract(c)}
+                    title={c.originalName}
                   >
-                    Edit Text
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px", fontSize: "0.8rem", color: "#666" }}>
-                    <span>Paste complete contract or critical clauses:</span>
-                    {pastedText && (
-                      <span>{pastedText.split(/\s+/).filter(Boolean).length} words ({pastedText.length} chars)</span>
-                    )}
+                    <div className="contractTitleWrapper">
+                      <span className="contractIcon">{riskIcon}</span>
+                      <span className="contractTitleText">{c.originalName || "Contract Audit"}</span>
+                    </div>
+
+                    <button
+                      className="contractDeleteBtn"
+                      onClick={(e) => handleDeleteContract(c._id, e)}
+                      title="Delete contract from vault"
+                    >
+                      🗑️
+                    </button>
                   </div>
-                  <textarea
-                    rows={7}
-                    value={pastedText}
-                    onChange={(e) => setPastedText(e.target.value)}
-                    placeholder="Paste contract clauses, terms, or complete agreement text here for instant evidence-backed audit..."
-                    style={{
-                      width: "100%",
-                      padding: "12px",
-                      borderRadius: "10px",
-                      border: "1px solid #ccc",
-                      fontFamily: "inherit",
-                      fontSize: "0.85rem",
-                      resize: "vertical",
-                      boxSizing: "border-box",
-                    }}
-                  />
-                  {analysis && (
-                    <div style={{ textAlign: "right", marginTop: "4px" }}>
-                      <button
-                        onClick={() => setIsTextCollapsed(true)}
-                        style={{ background: "none", border: "none", color: "#64748b", fontSize: "0.75rem", cursor: "pointer", textDecoration: "underline" }}
-                      >
-                        Collapse text to view report
-                      </button>
+                );
+              })
+            )}
+          </div>
+
+          {/* User Profile & Back to Services */}
+          <div className="sidebarFooter">
+            <div className="userBadge">
+              <div className="userAvatar">
+                {(currentUser?.name || currentUser?.email || "U")[0].toUpperCase()}
+              </div>
+              <div className="userDetails">
+                <span className="userName">{currentUser?.name || "Legal User"}</span>
+                <span className="userRole">{currentUser?.email || "Signed in"}</span>
+              </div>
+            </div>
+
+            <button className="backBtn" onClick={() => navigate("/services")}>
+              ← Back to Services
+            </button>
+          </div>
+        </aside>
+
+        {/* -----------------------------------------------------------
+            MAIN CONTENT AREA (Right Panel)
+           ----------------------------------------------------------- */}
+        <main className="contentArea">
+          {/* Header */}
+          <header className="contentHeader">
+            <div className="headerTitleGroup">
+              <button
+                className="mobileMenuBtn"
+                onClick={() => setSidebarOpen((prev) => !prev)}
+                aria-label="Toggle history menu"
+              >
+                ☰
+              </button>
+              <div>
+                <h2 className="contentTitle">{currentTitle}</h2>
+                <span className="contentSubtitle">Agentic Cross-Clause Legal Intelligence</span>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: "10px" }}>
+              <button
+                onClick={handleStartNewAudit}
+                style={{
+                  background: "#3437C2",
+                  color: "#ffffff",
+                  border: "none",
+                  padding: "7px 16px",
+                  borderRadius: "20px",
+                  fontSize: "0.85rem",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                }}
+              >
+                + New Audit
+              </button>
+            </div>
+          </header>
+
+          {/* Body */}
+          <div className="contentBody">
+            {/* Input Mode Selector */}
+            <div style={{ display: "flex", justifyContent: "center", gap: "12px", marginBottom: "15px", flexWrap: "wrap" }}>
+              <button
+                onClick={() => {
+                  setInputMode("file");
+                  setAnalysis(null);
+                  setMessage("");
+                }}
+                style={{
+                  padding: "8px 20px",
+                  borderRadius: "20px",
+                  border: inputMode === "file" ? "2px solid #3437C2" : "1px solid #cbd5e1",
+                  background: inputMode === "file" ? "#3437C2" : "#ffffff",
+                  color: inputMode === "file" ? "#ffffff" : "#334155",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                }}
+              >
+                📁 Upload Contract File
+              </button>
+              <button
+                onClick={() => {
+                  setInputMode("text");
+                  setAnalysis(null);
+                  setMessage("");
+                }}
+                style={{
+                  padding: "8px 20px",
+                  borderRadius: "20px",
+                  border: inputMode === "text" ? "2px solid #3437C2" : "1px solid #cbd5e1",
+                  background: inputMode === "text" ? "#3437C2" : "#ffffff",
+                  color: inputMode === "text" ? "#ffffff" : "#334155",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                }}
+              >
+                📝 Paste Contract Text
+              </button>
+            </div>
+
+            {/* Upload / Input Card */}
+            <div className="upload-section">
+              {inputMode === "file" ? (
+                <>
+                  <div
+                    className={`file-drop ${isDragging ? "dragging" : ""}`}
+                    onDrop={handleDrop}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <p style={{ margin: "0 0 4px 0", fontWeight: "600", color: "#1e293b" }}>
+                      Drag & Drop or <span style={{ color: "#3437C2", textDecoration: "underline" }}>Choose a File</span>
+                    </p>
+                    <p className="supported-formats">Supported formats: .pdf, .docx, .txt</p>
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      style={{ display: "none" }}
+                      multiple
+                      accept=".pdf,.doc,.docx,.txt"
+                      onChange={handleFileInputChange}
+                    />
+                  </div>
+
+                  {files.length > 0 && (
+                    <div style={{ textAlign: "left", marginBottom: "15px", background: "#f8fafc", padding: "10px 14px", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <h4 style={{ fontSize: "0.85rem", color: "#334155", margin: 0 }}>Selected File:</h4>
+                        <button
+                          onClick={() => {
+                            setFiles([]);
+                            setAnalysis(null);
+                          }}
+                          style={{ background: "none", border: "none", color: "#dc2626", fontSize: "0.75rem", cursor: "pointer" }}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                      <ul style={{ fontSize: "0.8rem", color: "#475569", margin: "6px 0 0 0", paddingLeft: "20px" }}>
+                        {files.map((file, index) => (
+                          <li key={index}>📄 <strong>{file.name}</strong> ({(file.size / 1024).toFixed(1)} KB)</li>
+                        ))}
+                      </ul>
                     </div>
                   )}
                 </>
-              )}
-            </div>
-          )}
-
-          {/* Analyze Button */}
-          <button className="analyze-btn" onClick={analyzeWithFastAPI} disabled={analyzing}>
-            {analyzing ? "Auditing Cross-Clause Risks with AI..." : "Analyze Contract"}
-          </button>
-
-          {/* Upload/Analysis status */}
-          {(uploading || analyzing) && (
-            <div className="progress-bar">
-              <div className="progress"></div>
-              <div className="progress-text">
-                {uploading ? "Uploading to secure vault..." : "Evaluating cross-clause carve-outs & liabilities..."}
-              </div>
-            </div>
-          )}
-          {message && <p className="progress-info">{message}</p>}
-        </div>
-
-        {/* Floating / Sticky Jump Button if analysis is ready */}
-        {analysis && (
-          <div style={{ textAlign: "center", margin: "1rem 0" }}>
-            <button
-              onClick={() => resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
-              style={{
-                background: "#ede9fe",
-                color: "#5b21b6",
-                border: "1px solid #c4b5fd",
-                padding: "6px 16px",
-                borderRadius: "20px",
-                fontSize: "0.8rem",
-                fontWeight: "600",
-                cursor: "pointer",
-              }}
-            >
-              ⬇️ Jump to Audit Report ({getItemCount(analysis.red_flags)} Red Flags Found)
-            </button>
-          </div>
-        )}
-
-        {/* Report Section with Anchor Ref */}
-        <div ref={resultsRef} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "2.5rem" }}>
-          <h2 className="section-title" style={{ margin: 0 }}>Contract Audit Report</h2>
-          
-          {/* EXPORT OPTIONS: PDF & JSON */}
-          {analysis && (
-            <div className="export-bar" style={{ display: "flex", gap: "10px" }}>
-              <button
-                onClick={handleDownloadPDF}
-                style={{
-                  background: "#dc2626",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "20px",
-                  padding: "8px 18px",
-                  fontSize: "0.85rem",
-                  fontWeight: "600",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  boxShadow: "0 2px 6px rgba(220, 38, 38, 0.2)",
-                }}
-              >
-                📄 Download PDF Report
-              </button>
-              <button
-                onClick={handleDownloadJSON}
-                style={{
-                  background: "#059669",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "20px",
-                  padding: "8px 18px",
-                  fontSize: "0.85rem",
-                  fontWeight: "600",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                }}
-              >
-                📥 Export JSON
-              </button>
-            </div>
-          )}
-        </div>
-
-        <div>
-          {analysis ? (
-            <>
-              {/* Title Section */}
-              {analysis.title && (
-                <div className="component grid-summary">
-                  <h2>Document Classification</h2>
-                  <p><strong>{analysis.title}</strong></p>
-                  {analysis.analysis_metadata && (
-                    <div style={{ fontSize: "0.75rem", color: "#64748b", marginTop: "6px" }}>
-                      Audited via <strong>{analysis.analysis_metadata.retrieval_strategy === "complete_document_context" ? "Complete-Document Cross-Clause Verification" : "Hybrid RAG + Structural Outline"}</strong> ({analysis.analysis_metadata.document_length?.toLocaleString()} characters analyzed).
+              ) : (
+                <div style={{ marginBottom: "15px" }}>
+                  {isTextCollapsed && analysis ? (
+                    <div
+                      style={{
+                        background: "#f1f5f9",
+                        border: "1px solid #cbd5e1",
+                        borderRadius: "10px",
+                        padding: "12px 18px",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                      }}
+                    >
+                      <span style={{ fontSize: "0.85rem", color: "#334155" }}>
+                        📄 <strong>Pasted Contract:</strong> {pastedText.split(/\s+/).filter(Boolean).length} words ({pastedText.length} chars)
+                      </span>
+                      <button
+                        onClick={() => setIsTextCollapsed(false)}
+                        style={{
+                          background: "#3437C2",
+                          color: "#fff",
+                          border: "none",
+                          padding: "4px 12px",
+                          borderRadius: "6px",
+                          fontSize: "0.8rem",
+                          cursor: "pointer",
+                        }}
+                      >
+                        Edit Text
+                      </button>
                     </div>
+                  ) : (
+                    <>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px", fontSize: "0.8rem", color: "#666" }}>
+                        <span>Paste contract clauses or complete agreement:</span>
+                        {pastedText && (
+                          <span>{pastedText.split(/\s+/).filter(Boolean).length} words ({pastedText.length} chars)</span>
+                        )}
+                      </div>
+                      <textarea
+                        rows={6}
+                        value={pastedText}
+                        onChange={(e) => {
+                          setPastedText(e.target.value);
+                          if (analysis) setAnalysis(null);
+                        }}
+                        placeholder="Paste contract clauses, terms, or complete agreement text here for instant evidence-backed audit..."
+                        style={{
+                          width: "100%",
+                          padding: "12px",
+                          borderRadius: "10px",
+                          border: "1px solid #cbd5e1",
+                          fontFamily: "inherit",
+                          fontSize: "0.85rem",
+                          resize: "vertical",
+                          boxSizing: "border-box",
+                        }}
+                      />
+                    </>
                   )}
                 </div>
               )}
 
-              {/* Summary Section */}
-              <div className="component grid-summary">
-                <h2>Executive Plain Summary</h2>
-                <div>{renderFormattedText(analysis.plain_summary)}</div>
-              </div>
+              {/* Analyze Button */}
+              <button className="analyze-btn" onClick={analyzeWithFastAPI} disabled={analyzing}>
+                {analyzing ? "Auditing Cross-Clause Risks with AI..." : "Analyze Contract"}
+              </button>
 
-              {/* Quick Stats & Risk Rubric (Gap D) */}
-              <div className="quickies">
-                <div className="component riskScore">
-                  <h2>Risk Assessment</h2>
-                  <div style={{ marginTop: "0.8rem" }}>
-                    {renderRiskBadge(analysis.risk_level)}
-                  </div>
-                </div>
-                <div className="component flagsFound">
-                  <h2>Red Flags Identified</h2>
-                  <div className="value" style={{ color: "#dc2626" }}>
-                    {getItemCount(analysis.red_flags)}
-                  </div>
-                </div>
-                <div className="component mistakes">
-                  <h2>Missing Protections</h2>
-                  <div className="value" style={{ color: "#d97706" }}>
-                    {getItemCount(analysis.missing_protections)}
-                  </div>
-                </div>
-              </div>
-
-              {/* Risk Rubric Breakdown Matrix (Gap D) */}
-              {analysis.risk_assessment?.rubric_breakdown && (
-                <div className="component" style={{ marginBottom: "20px" }}>
-                  <h2>⚖️ Consistent Risk Framework Evaluation</h2>
-                  <div className="risk-rubric-matrix">
-                    <div className="rubric-quadrant">
-                      <h4>💰 Financial Exposure</h4>
-                      <p>{analysis.risk_assessment.rubric_breakdown.financial_exposure || "Evaluated in red flags"}</p>
-                    </div>
-                    <div className="rubric-quadrant">
-                      <h4>⚖️ Dispute Probability</h4>
-                      <p>{analysis.risk_assessment.rubric_breakdown.dispute_probability || "Standard commercial probability"}</p>
-                    </div>
-                    <div className="rubric-quadrant">
-                      <h4>🔄 Clause Symmetry</h4>
-                      <p>{analysis.risk_assessment.rubric_breakdown.clause_symmetry || "Standard commercial covenants"}</p>
-                    </div>
-                    <div className="rubric-quadrant">
-                      <h4>🔗 Cross-Clause Interaction</h4>
-                      <p>{analysis.risk_assessment.rubric_breakdown.cross_clause_interaction || "No conflicting carve-outs detected"}</p>
-                    </div>
+              {/* Upload/Analysis progress bar */}
+              {(uploading || analyzing) && (
+                <div className="progress-bar">
+                  <div className="progress"></div>
+                  <div className="progress-text">
+                    {uploading ? "Saving to vault..." : "Evaluating cross-clause carve-outs & liabilities..."}
                   </div>
                 </div>
               )}
+              {message && <p className="progress-info">{message}</p>}
+            </div>
 
-              {/* Navigation Tabs */}
-              <div className="points">
-                <h3
-                  className={selectedTab === "redFlags" ? "active-tab" : ""}
-                  onClick={() => setSelectedTab("redFlags")}
-                >
-                  🚨 Evidence-Backed Red Flags ({getItemCount(analysis.red_flags)})
-                </h3>
-                <h3
-                  className={selectedTab === "missingProtections" ? "active-tab" : ""}
-                  onClick={() => setSelectedTab("missingProtections")}
-                >
-                  🛡️ Missing Protections ({getItemCount(analysis.missing_protections)})
-                </h3>
-                <h3
-                  className={selectedTab === "keyTerms" ? "active-tab" : ""}
-                  onClick={() => setSelectedTab("keyTerms")}
-                >
-                  📋 Key Terms & Clauses
-                </h3>
-                <h3
-                  className={selectedTab === "mistakes" ? "active-tab" : ""}
-                  onClick={() => setSelectedTab("mistakes")}
-                >
-                  ⚠️ Ambiguities
-                </h3>
-                <h3
-                  className={selectedTab === "recommendations" ? "active-tab" : ""}
-                  onClick={() => setSelectedTab("recommendations")}
-                >
-                  💡 Actionable Amendments
-                </h3>
-              </div>
+            {/* Anchor for results */}
+            <div ref={resultsRef}></div>
 
-              {/* Tab Content */}
+            {/* Analysis Report Section */}
+            {analysis && (
               <div>
-                {/* 1. EVIDENCE-BACKED RED FLAGS (Gap B & C) */}
-                {selectedTab === "redFlags" && (
-                  <div className="tab-content" style={{ marginTop: "1rem" }}>
-                    {(() => {
-                      const redFlags = analysis.red_flags;
-                      if (!redFlags || (Array.isArray(redFlags) && redFlags.length === 0)) {
-                        return (
-                          <div className="component">
-                            <p style={{ color: "#059669", fontWeight: "bold" }}>✅ No critical contractual red flags identified in this agreement.</p>
-                          </div>
-                        );
-                      }
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", margin: "2rem 0 1rem", flexWrap: "wrap", gap: "10px" }}>
+                  <h2 style={{ fontSize: "1.4rem", margin: 0, color: "#1e1b4b", fontWeight: "700" }}>
+                    Contract Audit Report
+                  </h2>
 
-                      const flagsList = Array.isArray(redFlags) ? redFlags : [redFlags];
+                  {/* Export Bar */}
+                  <div className="export-bar" style={{ display: "flex", gap: "10px" }}>
+                    <button
+                      onClick={handleDownloadPDF}
+                      style={{
+                        background: "#dc2626",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "20px",
+                        padding: "7px 16px",
+                        fontSize: "0.85rem",
+                        fontWeight: "600",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        boxShadow: "0 2px 6px rgba(220, 38, 38, 0.2)",
+                      }}
+                    >
+                      📄 Download PDF Report
+                    </button>
+                    <button
+                      onClick={handleDownloadJSON}
+                      style={{
+                        background: "#059669",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "20px",
+                        padding: "7px 16px",
+                        fontSize: "0.85rem",
+                        fontWeight: "600",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "6px",
+                      }}
+                    >
+                      📥 Export JSON
+                    </button>
+                  </div>
+                </div>
 
-                      return flagsList.map((flag, index) => {
-                        // Structured Object Support (Gap B)
-                        if (typeof flag === "object" && flag !== null) {
-                          const sev = String(flag.severity || "High").toLowerCase();
+                {/* Title & Classification */}
+                {analysis.title && (
+                  <div className="component">
+                    <h2>Document Classification</h2>
+                    <p><strong>{analysis.title}</strong></p>
+                    {analysis.analysis_metadata && (
+                      <div style={{ fontSize: "0.75rem", color: "#64748b", marginTop: "6px" }}>
+                        Audited via <strong>{analysis.analysis_metadata.retrieval_strategy === "complete_document_context" ? "Complete-Document Cross-Clause Verification" : "Hybrid RAG + Structural Outline"}</strong> ({analysis.analysis_metadata.document_length?.toLocaleString()} characters analyzed).
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Plain Summary */}
+                <div className="component">
+                  <h2>Executive Plain Summary</h2>
+                  <div>{renderFormattedText(analysis.plain_summary)}</div>
+                </div>
+
+                {/* Quick Stats & Risk Rubric */}
+                <div className="quickies">
+                  <div className="component">
+                    <h2>Risk Assessment</h2>
+                    <div style={{ marginTop: "0.5rem" }}>
+                      {renderRiskBadge(analysis.risk_level)}
+                    </div>
+                  </div>
+                  <div className="component">
+                    <h2>Red Flags Identified</h2>
+                    <div className="value" style={{ color: "#dc2626" }}>
+                      {getItemCount(analysis.red_flags)}
+                    </div>
+                  </div>
+                  <div className="component">
+                    <h2>Missing Protections</h2>
+                    <div className="value" style={{ color: "#d97706" }}>
+                      {getItemCount(analysis.missing_protections)}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Risk Rubric Breakdown Matrix */}
+                {analysis.risk_assessment?.rubric_breakdown && (
+                  <div className="component">
+                    <h2>⚖️ Consistent Risk Framework Evaluation</h2>
+                    <div className="risk-rubric-matrix">
+                      <div className="rubric-quadrant">
+                        <h4>💰 Financial Exposure</h4>
+                        <p>{analysis.risk_assessment.rubric_breakdown.financial_exposure || "Evaluated in red flags"}</p>
+                      </div>
+                      <div className="rubric-quadrant">
+                        <h4>⚖️ Dispute Probability</h4>
+                        <p>{analysis.risk_assessment.rubric_breakdown.dispute_probability || "Standard commercial probability"}</p>
+                      </div>
+                      <div className="rubric-quadrant">
+                        <h4>🔄 Clause Symmetry</h4>
+                        <p>{analysis.risk_assessment.rubric_breakdown.clause_symmetry || "Standard commercial covenants"}</p>
+                      </div>
+                      <div className="rubric-quadrant">
+                        <h4>🔗 Cross-Clause Interaction</h4>
+                        <p>{analysis.risk_assessment.rubric_breakdown.cross_clause_interaction || "No conflicting carve-outs detected"}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Navigation Tabs */}
+                <div className="points">
+                  <h3
+                    className={selectedTab === "redFlags" ? "active-tab" : ""}
+                    onClick={() => setSelectedTab("redFlags")}
+                  >
+                    🚨 Evidence-Backed Red Flags ({getItemCount(analysis.red_flags)})
+                  </h3>
+                  <h3
+                    className={selectedTab === "missingProtections" ? "active-tab" : ""}
+                    onClick={() => setSelectedTab("missingProtections")}
+                  >
+                    🛡️ Missing Protections ({getItemCount(analysis.missing_protections)})
+                  </h3>
+                  <h3
+                    className={selectedTab === "keyTerms" ? "active-tab" : ""}
+                    onClick={() => setSelectedTab("keyTerms")}
+                  >
+                    📋 Key Terms & Clauses
+                  </h3>
+                  <h3
+                    className={selectedTab === "mistakes" ? "active-tab" : ""}
+                    onClick={() => setSelectedTab("mistakes")}
+                  >
+                    ⚠️ Ambiguities
+                  </h3>
+                  <h3
+                    className={selectedTab === "recommendations" ? "active-tab" : ""}
+                    onClick={() => setSelectedTab("recommendations")}
+                  >
+                    💡 Actionable Amendments
+                  </h3>
+                </div>
+
+                {/* Tab Content */}
+                <div>
+                  {/* 1. Evidence-Backed Red Flags */}
+                  {selectedTab === "redFlags" && (
+                    <div>
+                      {(() => {
+                        const redFlags = analysis.red_flags;
+                        if (!redFlags || (Array.isArray(redFlags) && redFlags.length === 0)) {
                           return (
-                            <div key={index} className={`evidence-card ${sev}`}>
-                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "8px" }}>
-                                <div>
-                                  <span style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "600" }}>RED FLAG #{index + 1}</span>
-                                  <h3 style={{ margin: "2px 0 6px 0", fontSize: "1.1rem", color: "#1e293b", fontWeight: "bold" }}>
-                                    {flag.title || "Legal Liability Flag"}
-                                  </h3>
-                                  {flag.clause_reference && (
-                                    <span style={{ fontSize: "0.8rem", background: "#f1f5f9", padding: "2px 8px", borderRadius: "4px", color: "#475569" }}>
-                                      📍 Clause: <strong>{flag.clause_reference}</strong>
-                                    </span>
-                                  )}
-                                </div>
-                                <div style={{ display: "flex", gap: "6px" }}>
-                                  {flag.finding_type && (
-                                    <span style={{ background: "#e0e7ff", color: "#3730a3", fontSize: "0.75rem", padding: "3px 8px", borderRadius: "12px", fontWeight: "600" }}>
-                                      {flag.finding_type}
-                                    </span>
-                                  )}
-                                  <span style={{
-                                    background: sev === "critical" ? "#7f1d1d" : sev === "high" ? "#dc2626" : sev === "low" ? "#2563eb" : "#d97706",
-                                    color: "#fff",
-                                    fontSize: "0.75rem",
-                                    padding: "3px 10px",
-                                    borderRadius: "12px",
-                                    fontWeight: "bold",
-                                    textTransform: "uppercase"
-                                  }}>
-                                    {flag.severity || "HIGH"}
-                                  </span>
-                                </div>
-                              </div>
-
-                              {/* VERBATIM CONTRACTUAL EVIDENCE (Gap B) */}
-                              {flag.evidence && (
-                                <div className="evidence-quote-box">
-                                  <span style={{ fontWeight: "600", fontStyle: "normal", fontSize: "0.75rem", display: "block", color: "#64748b", marginBottom: "4px" }}>
-                                    📜 VERBATIM CONTRACT EVIDENCE:
-                                  </span>
-                                  &ldquo;{flag.evidence}&rdquo;
-                                </div>
-                              )}
-
-                              {/* Explanation & Impact */}
-                              <div style={{ marginTop: "10px", fontSize: "0.9rem", color: "#334155" }}>
-                                <p style={{ margin: "0 0 6px 0" }}><strong>Legal Vulnerability:</strong> {flag.explanation}</p>
-                                {flag.impact && (
-                                  <p style={{ margin: "0 0 6px 0", color: "#991b1b" }}>
-                                    <strong>Financial / Operational Exposure:</strong> {flag.impact}
-                                  </p>
-                                )}
-                              </div>
-
-                              {/* Actionable Negotiation Amendment */}
-                              {flag.recommendation && (
-                                <div style={{ marginTop: "10px", background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "8px 12px", borderRadius: "6px", fontSize: "0.85rem", color: "#166534" }}>
-                                  <strong>💡 Recommended Negotiation Action:</strong> {flag.recommendation}
-                                </div>
-                              )}
+                            <div className="component">
+                              <p style={{ color: "#059669", fontWeight: "bold" }}>✅ No critical contractual red flags identified in this agreement.</p>
                             </div>
                           );
                         }
 
-                        // String Fallback
-                        return (
-                          <div key={index} className="component redFlags">
-                            <div style={{ padding: "12px", border: "2px solid #ff6b6b", borderRadius: "8px", backgroundColor: "#fff5f5", color: "#b91c1c" }}>
-                              <h4 style={{ color: "#7f1d1d", marginBottom: "8px", fontWeight: "bold" }}>
-                                🚨 Red Flag #{index + 1}
-                              </h4>
-                              {renderFormattedText(flag)}
-                            </div>
-                          </div>
-                        );
-                      });
-                    })()}
-                  </div>
-                )}
+                        const flagsList = Array.isArray(redFlags) ? redFlags : [redFlags];
 
-                {/* 2. MISSING PROTECTIONS & OMISSIONS (Gap C) */}
-                {selectedTab === "missingProtections" && (
-                  <div className="tab-content" style={{ marginTop: "1rem" }}>
-                    {(() => {
-                      const missing = analysis.missing_protections;
-                      if (!missing || (Array.isArray(missing) && missing.length === 0)) {
-                        return (
-                          <div className="component">
-                            <p style={{ color: "#059669", fontWeight: "bold" }}>✅ No critical standard protective provisions were found missing.</p>
-                          </div>
-                        );
-                      }
-
-                      const list = Array.isArray(missing) ? missing : [missing];
-
-                      return list.map((item, index) => {
-                        if (typeof item === "object" && item !== null) {
-                          return (
-                            <div key={index} className="evidence-card medium">
-                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                <h3 style={{ margin: 0, fontSize: "1rem", color: "#92400e", fontWeight: "bold" }}>
-                                  🛡️ {item.title || "Absent Standard Protection"}
-                                </h3>
-                                <span style={{ background: "#fef3c7", color: "#b45309", fontSize: "0.75rem", padding: "2px 8px", borderRadius: "10px", fontWeight: "bold" }}>
-                                  MISSING CLAUSE
-                                </span>
-                              </div>
-                              <p style={{ margin: "8px 0 4px 0", fontSize: "0.88rem", color: "#451a03" }}>
-                                <strong>Vulnerability Created:</strong> {item.explanation || item.impact}
-                              </p>
-                              {item.recommendation && (
-                                <div style={{ marginTop: "8px", background: "#fefce8", border: "1px solid #fde047", padding: "8px 12px", borderRadius: "6px", fontSize: "0.85rem", color: "#854d0e" }}>
-                                  <strong>Suggested Clause Insertion:</strong> {item.recommendation}
-                                </div>
-                              )}
-                            </div>
-                          );
-                        }
-
-                        return (
-                          <div key={index} className="component">
-                            <p>{item}</p>
-                          </div>
-                        );
-                      });
-                    })()}
-                  </div>
-                )}
-
-                {/* 3. KEY OPERATIONAL TERMS */}
-                {selectedTab === "keyTerms" && (
-                  <div className="tab-content" style={{ marginTop: "1rem" }}>
-                    <div className="component keyTerms">
-                      <h2>👥 Contracting Parties & Defined Roles</h2>
-                      <div>{renderFormattedText(analysis.parties)}</div>
-                    </div>
-
-                    <div className="component keyTerms">
-                      <h2>📅 Important Dates & Term Milestones</h2>
-                      <div>{renderFormattedText(analysis.dates)}</div>
-                    </div>
-
-                    <div className="component keyTerms">
-                      <h2>💳 Payment Terms & Financial Penalties</h2>
-                      <div>{renderFormattedText(analysis.payment_terms)}</div>
-                    </div>
-
-                    <div className="component keyTerms">
-                      <h2>📋 Core Covenants & Performance Obligations</h2>
-                      <div>{renderFormattedText(analysis.obligations)}</div>
-                    </div>
-
-                    <div className="component keyTerms">
-                      <h2>🚪 Termination Triggers & Cure Periods</h2>
-                      <div>{renderFormattedText(analysis.termination)}</div>
-                    </div>
-                  </div>
-                )}
-
-                {/* 4. MISTAKES & AMBIGUITIES */}
-                {selectedTab === "mistakes" && (
-                  <div className="tab-content" style={{ marginTop: "1rem" }}>
-                    {(() => {
-                      const mistakes = analysis.mistakes_ambiguities;
-                      if (!mistakes || (Array.isArray(mistakes) && mistakes.length === 0)) {
-                        return (
-                          <div className="component">
-                            <p>No contractual ambiguities or drafting contradictions detected.</p>
-                          </div>
-                        );
-                      }
-
-                      if (Array.isArray(mistakes)) {
-                        return mistakes.map((m, index) => {
-                          if (typeof m === "object" && m !== null) {
+                        return flagsList.map((flag, index) => {
+                          if (typeof flag === "object" && flag !== null) {
+                            const sev = String(flag.severity || "High").toLowerCase();
                             return (
-                              <div key={index} className="evidence-card medium">
-                                <h4 style={{ color: "#b45309", margin: "0 0 6px 0", fontWeight: "bold" }}>
-                                  ⚠️ #{index + 1} {m.title || "Contractual Ambiguity"}
-                                </h4>
-                                {m.clause_reference && <p style={{ fontSize: "0.8rem", color: "#64748b" }}>Location: {m.clause_reference}</p>}
-                                {m.evidence && (
-                                  <div className="evidence-quote-box" style={{ borderColor: "#fde68a" }}>
-                                    &ldquo;{m.evidence}&rdquo;
+                              <div key={index} className={`evidence-card ${sev}`}>
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "8px" }}>
+                                  <div>
+                                    <span style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "600" }}>RED FLAG #{index + 1}</span>
+                                    <h3 style={{ margin: "2px 0 6px 0", fontSize: "1.05rem", color: "#1e293b", fontWeight: "bold" }}>
+                                      {flag.title || "Legal Liability Flag"}
+                                    </h3>
+                                    {flag.clause_reference && (
+                                      <span style={{ fontSize: "0.8rem", background: "#f1f5f9", padding: "2px 8px", borderRadius: "4px", color: "#475569" }}>
+                                        📍 Clause: <strong>{flag.clause_reference}</strong>
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div style={{ display: "flex", gap: "6px" }}>
+                                    {flag.finding_type && (
+                                      <span style={{ background: "#e0e7ff", color: "#3730a3", fontSize: "0.75rem", padding: "3px 8px", borderRadius: "12px", fontWeight: "600" }}>
+                                        {flag.finding_type}
+                                      </span>
+                                    )}
+                                    <span style={{
+                                      background: sev === "critical" ? "#7f1d1d" : sev === "high" ? "#dc2626" : sev === "low" ? "#2563eb" : "#d97706",
+                                      color: "#fff",
+                                      fontSize: "0.75rem",
+                                      padding: "3px 10px",
+                                      borderRadius: "12px",
+                                      fontWeight: "bold",
+                                      textTransform: "uppercase"
+                                    }}>
+                                      {flag.severity || "HIGH"}
+                                    </span>
+                                  </div>
+                                </div>
+
+                                {flag.evidence && (
+                                  <div className="evidence-quote-box">
+                                    <span style={{ fontWeight: "600", fontStyle: "normal", fontSize: "0.75rem", display: "block", color: "#64748b", marginBottom: "4px" }}>
+                                      📜 VERBATIM CONTRACT EVIDENCE:
+                                    </span>
+                                    &ldquo;{flag.evidence}&rdquo;
                                   </div>
                                 )}
-                                <p style={{ fontSize: "0.88rem", color: "#334155" }}>{m.explanation}</p>
-                                {m.recommendation && (
-                                  <p style={{ fontSize: "0.85rem", color: "#047857" }}><strong>Clarification:</strong> {m.recommendation}</p>
+
+                                <div style={{ marginTop: "10px", fontSize: "0.9rem", color: "#334155" }}>
+                                  <p style={{ margin: "0 0 6px 0" }}><strong>Legal Vulnerability:</strong> {flag.explanation}</p>
+                                  {flag.impact && (
+                                    <p style={{ margin: "0 0 6px 0", color: "#991b1b" }}>
+                                      <strong>Financial / Operational Exposure:</strong> {flag.impact}
+                                    </p>
+                                  )}
+                                </div>
+
+                                {flag.recommendation && (
+                                  <div style={{ marginTop: "10px", background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "8px 12px", borderRadius: "6px", fontSize: "0.85rem", color: "#166534" }}>
+                                    <strong>💡 Recommended Negotiation Action:</strong> {flag.recommendation}
+                                  </div>
                                 )}
                               </div>
                             );
                           }
+
                           return (
-                            <div key={index} className="component mistakes">
-                              <p>{m}</p>
+                            <div key={index} className="component">
+                              <p>{flag}</p>
                             </div>
                           );
                         });
-                      }
+                      })()}
+                    </div>
+                  )}
 
-                      return (
-                        <div className="component mistakes">
-                          <div>{renderFormattedText(mistakes)}</div>
-                        </div>
-                      );
-                    })()}
-                  </div>
-                )}
+                  {/* 2. Missing Protections */}
+                  {selectedTab === "missingProtections" && (
+                    <div>
+                      {(() => {
+                        const missing = analysis.missing_protections;
+                        if (!missing || (Array.isArray(missing) && missing.length === 0)) {
+                          return (
+                            <div className="component">
+                              <p style={{ color: "#059669", fontWeight: "bold" }}>✅ No critical standard protective provisions were found missing.</p>
+                            </div>
+                          );
+                        }
 
-                {/* 5. ACTIONABLE RECOMMENDATIONS */}
-                {selectedTab === "recommendations" && (
-                  <div className="tab-content" style={{ marginTop: "1rem" }}>
-                    <div className="component recommendations">
+                        const list = Array.isArray(missing) ? missing : [missing];
+
+                        return list.map((item, index) => {
+                          if (typeof item === "object" && item !== null) {
+                            return (
+                              <div key={index} className="evidence-card medium">
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                  <h3 style={{ margin: 0, fontSize: "1rem", color: "#92400e", fontWeight: "bold" }}>
+                                    🛡️ {item.title || "Absent Standard Protection"}
+                                  </h3>
+                                  <span style={{ background: "#fef3c7", color: "#b45309", fontSize: "0.75rem", padding: "2px 8px", borderRadius: "10px", fontWeight: "bold" }}>
+                                    MISSING CLAUSE
+                                  </span>
+                                </div>
+                                <p style={{ margin: "8px 0 4px 0", fontSize: "0.88rem", color: "#451a03" }}>
+                                  <strong>Vulnerability Created:</strong> {item.explanation || item.impact}
+                                </p>
+                                {item.recommendation && (
+                                  <div style={{ marginTop: "8px", background: "#fefce8", border: "1px solid #fde047", padding: "8px 12px", borderRadius: "6px", fontSize: "0.85rem", color: "#854d0e" }}>
+                                    <strong>Suggested Clause Insertion:</strong> {item.recommendation}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          }
+
+                          return (
+                            <div key={index} className="component">
+                              <p>{item}</p>
+                            </div>
+                          );
+                        });
+                      })()}
+                    </div>
+                  )}
+
+                  {/* 3. Key Terms */}
+                  {selectedTab === "keyTerms" && (
+                    <div>
+                      <div className="component">
+                        <h2>👥 Contracting Parties & Defined Roles</h2>
+                        <div>{renderFormattedText(analysis.parties)}</div>
+                      </div>
+
+                      <div className="component">
+                        <h2>📅 Important Dates & Term Milestones</h2>
+                        <div>{renderFormattedText(analysis.dates)}</div>
+                      </div>
+
+                      <div className="component">
+                        <h2>💳 Payment Terms & Financial Penalties</h2>
+                        <div>{renderFormattedText(analysis.payment_terms)}</div>
+                      </div>
+
+                      <div className="component">
+                        <h2>📋 Core Covenants & Performance Obligations</h2>
+                        <div>{renderFormattedText(analysis.obligations)}</div>
+                      </div>
+
+                      <div className="component">
+                        <h2>🚪 Termination Triggers & Cure Periods</h2>
+                        <div>{renderFormattedText(analysis.termination)}</div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 4. Mistakes & Ambiguities */}
+                  {selectedTab === "mistakes" && (
+                    <div>
+                      {(() => {
+                        const mistakes = analysis.mistakes_ambiguities;
+                        if (!mistakes || (Array.isArray(mistakes) && mistakes.length === 0)) {
+                          return (
+                            <div className="component">
+                              <p>No contractual ambiguities or drafting contradictions detected.</p>
+                            </div>
+                          );
+                        }
+
+                        if (Array.isArray(mistakes)) {
+                          return mistakes.map((m, index) => {
+                            if (typeof m === "object" && m !== null) {
+                              return (
+                                <div key={index} className="evidence-card medium">
+                                  <h4 style={{ color: "#b45309", margin: "0 0 6px 0", fontWeight: "bold" }}>
+                                    ⚠️ #{index + 1} {m.title || "Contractual Ambiguity"}
+                                  </h4>
+                                  {m.clause_reference && <p style={{ fontSize: "0.8rem", color: "#64748b" }}>Location: {m.clause_reference}</p>}
+                                  {m.evidence && (
+                                    <div className="evidence-quote-box" style={{ borderColor: "#fde68a" }}>
+                                      &ldquo;{m.evidence}&rdquo;
+                                    </div>
+                                  )}
+                                  <p style={{ fontSize: "0.88rem", color: "#334155" }}>{m.explanation}</p>
+                                  {m.recommendation && (
+                                    <p style={{ fontSize: "0.85rem", color: "#047857" }}><strong>Clarification:</strong> {m.recommendation}</p>
+                                  )}
+                                </div>
+                              );
+                            }
+                            return (
+                              <div key={index} className="component">
+                                <p>{m}</p>
+                              </div>
+                            );
+                          });
+                        }
+
+                        return (
+                          <div className="component">
+                            <div>{renderFormattedText(mistakes)}</div>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  )}
+
+                  {/* 5. Actionable Recommendations */}
+                  {selectedTab === "recommendations" && (
+                    <div className="component">
                       <div
                         style={{
                           padding: "16px",
@@ -993,20 +1258,12 @@ const ContractAnalyzer = () => {
                         <div>{renderFormattedText(analysis.recommendations)}</div>
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
-            </>
-          ) : (
-            <p style={{ textAlign: "center", color: "#666", padding: "2.5rem" }}>
-              No contract analyzed yet. Upload a file or paste contract text above, then click <strong>"Analyze Contract"</strong>.
-            </p>
-          )}
-        </div>
-
-        <button className="back-btn" onClick={() => navigate(-1)}>
-          Back
-        </button>
+            )}
+          </div>
+        </main>
       </div>
     </div>
   );

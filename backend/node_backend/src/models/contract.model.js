@@ -18,6 +18,12 @@ const ContractSchema = new mongoose.Schema(
     },
     fileSize: {
       type: Number, // in bytes
+      default: 0,
+    },
+    // Raw contract text (useful for pasted text or extracted document text)
+    contractText: {
+      type: String,
+      default: "",
     },
     // Excluded from default queries so GET /contracts stays super fast
     fileData: {
@@ -29,23 +35,11 @@ const ContractSchema = new mongoose.Schema(
       enum: ["uploaded", "analyzing", "analyzed", "failed"],
       default: "uploaded",
     },
-    // Structured insights returned by Gemini AI
+    // Complete structured legal audit returned by the AI pipeline
+    // Uses Mixed to store rich evidence-backed red flags, missing protections, and rubric matrix
     analysis: {
-      title: String,
-      parties: String,
-      dates: String,
-      payment_terms: String,
-      obligations: String,
-      termination: String,
-      mistakes_ambiguities: String,
-      red_flags: [String],
-      plain_summary: String,
-      risk_level: {
-        type: String,
-        enum: ["Low", "Medium", "High", "Unknown", null],
-        default: null,
-      },
-      recommendations: String,
+      type: mongoose.Schema.Types.Mixed,
+      default: null,
     },
   },
   {

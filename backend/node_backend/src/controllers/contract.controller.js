@@ -1,22 +1,76 @@
 const Contract = require("../models/contract.model.js");
 const APIFeatures = require("../utils/apiFeatures.js");
+const jwt = require("jsonwebtoken");
 
-// 1. CREATE: Upload a Contract
+// Helper to safely extract userId from verified token, header, or query
+function extractUserId(req) {
+  if (req.user?.id) return String(req.user.id);
+  const authHeader = req.headers["authorization"] || req.headers["Authorization"];
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    try {
+      const token = authHeader.split(" ")[1];
+      const decoded = jwt.decode(token);
+      if (decoded?.id) return String(decoded.id);
+      if (decoded?.email) return String(decoded.email);
+    } catch (err) {
+      // Ignore token decode failure
+    }
+  }
+  return (
+    req.headers["x-user-id"] ||
+    req.query?.userId ||
+    req.body?.userId ||
+    "anonymous"
+  );
+}
+
+// 1. CREATE / UPLOAD: Upload a Contract (file or pasted text)
 async function uploadContract(req, res) {
   try {
-    if (!req.file) {
-      return res.status(400).json({ success: false, message: "No contract file uploaded" });
+    const userId = extractUserId(req);
+    const pastedText = req.body?.contractText || req.body?.text || req.body?.pastedText;
+
+    if (!req.file && (!pastedText || !pastedText.trim())) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide either a contract file or contract text",
+      });
     }
 
-    const userId = req.user?.id || req.body?.userId || "anonymous";
+    let originalName = "Pasted Contract";
+    let mimeType = "text/plain";
+    let fileSize = 0;
+    let fileDataBase64 = null;
+
+    if (req.file) {
+      originalName = req.file.originalname;
+      mimeType = req.file.mimetype || "application/pdf";
+      fileSize = req.file.size;
+      fileDataBase64 = req.file.buffer ? req.file.buffer.toString("base64") : null;
+    } else if (pastedText) {
+      originalName = req.body?.title || `Contract Audit (${new Date().toLocaleDateString()})`;
+      fileSize = Buffer.byteLength(pastedText, "utf8");
+    }
+
+    // Parse analysis if supplied in payload
+    let parsedAnalysis = null;
+    if (req.body?.analysis) {
+      try {
+        parsedAnalysis = typeof req.body.analysis === "string" ? JSON.parse(req.body.analysis) : req.body.analysis;
+      } catch (e) {
+        parsedAnalysis = req.body.analysis;
+      }
+    }
 
     const contract = new Contract({
       userId: String(userId),
-      originalName: req.file.originalname,
-      mimeType: req.file.mimetype || "application/pdf",
-      fileSize: req.file.size,
-      fileData: req.file.buffer.toString("base64"),
-      status: "uploaded",
+      originalName,
+      mimeType,
+      fileSize,
+      contractText: pastedText || "",
+      fileData: fileDataBase64,
+      status: parsedAnalysis ? "analyzed" : "uploaded",
+      analysis: parsedAnalysis || null,
     });
 
     await contract.save();
@@ -26,7 +80,7 @@ async function uploadContract(req, res) {
 
     return res.status(201).json({
       success: true,
-      message: "Contract uploaded successfully",
+      message: "Contract saved successfully",
       doc: responseDoc,
     });
   } catch (err) {
@@ -35,13 +89,20 @@ async function uploadContract(req, res) {
   }
 }
 
-// 2. READ ALL: Get Contracts with Filtering, Sorting, Field Limiting & Pagination
+// 2. READ ALL: Get Contracts for current user with Filtering, Sorting, Field Limiting & Pagination
 async function getContracts(req, res) {
   try {
-    // If a user token exists, restrict query to that user unless user requests specific userId
+    const userId = extractUserId(req);
     const queryString = { ...req.query };
-    if (req.user?.id && !queryString.userId) {
-      queryString.userId = String(req.user.id);
+
+    // Default to current user's contracts
+    if (!queryString.userId && userId && userId !== "anonymous") {
+      queryString.userId = String(userId);
+    }
+
+    // Default sort by newest
+    if (!queryString.sort) {
+      queryString.sort = "-createdAt";
     }
 
     // Execute query with APIFeatures
@@ -58,7 +119,7 @@ async function getContracts(req, res) {
     const docs = await features.query;
 
     const page = Math.max(1, parseInt(req.query.page, 10) || 1);
-    const limit = Math.max(1, Math.min(100, parseInt(req.query.limit, 10) || 10));
+    const limit = Math.max(1, Math.min(100, parseInt(req.query.limit, 10) || 20));
     const totalPages = Math.ceil(total / limit) || 1;
 
     return res.json({
@@ -94,10 +155,10 @@ async function getContractById(req, res) {
   }
 }
 
-// 4. UPDATE: Update Contract Metadata (e.g. status, originalName)
+// 4. UPDATE: Update Contract Metadata
 async function updateContract(req, res) {
   try {
-    const allowedUpdates = ["originalName", "status", "analysis"];
+    const allowedUpdates = ["originalName", "status", "analysis", "contractText"];
     const updates = {};
     for (const key of Object.keys(req.body)) {
       if (allowedUpdates.includes(key)) {
@@ -121,17 +182,21 @@ async function updateContract(req, res) {
   }
 }
 
-// 5. UPDATE: Save AI Analysis Result (Specialized update)
+// 5. UPDATE / SAVE: Save AI Analysis Result to contract record
 async function saveContractAnalysis(req, res) {
   try {
-    const { analysis } = req.body;
+    const { analysis, contractText, originalName } = req.body;
     if (!analysis) {
       return res.status(400).json({ success: false, message: "Analysis data required" });
     }
 
+    const updates = { analysis, status: "analyzed" };
+    if (contractText) updates.contractText = contractText;
+    if (originalName) updates.originalName = originalName;
+
     const doc = await Contract.findByIdAndUpdate(
       req.params.id,
-      { analysis, status: "analyzed" },
+      updates,
       { new: true }
     );
 
@@ -139,14 +204,61 @@ async function saveContractAnalysis(req, res) {
       return res.status(404).json({ success: false, message: "Contract not found" });
     }
 
-    return res.json({ success: true, message: "Contract analysis saved", doc });
+    return res.json({ success: true, message: "Contract analysis saved successfully", doc });
   } catch (err) {
     console.error("Save analysis error:", err);
     return res.status(500).json({ success: false, message: "Error saving contract analysis" });
   }
 }
 
-// 6. DELETE: Delete Contract Record
+// 6. SAVE COMPLETE AUDIT: Save or update full audit report
+async function saveCompleteAudit(req, res) {
+  try {
+    const userId = extractUserId(req);
+    const { contractId, originalName, contractText, analysis } = req.body;
+
+    if (!analysis) {
+      return res.status(400).json({ success: false, message: "Analysis data is required" });
+    }
+
+    let doc;
+    if (contractId) {
+      doc = await Contract.findByIdAndUpdate(
+        contractId,
+        {
+          analysis,
+          contractText: contractText || "",
+          status: "analyzed",
+          ...(originalName ? { originalName } : {}),
+        },
+        { new: true }
+      );
+    }
+
+    if (!doc) {
+      doc = new Contract({
+        userId: String(userId),
+        originalName: originalName || analysis.title || `Contract Audit (${new Date().toLocaleDateString()})`,
+        mimeType: "text/plain",
+        contractText: contractText || "",
+        status: "analyzed",
+        analysis,
+      });
+      await doc.save();
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Audit report saved to vault",
+      doc,
+    });
+  } catch (err) {
+    console.error("Save complete audit error:", err);
+    return res.status(500).json({ success: false, message: "Error saving audit report" });
+  }
+}
+
+// 7. DELETE: Delete Contract Record
 async function deleteContract(req, res) {
   try {
     const doc = await Contract.findByIdAndDelete(req.params.id);
@@ -160,7 +272,7 @@ async function deleteContract(req, res) {
   }
 }
 
-// 7. DOWNLOAD / STREAM FILE
+// 8. DOWNLOAD / STREAM FILE
 async function downloadContract(req, res) {
   try {
     const doc = await Contract.findById(req.params.id).select("+fileData");
@@ -186,6 +298,7 @@ module.exports = {
   getContractById,
   updateContract,
   saveContractAnalysis,
+  saveCompleteAudit,
   deleteContract,
   downloadContract,
 };

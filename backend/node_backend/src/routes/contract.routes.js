@@ -7,6 +7,7 @@ const {
   getContractById,
   updateContract,
   saveContractAnalysis,
+  saveCompleteAudit,
   deleteContract,
   downloadContract,
 } = require("../controllers/contract.controller.js");
@@ -31,9 +32,12 @@ function aliasRecentContracts(req, res, next) {
 router.get("/contracts/high-risk", aliasHighRiskContracts, getContracts);
 router.get("/contracts/recent", aliasRecentContracts, getContracts);
 
-// Create (File Upload)
+// Create (File Upload or Text)
 router.post("/upload-contract", upload.single("file"), uploadContract);
 router.post("/contracts", upload.single("file"), uploadContract);
+
+// Save complete audit report (analysis + contract text)
+router.post("/contracts/save-audit", saveCompleteAudit);
 
 // Read All (with filtering, sorting, field limiting, search & pagination)
 router.get("/contracts", getContracts);

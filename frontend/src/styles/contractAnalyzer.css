@@ -1,129 +1,463 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900&display=swap');
 
-/* --------------------------------
-   PAGE WRAPPER
--------------------------------- */
-.case-prediction {
-  background-size: cover;
-  background-position: center;
-  background-attachment: fixed;
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  overflow-x: hidden;
+/* -------------------------------------------------------------
+   PAGE SHELL & BACKGROUND (Identical to Legal Assistant)
+------------------------------------------------------------- */
+.contractAnalyzerPage {
   font-family: 'Poppins', sans-serif;
+  background: url("../assets/background.jpeg") center/cover no-repeat fixed;
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
-/* --------------------------------
-   HEADER
--------------------------------- */
-.case-prediction .top-bar {
+/* -------------------------------------------------------------
+   TOP NAVIGATION BAR
+------------------------------------------------------------- */
+.topBar {
   position: absolute;
-  top: 20px;
-  left: 50px;
-  right: 50px;
+  top: 18px;
+  left: 40px;
+  right: 40px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  z-index: 20;
+}
+
+.brand {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #ffffff;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  letter-spacing: 0.3px;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.brand:hover {
+  opacity: 0.95;
+}
+
+.topBarNav {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.navLink {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #ffffff;
+  text-decoration: none;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.navLink:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* -------------------------------------------------------------
+   MAIN CARD CONTAINER (White rounded card matching app design)
+------------------------------------------------------------- */
+.mainContainer {
+  flex: 1;
+  margin: 75px auto 25px;
+  border-radius: 25px;
+  background-color: #ffffff;
+  display: flex;
+  width: 92%;
+  max-width: 1320px;
+  height: calc(100vh - 105px);
+  min-height: 600px;
+  overflow: hidden;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.32);
+  position: relative;
+  box-sizing: border-box;
+}
+
+/* -------------------------------------------------------------
+   SIDEBAR (#727374 App Signature Color - Uniform with Legal Assistant)
+------------------------------------------------------------- */
+.sidebar {
+  width: 290px;
+  min-width: 260px;
+  max-width: 320px;
+  background-color: #727374;
+  border-radius: 24px 0 0 24px;
+  padding: 1.4rem 1.2rem;
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-sizing: border-box;
+  transition: transform 0.3s ease;
+  z-index: 15;
+}
+
+/* "+ New Contract Audit" Button (#3437C2 Signature) */
+.newAuditBtn {
+  background: #3437C2;
+  border: none;
+  color: #ffffff;
+  padding: 0.85rem 1.2rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 0.6rem;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(52, 55, 194, 0.35);
+  transition: all 0.2s ease;
+}
+
+.newAuditBtn:hover {
+  background: #2b2ea6;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(52, 55, 194, 0.45);
+}
+
+.newAuditBtn:active {
+  transform: translateY(0);
+}
+
+/* Sidebar Section Sub-header */
+.sessionSectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 1.4rem 0 0.6rem;
+  padding: 0 4px;
+}
+
+.sectionTitle {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: #e2e8f0;
+}
+
+.sessionBadge {
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  font-size: 0.7rem;
+  padding: 2px 7px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+/* Scrollable Contracts List */
+.contractList {
+  flex: 1;
+  overflow-y: auto;
+  margin: 0.3rem 0;
+  padding-right: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.contractList::-webkit-scrollbar {
+  width: 5px;
+}
+
+.contractList::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 10px;
+}
+
+.emptyContracts {
+  font-size: 0.8rem;
+  color: #e5e7eb;
+  padding: 1.5rem 0.5rem;
+  text-align: center;
+  line-height: 1.5;
+  opacity: 0.85;
+}
+
+/* Single Past Contract Item */
+.contractItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 0.8rem;
+  border-radius: 0.55rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #f1f5f9;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.contractItem:hover {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.contractItemActive {
+  background: rgba(255, 255, 255, 0.28);
+  border-color: rgba(255, 255, 255, 0.45);
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: inset 3px 0 0 #ffffff;
+}
+
+.contractTitleWrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+  flex: 1;
+  margin-right: 6px;
+}
+
+.contractIcon {
+  font-size: 0.9rem;
+  opacity: 0.9;
+  flex-shrink: 0;
+}
+
+.contractTitleText {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+}
+
+.contractDeleteBtn {
+  background: transparent;
+  border: none;
+  color: #fca5a5;
+  font-size: 0.85rem;
+  padding: 2px 4px;
+  cursor: pointer;
+  border-radius: 4px;
+  opacity: 0.65;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.contractItem:hover .contractDeleteBtn {
+  opacity: 1;
+}
+
+.contractDeleteBtn:hover {
+  background: rgba(239, 68, 68, 0.25);
+  color: #fee2e2;
+  transform: scale(1.1);
+}
+
+/* Sidebar Bottom Footer: User Info & Nav */
+.sidebarFooter {
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  padding-top: 0.9rem;
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.userBadge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px;
+}
+
+.userAvatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #3437C2;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.userDetails {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.userName {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.userRole {
+  font-size: 0.72rem;
+  color: #cbd5e1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.backBtn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  padding: 0.55rem 0.8rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.backBtn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* -------------------------------------------------------------
+   MAIN CONTENT AREA (Right Panel)
+------------------------------------------------------------- */
+.contentArea {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow-y: auto;
+  background-color: #f8fafc;
+  box-sizing: border-box;
+}
+
+.contentHeader {
+  padding: 1.2rem 2rem;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #ffffff;
+  position: sticky;
+  top: 0;
   z-index: 10;
 }
 
-.case-prediction .brand {
-  font-weight: bold;
-  color: white;
-  text-decoration: none;
+.headerTitleGroup {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
-.case-prediction .login-link {
-  font-weight: bold;
-  color: white;
-  text-decoration: none;
+.mobileMenuBtn {
+  display: none;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 4px 10px;
+  border-radius: 6px;
 }
 
-.case-container {
-  background: #f9f9f9;
-  border-radius: 15px;
-  margin-top: 100px;
-  margin-bottom: 30px;
-  padding: 30px;
-  width: 90%;
-  max-width: 960px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+.contentTitle {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #1e1b4b;
+  margin: 0;
 }
 
-/* --------------------------------
-   MAIN CONTAINER
--------------------------------- */
-.title {
-  text-align: center;
-  font-size: 28px;
-  font-weight: bold;
-  margin-bottom: 25px;
+.contentSubtitle {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-left: 8px;
 }
 
-.description {
-  font-size: 1rem;
-  font-weight: 500;
-  max-width: 550px;
+.contentBody {
+  padding: 2rem;
+  max-width: 900px;
   margin: 0 auto;
-  line-height: 1.6;
-  display: block;
-  text-align: center;
-  word-wrap: break-word;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* --------------------------------
-   UPLOAD SECTION
+   UPLOAD & INPUT CARDS
 -------------------------------- */
 .upload-section {
   text-align: center;
-  margin: 0 auto;
+  margin: 0 auto 2rem;
   width: 100%;
-  max-width: 38rem;
+  background: #ffffff;
+  padding: 25px;
+  border-radius: 16px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+  box-sizing: border-box;
 }
 
 .file-drop {
-  background: #e0e0e0;
-  padding: 15px;
-  border-radius: 10px;
-  margin-bottom: 1.5rem;
-  height: 6rem;
-  border: 1px solid darkgrey;
-  font-size: 0.8rem;
+  background: #f8fafc;
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  border: 2px dashed #cbd5e1;
+  font-size: 0.85rem;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .file-drop.dragging {
-  background: #d4d4d8;
+  background: #eef2ff;
   border-color: #3b82f6;
 }
 
 .supported-formats {
-  font-size: 10px;
-  color: #666;
-  margin-top: 10px;
+  font-size: 11px;
+  color: #64748b;
+  margin-top: 8px;
 }
 
 .analyze-btn {
   display: block;
   margin: 15px auto 0 auto;
-  background: #4e4d5b;
+  background: #3437C2;
   color: #fff;
-  padding: 12px 30px;
-  margin-top: 20px;
+  padding: 12px 36px;
   border: none;
   border-radius: 25px;
   cursor: pointer;
   text-align: center;
   font-size: 0.95rem;
   font-weight: 600;
-  transition: background 0.2s ease;
+  box-shadow: 0 4px 12px rgba(52, 55, 194, 0.3);
+  transition: all 0.2s ease;
 }
 
 .analyze-btn:hover:not(:disabled) {
-  background: #3730d0;
+  background: #2b2ea6;
+  transform: translateY(-1px);
 }
 
 .analyze-btn:disabled {
@@ -133,16 +467,16 @@
 
 .progress-bar {
   position: relative;
-  background: #d1d1d1;
-  height: 10px;
-  border-radius: 5px;
-  margin: 25px 0;
+  background: #e2e8f0;
+  height: 8px;
+  border-radius: 4px;
+  margin: 25px 0 10px;
 }
 
 .progress {
-  background: #4caf50;
-  height: 15px;
-  border-radius: 20px;
+  background: #10b981;
+  height: 8px;
+  border-radius: 4px;
   animation: pulse 1.5s infinite;
 }
 
@@ -153,164 +487,118 @@
 }
 
 .progress-text {
-  font-weight: bold;
-  font-size: 12px;
+  font-weight: 600;
+  font-size: 11px;
   position: absolute;
   top: -20px;
   left: 50%;
   transform: translateX(-50%);
+  color: #334155;
+  white-space: nowrap;
 }
 
 .progress-info {
-  font-size: 11px;
-  color: #444;
+  font-size: 12px;
+  color: #475569;
   margin-top: 8px;
 }
 
-.section-title {
-  font-size: 1.5rem;
-  margin: 3rem 0 1rem;
-  text-align: left;
-}
-
 /* --------------------------------
-   QUICKIES SECTION & COMPONENTS
+   QUICK STATS & COMPONENTS
 -------------------------------- */
 .quickies {
   display: flex;
   justify-content: space-between;
   align-items: stretch;
-  margin: 2rem auto;
+  margin: 1.5rem auto;
   padding: 1rem;
-  max-width: 100%;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  border-radius: 20px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(4px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  gap: 15px;
 }
 
 .component {
-  background: linear-gradient(145deg, #ffffff, #f0f0f0);
-  padding: 24px;
-  border-radius: 15px;
-  border: none;
-  margin: 0.8rem;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6);
-  transition: all 0.3s ease;
+  background: #ffffff;
+  padding: 22px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+  margin-bottom: 1.2rem;
+}
+
+.quickies .component {
   flex: 1;
-  min-width: 220px;
+  margin-bottom: 0;
+  min-width: 180px;
 }
 
-.component:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+.component h2 {
+  font-size: 1rem;
+  margin-bottom: 10px;
+  text-align: left;
+  font-weight: 700;
+  color: #1e293b;
 }
 
-@media (max-width: 768px) {
-  .quickies {
-    flex-direction: column;
-    justify-content: center;
-    gap: 1.5rem;
-    margin: 1rem auto;
-    padding: 1.5rem;
-  }
-
-  .component {
-    min-width: auto;
-    width: 100%;
-  }
-}
-
-.riskScore {
-  max-width: 20rem;
-  word-wrap: break-word;
-}
-
-.active-tab {
-  border-bottom: 3px solid #3730d0 !important;
-  color: #3730d0 !important;
-  cursor: pointer;
+.component p {
+  font-size: 0.92rem;
+  text-align: left;
+  font-weight: 400;
+  line-height: 1.6;
+  color: #334155;
+  margin: 0;
 }
 
 .value {
   display: flex;
   justify-content: center;
   text-align: center;
-  font-size: 3.5rem;
+  font-size: 3rem;
   font-weight: 700;
-  margin-top: 0.5rem;
+  margin-top: 0.3rem;
 }
 
+/* Navigation Tabs */
 .points {
   display: flex;
   gap: 1.2rem;
-  margin-top: 2rem;
-  margin-left: 0.5rem;
-  border-bottom: 1px solid #ddd;
+  margin: 1.5rem 0 1rem;
+  border-bottom: 1px solid #e2e8f0;
   padding-bottom: 8px;
   overflow-x: auto;
 }
 
 .points h3 {
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   cursor: pointer;
   padding-bottom: 8px;
   margin: 0;
   white-space: nowrap;
-  color: #666;
+  color: #64748b;
   transition: all 0.2s ease;
-}
-
-.points h3:hover {
-  color: #111;
-}
-
-.component h2 {
-  font-size: 1.1rem;
-  margin-bottom: 13px;
-  text-align: left;
-  font-weight: bold;
-}
-
-.component p {
-  font-size: 0.95rem;
-  text-align: left;
-  font-weight: 400;
-  line-height: 1.6;
-}
-
-.back-btn {
-  display: block;
-  margin: 20px 0 0 auto;
-  background: #4b44f6;
-  color: #fff;
-  padding: 8px 30px;
-  border: none;
-  border-radius: 25px;
-  cursor: pointer;
   font-weight: 600;
 }
 
-.back-btn:hover {
-  background: #3730d0;
+.points h3:hover {
+  color: #1e1b4b;
 }
 
-.tab-content .component {
-  margin-bottom: 20px;
+.active-tab {
+  border-bottom: 3px solid #3437C2 !important;
+  color: #3437C2 !important;
 }
 
-/* --------------------------------
-   EVIDENCE-BACKED RED FLAGS (Gaps B & C)
--------------------------------- */
+/* Evidence Cards */
 .evidence-card {
   background: #ffffff;
   border: 1px solid #fee2e2;
   border-left: 6px solid #ef4444;
   border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 18px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  padding: 18px;
+  margin-bottom: 14px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
 }
 
 .evidence-card.critical {
@@ -351,31 +639,61 @@
 
 .risk-rubric-matrix {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 12px;
-  margin-top: 15px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+  margin-top: 12px;
 }
 
 .rubric-quadrant {
   background: #f8fafc;
   border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  padding: 12px 14px;
+  border-radius: 8px;
+  padding: 10px 12px;
 }
 
 .rubric-quadrant h4 {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   text-transform: uppercase;
   color: #64748b;
-  margin: 0 0 6px 0;
+  margin: 0 0 4px 0;
   letter-spacing: 0.5px;
 }
 
 .rubric-quadrant p {
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 600;
   color: #1e293b;
   margin: 0;
+}
+
+/* Responsive Mobile Layout */
+@media (max-width: 900px) {
+  .mainContainer {
+    width: 96%;
+    height: calc(100vh - 85px);
+    margin-top: 65px;
+  }
+
+  .sidebar {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    transform: translateX(-100%);
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.25);
+  }
+
+  .sidebarOpen {
+    transform: translateX(0);
+  }
+
+  .mobileMenuBtn {
+    display: block;
+  }
+
+  .quickies {
+    flex-direction: column;
+  }
 }
 
 /* --------------------------------
@@ -384,29 +702,34 @@
 @media print {
   body {
     background: #fff !important;
-    color: #000 !important;
   }
 
-  .case-prediction {
+  .contractAnalyzerPage {
     background: none !important;
     min-height: auto !important;
   }
 
-  .top-bar,
+  .topBar,
+  .sidebar,
+  .contentHeader,
   .upload-section,
   .points,
-  .back-btn,
   .export-bar,
   button {
     display: none !important;
   }
 
-  .case-container {
+  .mainContainer {
     box-shadow: none !important;
     margin: 0 !important;
     padding: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
+    border-radius: 0 !important;
+    height: auto !important;
+  }
+
+  .contentArea {
     background: #fff !important;
   }
 
@@ -414,11 +737,5 @@
     page-break-inside: avoid;
     border: 1px solid #ccc !important;
     box-shadow: none !important;
-  }
-
-  .component {
-    page-break-inside: avoid;
-    box-shadow: none !important;
-    border: 1px solid #eee !important;
   }
 }
