@@ -12,13 +12,14 @@ import gptImgLogo from "../assets/chatgptLogo.svg";
 
 const DEFAULT_WELCOME = {
   sender: "bot",
-  text: "Hello! I am your AI Legal Assistant powered by LegalSmiths. How can I assist you with Indian laws, statutory provisions, or legal queries today?",
+  text: "Hello! I am your AI Legal Assistant powered by LegalSmiths.\n\nI can assist you with Indian statutory provisions (Bharatiya Nyaya Sanhita, BNSS, Indian Contract Act, Consumer Protection Act), procedural guidance, and landmark case precedents.",
 };
 
 const PRESET_QUERIES = [
-  "What is Section 138 of the Negotiable Instruments Act?",
+  "What are the rights of an arrested person under BNSS in India?",
+  "What is Section 138 of the Negotiable Instruments Act for cheque bounce?",
   "What are tenant rights against arbitrary eviction under Rent Control laws?",
-  "What is the procedure to file a consumer dispute in India?",
+  "What remedies exist under RERA when a builder delays flat possession?",
 ];
 
 const LegalAssistant = () => {
@@ -28,6 +29,7 @@ const LegalAssistant = () => {
   const [messages, setMessages] = useState([DEFAULT_WELCOME]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [copiedIndex, setCopiedIndex] = useState(null);
 
   // Auto-scroll to the latest message
   useEffect(() => {
@@ -62,7 +64,7 @@ const LegalAssistant = () => {
         {
           sender: "bot",
           text:
-            "⚠️ Unable to connect to the Legal Assistant server. Please ensure the Python backend is running on port 8000.",
+            "⚠️ Unable to connect to the Legal Assistant service. Please ensure the backend is active.",
         },
       ]);
     } finally {
@@ -80,7 +82,64 @@ const LegalAssistant = () => {
     setInput("");
   };
 
-  const handleLogout = () => { logout(navigate); };
+  const handleCopy = (text, idx) => {
+    navigator.clipboard.writeText(text);
+    setCopiedIndex(idx);
+    setTimeout(() => setCopiedIndex(null), 2000);
+  };
+
+  // Helper to render formatted text with citations and bolding
+  const renderMessageContent = (text) => {
+    if (!text) return null;
+
+    // Detect trailing statutory citations in brackets e.g. [Act, Year, Section]
+    const citationRegex = /\[(.*?)\]\s*$/;
+    const match = text.match(citationRegex);
+    let mainText = text;
+    let citation = null;
+    if (match) {
+      mainText = text.substring(0, match.index).trim();
+      citation = match[1];
+    }
+
+    const paragraphs = mainText.split("\n").filter((p) => p.trim());
+
+    return (
+      <div style={{ width: "100%" }}>
+        {paragraphs.map((p, idx) => {
+          const parts = p.split(/(\*\*.*?\*\*)/g);
+          return (
+            <p key={idx} style={{ marginBottom: "8px", lineHeight: "1.6" }}>
+              {parts.map((part, i) => {
+                if (part.startsWith("**") && part.endsWith("**")) {
+                  return <strong key={i}>{part.slice(2, -2)}</strong>;
+                }
+                return part;
+              })}
+            </p>
+          );
+        })}
+
+        {citation && (
+          <div
+            style={{
+              marginTop: "8px",
+              padding: "6px 12px",
+              background: "#eef2ff",
+              color: "#3730a3",
+              border: "1px solid #c7d2fe",
+              borderRadius: "6px",
+              fontSize: "0.75rem",
+              fontWeight: "600",
+              display: "inline-block",
+            }}
+          >
+            📜 Statutory Authority: {citation}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className={styles.legalAssistant}>
@@ -90,7 +149,7 @@ const LegalAssistant = () => {
           LegalSmiths
         </Link>
         <button
-          onClick={handleLogout}
+          onClick={() => logout(navigate)}
           className={styles.loginLink}
           style={{ background: "none", border: "none", cursor: "pointer" }}
         >
@@ -110,7 +169,7 @@ const LegalAssistant = () => {
             {/* Suggested Legal Queries */}
             <div className={styles.upperSiderBottom}>
               <p style={{ fontSize: "0.8rem", color: "#bbb", marginBottom: "0.5rem" }}>
-                Suggested Inquiries:
+                Suggested Indian Law Inquiries:
               </p>
               {PRESET_QUERIES.map((queryText, index) => (
                 <button
@@ -151,9 +210,27 @@ const LegalAssistant = () => {
                   src={msg.sender === "bot" ? gptImgLogo : userIcon}
                   alt={msg.sender === "bot" ? "AI Assistant" : "User"}
                 />
-                <p className={styles.txt} style={{ whiteSpace: "pre-wrap" }}>
-                  {msg.text}
-                </p>
+                <div style={{ flex: 1 }}>
+                  {renderMessageContent(msg.text)}
+                  {msg.sender === "bot" && index > 0 && (
+                    <button
+                      onClick={() => handleCopy(msg.text, index)}
+                      style={{
+                        background: "none",
+                        border: "1px solid #aaa",
+                        borderRadius: "4px",
+                        padding: "2px 8px",
+                        fontSize: "0.7rem",
+                        color: "#555",
+                        cursor: "pointer",
+                        marginTop: "6px",
+                      }}
+                      title="Copy Advisory"
+                    >
+                      {copiedIndex === index ? "✓ Copied" : "📋 Copy Advisory"}
+                    </button>
+                  )}
+                </div>
               </div>
             ))}
 
@@ -161,9 +238,12 @@ const LegalAssistant = () => {
             {loading && (
               <div className={`${styles.chat} ${styles.bot}`}>
                 <img className={styles.chatImg} src={gptImgLogo} alt="AI" />
-                <p className={styles.txt} style={{ fontStyle: "italic", color: "#555" }}>
-                  Analyzing legal context and generating advisory...
-                </p>
+                <div style={{ fontStyle: "italic", color: "#555" }}>
+                  <p>Searching official statutes and synthesizing legal advisory...</p>
+                  <small style={{ fontSize: "0.7rem", color: "#888" }}>
+                    Checking BNS, BNSS, and Indian judicial precedent
+                  </small>
+                </div>
               </div>
             )}
 

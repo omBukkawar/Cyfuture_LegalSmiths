@@ -62,6 +62,22 @@ CASE_PREDICTOR_MODELS = [
     "nvidia/nemotron-3-ultra-550b-a55b:free",
 ]
 
+# 4. LangGraph Adversarial Case Debate (Advocate & Judge)
+ADVOCATE_MODEL = os.getenv('ADVOCATE_MODEL', 'meta-llama/llama-3.3-70b-instruct')
+ADVOCATE_FALLBACK_MODELS = [
+    'openai/gpt-4o-mini',
+    'mistralai/mistral-small-24b-instruct-2501',
+    'nvidia/nemotron-3.5-lightning:free',
+]
+
+JUDGE_MODEL = os.getenv('JUDGE_MODEL', 'meta-llama/llama-3.3-70b-instruct')
+JUDGE_FALLBACK_MODELS = [
+    'openai/gpt-4o-mini',
+    'mistralai/mistral-small-24b-instruct-2501',
+    'nvidia/nemotron-3-ultra-550b-a55b:free',
+]
+
+
 
 
 

@@ -23,8 +23,44 @@ from typing import Any, Dict, List, Optional
 from urllib.parse import urlparse
 
 import requests
-from langchain_core.messages import HumanMessage, SystemMessage
-from langgraph.graph import END, START, StateGraph
+
+try:
+    from langchain_core.messages import HumanMessage, SystemMessage
+except ImportError:
+    class HumanMessage:
+        type = 'human'
+        def __init__(self, content): self.content = content
+    class SystemMessage:
+        type = 'system'
+        def __init__(self, content): self.content = content
+
+try:
+    from langgraph.graph import END, START, StateGraph
+except ImportError:
+    END = '__end__'
+    START = '__start__'
+    class StateGraph:
+        def __init__(self, state_schema):
+            self.schema = state_schema
+            self.nodes = {}
+            self.edges = []
+        def add_node(self, name, func):
+            self.nodes[name] = func
+        def add_edge(self, from_node, to_node):
+            self.edges.append((from_node, to_node))
+        def compile(self):
+            class _CompiledApp:
+                def __init__(self, nodes):
+                    self.nodes = nodes
+                def invoke(self, state):
+                    current_state = dict(state)
+                    for name in ['research', 'claimant', 'defence', 'citation_audit', 'judge']:
+                        if name in self.nodes:
+                            updates = self.nodes[name](current_state)
+                            if isinstance(updates, dict):
+                                current_state.update(updates)
+                    return current_state
+            return _CompiledApp(self.nodes)
 
 # Try importing typing_extensions TypedDict; fall back to stdlib
 try:
