@@ -16,10 +16,10 @@ except ImportError:
             return _T(template)
 
 
-SYNTHESIS_PROMPT = """You are an Executive Legal Strategist and Senior Commercial Counsel.
-Review the extracted operational terms and the evidence-backed risk audit findings below.
+SYNTHESIS_PROMPT = """You are an Executive Commercial Counsel and Strategic Negotiator.
+Review the extracted operational terms and the grounded risk audit findings below.
 
-Synthesize an executive summary and strategic recommendations for executive leadership.
+Synthesize a comprehensive executive legal summary and prioritized negotiation amendment actions for executive leadership.
 
 Extracted Operational Terms:
 Parties: {parties}
@@ -30,15 +30,15 @@ Termination: {termination}
 
 Risk Audit Findings:
 Risk Level: {risk_level}
-Red Flags (Evidence-Backed): {red_flags}
+Red Flags (Verified Findings): {red_flags}
 Missing Protections / Omissions: {missing_protections}
-Mistakes & Ambiguities: {mistakes}
+Drafting Ambiguities: {mistakes}
 
 Return ONLY a valid JSON object with the following exact keys:
 {{
-  "title": "A professional executive title, e.g., 'Commercial Contract Risk Audit: [Agreement Name / Parties]'",
-  "plain_summary": "A clear, 3–4 sentence executive summary written in plain everyday English that a CEO or non-lawyer can immediately understand, highlighting whether the agreement is commercially viable and what the primary financial vulnerability is.",
-  "recommendations": "Actionable, numbered negotiation amendments and specific revised clause text recommended before signing or executing this agreement."
+  "title": "A professional executive title, e.g., 'Commercial Contract Risk Audit & Amendment Roadmap: [Agreement Name / Parties]'",
+  "plain_summary": "A comprehensive, 3–5 sentence executive summary written in plain everyday English that an executive or CEO can immediately understand. Clearly explain commercial viability, the primary uncapped financial risks (identifying who is indemnifying whom), SLA/performance weaknesses, and exit constraints.",
+  "recommendations": "Actionable, numbered negotiation amendments and specific revised clause text recommended before signing or executing this agreement. Address every critical red flag directly."
 }}
 
 CRITICAL: Return ONLY valid JSON format. No conversational text outside the JSON.
@@ -89,12 +89,7 @@ def parse_synthesis_json(raw_text: str) -> Dict[str, Any]:
 def synthesis_formatter_node(state: ContractAnalyzerState) -> ContractAnalyzerState:
     """
     Node 4: Synthesis & Final Comprehensive Formatter Agent.
-    
-    ENGINEERING IMPROVEMENTS:
-    - Integrates evidence-backed red flags, missing protections, and rubric breakdown.
-    - Preserves rich structured findings while ensuring 100% backward compatibility
-      with existing frontends and APIs.
-    - Appends audit metadata: retrieval strategy, document length, and risk score breakdown.
+    Consolidates verified evidence-backed red flags, missing protections, and rubric breakdown.
     """
     if not state.get("is_valid_doc", True):
         error_msg = state.get("doc_error", "Invalid or unreadable document.")
@@ -140,9 +135,9 @@ def synthesis_formatter_node(state: ContractAnalyzerState) -> ContractAnalyzerSt
         obligations=extracted.get("obligations", "Not specified"),
         termination=extracted.get("termination", "Not specified"),
         risk_level=risk.get("risk_level", "Medium"),
-        red_flags=json.dumps(red_flags_list[:6]),
-        missing_protections=json.dumps(missing_protections_list[:4]),
-        mistakes=json.dumps(mistakes_list[:4]),
+        red_flags=json.dumps(red_flags_list[:12]),
+        missing_protections=json.dumps(missing_protections_list[:8]),
+        mistakes=json.dumps(mistakes_list[:8]),
     )
 
     try:
@@ -182,5 +177,5 @@ def synthesis_formatter_node(state: ContractAnalyzerState) -> ContractAnalyzerSt
         }
     }
 
-    print(f"[Synthesis Node] Final contract analysis assembled ({len(red_flags_list)} red flags, {len(missing_protections_list)} missing protections).")
+    print(f"[Synthesis Node] Final contract analysis assembled ({len(red_flags_list)} verified red flags, {len(missing_protections_list)} missing protections).")
     return state

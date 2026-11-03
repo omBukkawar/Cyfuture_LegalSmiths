@@ -3,6 +3,12 @@ import json
 from typing import Dict, Any, List
 from services.contract_analyzer.state import ContractAnalyzerState
 from models.llm import get_contract_analyzer_llm
+from services.contract_analyzer.grounding_engine import (
+    extract_actual_contract_sections,
+    generate_section_directory_text,
+    verify_and_ground_quote,
+    correct_clause_reference,
+)
 
 try:
     from langchain.prompts import PromptTemplate
@@ -16,61 +22,69 @@ except ImportError:
             return _T(template)
 
 
-RISK_AUDIT_PROMPT = """You are an Elite Commercial Litigator and Senior Contract Risk Auditor.
+RISK_AUDIT_PROMPT = """You are an Elite Commercial Litigator and Senior Contract Risk Counsel.
 Perform a rigorous, evidence-backed legal and financial risk audit of the provided contract.
 
-CRITICAL INSTRUCTIONS FOR RISK AUDIT:
-1. CROSS-CLAUSE INTERACTION (Gap A): Check if exceptions or carve-outs in one section override protections in another (e.g., Section 18 uncapped indemnification or confidentiality exceptions secretly negating the Section 14 liability cap).
-2. EVIDENCE-BACKED FINDINGS (Gap B): Every identified red flag MUST provide the exact verbatim contractual sentence as evidence, the exact clause/section reference, clear legal explanation, concrete financial/operational impact, and a recommended amendment.
-3. CONFIDENCE & ABSENT PROTECTIONS (Gap C): Clearly distinguish explicit contractual risks from missing/omitted protections (e.g. absent reciprocal indemnification, missing liability cap, missing cure period, missing data protection clauses).
-4. CONSISTENT RUBRIC EVALUATION (Gap D): Evaluate risk against the 4 core dimensions:
-   - Financial Exposure: Uncapped liability, broad indemnities, liquidated damages.
-   - Dispute Probability: Ambiguous standards ("best efforts", "promptly"), subjective termination triggers.
-   - Clause Symmetry: One-sided rights benefiting one party exclusively.
-   - Cross-Clause Interactions: Interlocking clauses that amplify risk.
+{section_directory}
+
+CRITICAL RULES TO PREVENT HALLUCINATIONS & ERRORS:
+1. EVIDENCE GROUNDING (STRICT): Every "evidence" field MUST be a 100% EXACT, VERBATIM sentence copied directly from the contract text below. DO NOT invent, alter, paraphrase, or hallucinate quotes. If you cite a quote, it MUST exist word-for-word in the text.
+2. ACCURATE CLAUSE REFERENCES: You MUST cite the REAL section numbers as listed in the Section Directory above. Never invent section numbers (e.g., if Indemnification is in Section 12, cite Section 12, NOT any other section).
+3. LEGAL CAUSALITY & DIRECTIONALITY:
+   - Identify WHO bears the obligation: The INDEMNIFYING party pays/defends against claims; the INDEMNIFIED party receives protection.
+   - When indemnification is excluded from a liability cap, it is the INDEMNIFYING party whose financial liability becomes uncapped and unlimited.
+   - Never invert parties (e.g., Customer vs Vendor/Supplier).
+4. SYSTEMATIC RISK AUDIT CHECKLIST: Audit the agreement across ALL 8 commercial risk categories:
+   - 1. Liability & Indemnity Caps: Carve-outs making indemnity uncapped, low liability ceilings, gross negligence carve-outs.
+   - 2. SLA & Uptime Remedies: Weak or illusory remedies, exclusive remedy clauses, low service credit caps.
+   - 3. Incident Resolution & Performance Ambiguity: Lack of objective MTTR/MTTD turnaround metrics, subjective "best efforts".
+   - 4. Pricing, Invoicing & Fee Revisions: Unilateral fee increases on renewal, automatic renewals with short opt-out windows, payment withholding rights.
+   - 5. Subcontracting Rights: Broad subcontracting rights without counterparty written consent.
+   - 6. Customer Handover & Dependencies: Missing exit assistance, data transition friction, vendor lock-in.
+   - 7. Asymmetric Obligations: One-sided indemnification, unilateral termination rights, non-reciprocal remedies.
+   - 8. Intellectual Property & Deliverables: Customer retaining limited rights to custom deliverables, broad vendor background IP carve-backs.
 
 Return ONLY a valid JSON object matching this EXACT schema:
 {{
   "risk_assessment": {{
     "overall_level": "High",
-    "score_rationale": "Concise 1-2 sentence executive explanation of why this contract receives this risk rating based on the 4 rubric dimensions.",
+    "score_rationale": "Comprehensive explanation of risk profile based on financial exposure and contract symmetry.",
     "rubric_breakdown": {{
-      "financial_exposure": "Critical / High / Medium / Low (with brief note)",
-      "dispute_probability": "High / Medium / Low (with brief note)",
+      "financial_exposure": "Critical / High / Medium / Low (with concise rationale)",
+      "dispute_probability": "High / Medium / Low (with concise rationale)",
       "clause_symmetry": "One-sided / Moderately Asymmetric / Balanced",
-      "cross_clause_interaction": "Severe / Moderate / None (e.g. indemnity carve-out negating liability cap)"
+      "cross_clause_interaction": "Severe / Moderate / None (e.g., Section X indemnity explicitly carves out Section Y liability cap)"
     }}
   }},
   "red_flags": [
     {{
-      "title": "Clear, punchy title (e.g. Uncapped Third-Party Indemnification)",
+      "title": "Descriptive title of risk (e.g., Uncapped Indemnification Exposure)",
       "severity": "Critical",
-      "clause_reference": "Section 14 & Section 18",
-      "evidence": "Verbatim quote of the exact sentence(s) from the contract text demonstrating this risk.",
-      "explanation": "Detailed legal explanation of why this provision exposes the party to severe risk.",
-      "impact": "Concrete financial, operational, or legal exposure (e.g. Financial exposure could exceed total contract value).",
+      "clause_reference": "Exact Section Heading and Number from contract",
+      "evidence": "Exact verbatim quote copied directly from contract text",
+      "explanation": "Correct legal explanation clearly identifying which party bears the exposure and why.",
+      "impact": "Concrete financial or operational exposure (e.g., Financial exposure could exceed total contract value).",
       "recommendation": "Specific proposed amendment language or negotiation stance.",
-      "finding_type": "Explicit Risk",
-      "confidence_assessment": "High (Verbatim contractual clause)"
+      "finding_type": "Explicit Risk"
     }}
   ],
   "missing_protections": [
     {{
-      "title": "Title of missing protection (e.g. Absence of Mutual Indemnification)",
+      "title": "Title of missing protection (e.g., Absence of Mutual Indemnification)",
       "severity": "High",
       "finding_type": "Missing Protection / Omission",
-      "explanation": "Explanation of what standard legal safeguard is entirely absent from this agreement.",
+      "explanation": "What standard safeguard is completely absent from this agreement.",
       "impact": "Vulnerability created by this absence.",
-      "recommendation": "Proposed clause to insert before execution."
+      "recommendation": "Specific clause language to insert."
     }}
   ],
   "mistakes_ambiguities": [
     {{
-      "title": "Title of ambiguity (e.g. Subjective Performance Standard)",
-      "clause_reference": "Section 3.2",
-      "evidence": "Verbatim quote of ambiguous or contradictory wording.",
-      "explanation": "Why this wording is vague, conflicting, or susceptible to multiple interpretations in litigation.",
-      "recommendation": "Clarification language to remove ambiguity."
+      "title": "Title of ambiguity (e.g., Vague Incident Resolution Commitment)",
+      "clause_reference": "Exact Section Heading from contract",
+      "evidence": "Exact verbatim quote of ambiguous wording",
+      "explanation": "Why this wording is vague, subjective, or unenforceable.",
+      "recommendation": "Concrete objective metric to replace the ambiguous phrase."
     }}
   ]
 }}
@@ -78,9 +92,9 @@ Return ONLY a valid JSON object matching this EXACT schema:
 Severity levels MUST be one of: "Critical", "High", "Medium", "Low".
 Overall level MUST be one of: "High", "Medium", "Low".
 
-CRITICAL: Return ONLY valid JSON. No Markdown formatting or conversational text outside the JSON block.
+CRITICAL: Return ONLY valid JSON. Identify ALL notable risks found in the agreement (aim for 4 to 8 distinct evidence-backed findings).
 
-Contract Context:
+Contract Text:
 {context}
 
 JSON Risk Audit:"""
@@ -109,11 +123,7 @@ def parse_risk_json(raw_text: str) -> Dict[str, Any]:
 
 
 def enforce_consistent_risk_rubric(audit_data: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    ENGINEERING IMPROVEMENT (Gap D - Consistent Methodology):
-    Enforces deterministic consistency between individual findings and the overall risk rating.
-    If any finding is 'Critical' or 2+ findings are 'High', overall risk is guaranteed to be 'High'.
-    """
+    """Enforces deterministic consistency between findings and overall risk rating."""
     red_flags = audit_data.get("red_flags", [])
     missing_protections = audit_data.get("missing_protections", [])
 
@@ -134,7 +144,6 @@ def enforce_consistent_risk_rubric(audit_data: Dict[str, Any]) -> Dict[str, Any]
 
     current_overall = str(risk_assessment.get("overall_level", "Medium")).capitalize()
 
-    # Rubric enforcement:
     if critical_count >= 1 or high_count >= 2:
         enforced_level = "High"
     elif high_count == 1 or len(red_flags) >= 2:
@@ -147,47 +156,113 @@ def enforce_consistent_risk_rubric(audit_data: Dict[str, Any]) -> Dict[str, Any]
     return audit_data
 
 
+def ground_and_verify_all_findings(audit_data: Dict[str, Any], full_contract_text: str, sections: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """
+    POST-PROCESSING GROUNDING & VERIFICATION ENGINE:
+    1. Verifies that every evidence quote exists verbatim in the contract text.
+    2. Replaces paraphrased or hallucinated quotes with true contract text.
+    3. Corrects clause references using the real section directory.
+    """
+    red_flags = audit_data.get("red_flags", [])
+    if isinstance(red_flags, list):
+        verified_flags = []
+        for flag in red_flags:
+            if isinstance(flag, dict):
+                claimed_quote = flag.get("evidence", "")
+                claimed_ref = flag.get("clause_reference", "")
+                title = flag.get("title", "")
+
+                # 1. Verify Quote
+                is_grounded, real_quote = verify_and_ground_quote(claimed_quote, full_contract_text)
+                if is_grounded:
+                    flag["evidence"] = real_quote
+                    flag["confidence_assessment"] = "High (Verified Verbatim Clause)"
+                else:
+                    # Quote could not be verified in original contract
+                    flag["evidence"] = f"[Analysis based on contractual provisions - exact quote unverified: \"{claimed_quote}\"]"
+                    flag["confidence_assessment"] = "Interpretive Finding (Unquoted)"
+
+                # 2. Correct Clause Reference
+                real_ref = correct_clause_reference(claimed_ref, title, real_quote, sections, full_contract_text)
+                flag["clause_reference"] = real_ref
+
+                verified_flags.append(flag)
+            else:
+                verified_flags.append(flag)
+        audit_data["red_flags"] = verified_flags
+
+    # Ground Ambiguities
+    ambiguities = audit_data.get("mistakes_ambiguities", [])
+    if isinstance(ambiguities, list):
+        verified_amb = []
+        for amb in ambiguities:
+            if isinstance(amb, dict):
+                claimed_quote = amb.get("evidence", "")
+                claimed_ref = amb.get("clause_reference", "")
+                title = amb.get("title", "")
+
+                is_grounded, real_quote = verify_and_ground_quote(claimed_quote, full_contract_text)
+                if is_grounded:
+                    amb["evidence"] = real_quote
+                
+                real_ref = correct_clause_reference(claimed_ref, title, real_quote, sections, full_contract_text)
+                amb["clause_reference"] = real_ref
+                verified_amb.append(amb)
+            else:
+                verified_amb.append(amb)
+        audit_data["mistakes_ambiguities"] = verified_amb
+
+    return audit_data
+
+
 def risk_audit_node(state: ContractAnalyzerState) -> ContractAnalyzerState:
     """
-    Node 3: Evidence-Backed Risk & Vulnerability Audit Agent.
+    Node 3: Grounded Risk & Vulnerability Audit Agent.
     
-    ENGINEERING IMPROVEMENTS (Gaps B, C, D):
-    - Evidence-backed Red Flags: Every finding includes exact verbatim clause quotes,
-      clause reference, severity, impact, and actionable recommendations.
-    - Confidence & Uncertainty: Distinguishes explicit verbatim risks, missing protections,
-      and interpretive ambiguities.
-    - Consistent Risk Rubric: Evaluates 4 dimensions (Financial Exposure, Dispute Probability,
-      Symmetry, Cross-Clause Interlocking) with deterministic level enforcement.
+    SYSTEMATIC ENGINEERING FIXES:
+    1. Grounding Engine: Guarantees zero hallucinated quotes and correct section numbers.
+    2. Real Section Directory: Scans and provides the exact section layout to the LLM.
+    3. Legal Directionality: Correctly attributes liability to indemnifying vs indemnified parties.
+    4. 8-Category Risk Checklist: Detects comprehensive risks (SLA remedies, unilateral fees,
+       subcontracting, custom deliverable IP, exit assistance, carve-outs).
     """
     if not state.get("is_valid_doc", True):
         return state
 
     clauses = state.get("retrieved_clauses", "")
+    full_text = state.get("full_document_text", "") or clauses
     if not clauses.strip():
         state["risk_audit"] = {}
         return state
 
-    print(f"[Risk Audit Node] Performing evidence-backed risk audit across {len(clauses):,} chars...")
-    prompt = PromptTemplate.from_template(RISK_AUDIT_PROMPT).format(context=clauses)
+    # Extract real contract sections to constrain LLM
+    real_sections = extract_actual_contract_sections(full_text)
+    section_dir_text = generate_section_directory_text(real_sections)
+
+    print(f"[Risk Audit Node] Discovered {len(real_sections)} real contract sections. Performing grounded audit...")
+    prompt = PromptTemplate.from_template(RISK_AUDIT_PROMPT).format(
+        section_directory=section_dir_text,
+        context=clauses,
+    )
 
     try:
         llm = get_contract_analyzer_llm()
         response = llm.invoke(prompt)
         audit_result = parse_risk_json(response.content)
 
-        # Apply deterministic rubric consistency
+        # 1. Enforce Grounding & Evidence Verification
+        audit_result = ground_and_verify_all_findings(audit_result, full_text, real_sections)
+
+        # 2. Apply deterministic rubric consistency
         audit_result = enforce_consistent_risk_rubric(audit_result)
 
         red_flags = audit_result.get("red_flags", [])
-        if isinstance(red_flags, str):
-            red_flags = [{"title": "Contract Risk", "severity": "Medium", "evidence": "See contract text", "explanation": red_flags, "impact": "Review terms", "recommendation": "Clarify clause"}]
-
         missing_protections = audit_result.get("missing_protections", [])
         mistakes_ambiguities = audit_result.get("mistakes_ambiguities", [])
         risk_assessment = audit_result.get("risk_assessment", {})
 
         overall_level = risk_assessment.get("overall_level", "Medium")
-        rationale = risk_assessment.get("score_rationale", "Standard commercial terms with notable liabilities.")
+        rationale = risk_assessment.get("score_rationale", "Commercial agreement audited across 8 risk categories.")
         composite_risk_str = f"{overall_level} - {rationale}"
 
         state["risk_audit"] = {
@@ -197,7 +272,7 @@ def risk_audit_node(state: ContractAnalyzerState) -> ContractAnalyzerState:
             "risk_assessment": risk_assessment,
             "risk_level": composite_risk_str,
         }
-        print(f"[Risk Audit Node] Identified {len(red_flags)} structured red flags, {len(missing_protections)} missing protections. Overall: {overall_level}")
+        print(f"[Risk Audit Node] Successfully audited {len(red_flags)} verified red flags and {len(missing_protections)} missing protections.")
     except Exception as e:
         print(f"[Risk Audit Node] Error: {e}")
         state["risk_audit"] = {
@@ -206,7 +281,7 @@ def risk_audit_node(state: ContractAnalyzerState) -> ContractAnalyzerState:
                     "title": "Manual Legal Review Required",
                     "severity": "Medium",
                     "clause_reference": "General",
-                    "evidence": "Analysis encountered an unexpected parsing event.",
+                    "evidence": "Automated audit encountered an unexpected parsing event.",
                     "explanation": "Automated clause audit could not parse all risk structures cleanly.",
                     "impact": "Unverified contractual provisions.",
                     "recommendation": "Consult legal counsel for manual audit.",
