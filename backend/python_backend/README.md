@@ -1,19 +1,33 @@
 # LegalSmiths AI Backend (FastAPI Microservice)
 
-The unified AI backend for **LegalSmiths**, powering AI Legal Advice, Advanced Contract Clause Analysis, and Judicial Case Outcome Prediction.
+The unified, production AI backend for **LegalSmiths**, powering statutory Indian Legal Advice, Advanced Contract Clause Analysis, and Judicial Case Outcome Prediction.
+
+---
+
+## 🌐 Live Production Deployment
+
+The AI microservice is deployed as a containerized web service on **Render**:
+* **Live Base URL:** [https://legalsmiths-ai.onrender.com](https://legalsmiths-ai.onrender.com)
+* **Interactive Swagger UI:** [https://legalsmiths-ai.onrender.com/docs](https://legalsmiths-ai.onrender.com/docs)
+* **Health Check:** [https://legalsmiths-ai.onrender.com/health](https://legalsmiths-ai.onrender.com/health)
+* **Hosting:** Render Web Service (Docker Runtime)
+* **Region:** Singapore (`ap-southeast-1`) — Optimized for low latency.
+* **CI/CD:** Automated verification and gated webhook deployment via GitHub Actions.
 
 ---
 
 ## 🌟 Key Architecture & Capabilities
 
-```
+```text
 backend/python_backend/
+├── Dockerfile               # Production Slim Python 3.11 container
+├── .dockerignore            # Excludes caches, venv, and large indexes
+├── requirements.txt         # Slimmed, production-safe dependencies
 ├── main.py                  # FastAPI application entrypoint & lifecycle
 ├── config/
-│   └── settings.py          # Environment, device selection, and paths
+│   └── settings.py          # Environment, device selection, and priority model chains
 ├── models/
-│   ├── llm.py               # Dedicated OpenRouter LLM provider
-│   └── embeddings.py        # HuggingFace Embeddings & CrossEncoder models
+│   └── llm.py               # OpenRouter LLM wrapper with multi-model fallback chain
 ├── routers/
 │   ├── legal_assistant.py   # POST /legalassistant
 │   ├── contract_analyzer.py # POST /contractanalyzer
@@ -40,101 +54,75 @@ backend/python_backend/
     └── document_service.py  # PDF, DOCX, TXT multi-engine document extraction
 ```
 
-### 1. 🏛️ Legal Assistant (`/legalassistant`)
-* **Agentic 4-Node Pipeline:**
-  1. **Node 1 (Guardrails):** Catches prompt injection, jailbreak attempts, and illegal solicitation before executing search or consuming LLM tokens.
-  2. **Node 2 (Serper Search):** Fetches real-time Indian legal provisions, BNS/BNSS amendments, and court precedents.
-  3. **Node 3 (Evaluator):** Scores relevance and filters out noise/foreign law, triggering internal fallback if necessary.
-  4. **Node 4 (Synthesis):** OpenRouter LLM (`meta-llama/llama-3.3-70b-instruct`) generates plain-language advice with mandatory `[Act, Section]` citations.
+---
 
-### 2. 📜 Contract Analyzer (`/contractanalyzer`)
-* **Agentic 4-Node Pipeline:**
-  1. **Node 1 (Ingestion & Retrieval):** Chunks contract documents and runs an advanced Hybrid Retriever (BM25 sparse + FAISS dense MMR with Cross-Encoder reranker) across 5 core legal dimensions.
-  2. **Node 2 (Clause Extractor):** Extracts operational terms (parties, critical dates, payment schedules, performance covenants, and termination triggers).
-  3. **Node 3 (Risk Auditor):** Analyzes uncapped liabilities, one-sided indemnities, ambiguities, and computes a risk rating (`Low`, `Medium`, `High`).
-  4. **Node 4 (Synthesis & Formatter):** Generates an executive summary, actionable amendment recommendations, and strictly formats the JSON matching frontend React tabs.
+## 🔄 Multi-Model Fallback Resilience Chain
 
-### 3. ⚖️ Case Outcome Prediction (`/caseoutcomeprediction`)
-* Analyzes factual case summaries under Indian legal precedent.
-* Computes win/loss probability percentage, strongest arguments, counterarguments, precedent citations, and statutory penalties.
+Free-tier LLMs rotate frequently and can occasionally return `404 Not Found` (model rotated) or `402 Payment Required` (credits exhausted). To guarantee 99.9% uptime during evaluation, the microservice implements a priority fallback chain (`models/llm.py`):
+
+```text
+User Request
+     │
+     ├── 1. Primary Specialized Model (e.g., Gemma 4 31B / Qwen 2.5 72B / DeepSeek R1)
+     │       └── If 404 / 402 Error ──► Automatically catches and retries
+     │
+     ├── 2. Secondary Fast Model (Mistral 7B Instruct / Hermes 3 Llama)
+     │       └── If 404 / 402 Error ──► Automatically catches and retries
+     │
+     └── 3. Ultimate Safety Net: 'openrouter/auto'
+             └── Dynamic routing to any currently active, high-availability free model
+```
 
 ---
 
-## ⚙️ Environment Variables
+## ⚙️ Environment Configuration
 
-Create or update `.env` in `backend/python_backend/`:
+Copy `.env.example` to `.env` in `backend/python_backend/`:
 
+```bash
+cp .env.example .env
+```
+
+### Production `.env` Template
 ```env
-# Server Configuration
-PORT=8000
-HOST=0.0.0.0
-DEVICE=auto
-
-# OpenRouter (Primary LLM Provider)
-OPENROUTER_API_KEY=your_openrouter_api_key
+# OpenRouter API Key
+OPENROUTER_API_KEY=sk-or-v1-xxxxxx
 OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
+OPENROUTER_MODEL_NAME=openrouter/auto
 
-# Per-Module Model Configuration (supports openrouter/auto or specific free models)
+# Per-module primary models (optional overrides)
 LEGAL_ASSISTANT_MODEL=openrouter/auto
 CONTRACT_ANALYZER_MODEL=openrouter/auto
 CASE_PREDICTOR_MODEL=openrouter/auto
 
-# Serper API (Real-Time Google India Search)
-SERPER_API_KEY=your_serper_api_key
+# Serper.dev Key for Real-time Indian Law Search
+SERPER_API_KEY=xxxxxx
+
+PORT=8000
+HOST=0.0.0.0
 ```
 
 ---
 
-## 🚀 Getting Started
+## 🚀 Running Locally
 
-### 1. Install Dependencies
 ```bash
 cd backend/python_backend
 pip install -r requirements.txt
-```
-
-### 2. Run the Development Server
-```bash
 uvicorn main:app --reload --port 8000
 ```
-
-The service will be available at:
-* **Interactive Swagger UI:** [http://localhost:8000/docs](http://localhost:8000/docs)
-* **ReDoc Documentation:** [http://localhost:8000/redoc](http://localhost:8000/redoc)
-* **Health Check:** [http://localhost:8000/health](http://localhost:8000/health)
+* API Server: `http://localhost:8000`
+* Swagger Interactive Docs: `http://localhost:8000/docs`
+* Health Check: `http://localhost:8000/health`
 
 ---
 
-## 📡 API Endpoints
+## 🐳 Docker Deployment
 
-### 1. Legal Assistant
-* **Method:** `POST /legalassistant`
-* **Content-Type:** `application/json`
-* **Request:**
-  ```json
-  {
-    "questions": [
-      "Can police arrest an accused without an arrest warrant in India?"
-    ]
-  }
-  ```
+```bash
+# Build Docker image
+docker build -t legalsmiths-ai .
 
-### 2. Smart Contract Analyzer
-* **Method:** `POST /contractanalyzer`
-* **Content-Type:** `multipart/form-data`
-* **Parameters:**
-  * `request` (string): `"Please analyze this contract for liabilities and red flags."`
-  * `files` (binary): One or more PDF, DOCX, or TXT contract files.
-
-### 3. Case Outcome Prediction
-* **Method:** `POST /caseoutcomeprediction`
-* **Content-Type:** `application/json`
-* **Request:**
-  ```json
-  {
-    "questions": [
-      "Petitioner entered into a registered lease agreement for commercial property. Respondent defaulted on rent for 6 months and refuses to vacate despite 30 days notice under Section 106 of the Transfer of Property Act."
-    ]
-  }
-  ```
-
+# Run Docker container
+docker run -p 8000:8000 --env-file .env legalsmiths-ai
+```
