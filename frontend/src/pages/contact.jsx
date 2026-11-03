@@ -96,18 +96,16 @@ const Contact = () => {
           MAIN CONTACT CONTAINER (Info + Form)
          ------------------------------------------------------------- */}
       <main className="contact-container">
-        {/* Left Column: Direct Contact Info */}
+        {/* Left Column: Direct Contact Info (Dummy) */}
         <div className="contact-info-panel">
           <div className="info-card">
             <div className="info-icon">📍</div>
             <div className="info-text">
-              <h3>Headquarters</h3>
+              <h3>Office</h3>
               <p>
-                LegalSmiths AI Labs
+                123 Legal Avenue, Suite 100
                 <br />
-                Cyber City, DLF Phase 2, Gurugram
-                <br />
-                National Capital Region (NCR), India
+                City, State 00000
               </p>
             </div>
           </div>
@@ -115,11 +113,11 @@ const Contact = () => {
           <div className="info-card">
             <div className="info-icon">✉️</div>
             <div className="info-text">
-              <h3>Email Inquiries</h3>
+              <h3>Email</h3>
               <p>
-                General: <a href="mailto:contact@legalsmiths.ai">contact@legalsmiths.ai</a>
+                General: <a href="mailto:info@example.com">info@example.com</a>
                 <br />
-                Support: <a href="mailto:support@legalsmiths.ai">support@legalsmiths.ai</a>
+                Support: <a href="mailto:support@example.com">support@example.com</a>
               </p>
             </div>
           </div>
@@ -127,12 +125,12 @@ const Contact = () => {
           <div className="info-card">
             <div className="info-icon">📞</div>
             <div className="info-text">
-              <h3>Helpline & Advisory</h3>
+              <h3>Phone</h3>
               <p>
-                +91 (011) 4567-8900
+                +1 (555) 000-0000
                 <br />
                 <span style={{ fontSize: "0.8rem", color: "#888" }}>
-                  Monday – Saturday: 9:00 AM – 7:00 PM IST
+                  Monday – Friday: 9:00 AM – 5:00 PM
                 </span>
               </p>
             </div>
@@ -162,7 +160,7 @@ const Contact = () => {
 
           {submitted && (
             <div className="success-alert">
-              <span>✓</span> Thank you! Your inquiry has been received. Our legal team will get in touch shortly.
+              <span>✓</span> Thank you! Your inquiry has been received. Our team will get in touch shortly.
             </div>
           )}
 
@@ -172,7 +170,7 @@ const Contact = () => {
               <input
                 type="text"
                 id="name"
-                placeholder="e.g. Adv. Rajesh Sharma"
+                placeholder="Your name..."
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 required
@@ -184,7 +182,7 @@ const Contact = () => {
               <input
                 type="email"
                 id="email"
-                placeholder="e.g. rajesh@lawfirm.in"
+                placeholder="name@example.com"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 required
@@ -195,7 +193,7 @@ const Contact = () => {
               <label htmlFor="question">Your Inquiry or Question*</label>
               <textarea
                 id="question"
-                placeholder="Describe your inquiry, legal tech partnership, or question..."
+                placeholder="Your message or inquiry..."
                 value={formData.question}
                 onChange={(e) => setFormData({ ...formData, question: e.target.value })}
                 required
