@@ -60,10 +60,9 @@ const LegalAssistant = () => {
     }
   }, [input]);
 
-  // 1. Fetch user's chat sessions on mount
+  // 1. Fetch user's chat sessions
   const fetchSessions = useCallback(async () => {
     try {
-      setLoadingSessions(true);
       const headers = {
         ...getAuthHeaders(),
         "x-user-id": currentUser?.id || "anonymous",
@@ -74,21 +73,47 @@ const LegalAssistant = () => {
         setSessions(res.data.sessions);
       }
     } catch (err) {
-      console.warn("Could not fetch sessions from Node backend; trying local cache:", err.message);
-      const cached = localStorage.getItem(`legalsmiths_sessions_${currentUser?.id || "anonymous"}`);
-      if (cached) {
-        try {
-          setSessions(JSON.parse(cached));
-        } catch (e) {}
-      }
-    } finally {
-      setLoadingSessions(false);
+      console.warn("Could not refresh sessions from Node backend:", err.message);
     }
   }, [currentUser?.id]);
 
   useEffect(() => {
-    fetchSessions();
-  }, [fetchSessions]);
+    let isMounted = true;
+
+    const initialLoad = async () => {
+      try {
+        const headers = {
+          ...getAuthHeaders(),
+          "x-user-id": currentUser?.id || "anonymous",
+        };
+
+        const res = await axios.get(`${NODE_API_URL}/sessions`, { headers });
+        if (isMounted && res.data?.success && Array.isArray(res.data.sessions)) {
+          setSessions(res.data.sessions);
+        }
+      } catch (err) {
+        console.warn("Could not fetch sessions from Node backend; trying local cache:", err.message);
+        const cached = localStorage.getItem(`legalsmiths_sessions_${currentUser?.id || "anonymous"}`);
+        if (cached && isMounted) {
+          try {
+            setSessions(JSON.parse(cached));
+          } catch (_parseErr) {
+            console.warn("Cache parse error:", _parseErr);
+          }
+        }
+      } finally {
+        if (isMounted) {
+          setLoadingSessions(false);
+        }
+      }
+    };
+
+    initialLoad();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [currentUser?.id]);
 
   // 2. Select and load a past chat session
   const handleSelectSession = async (sessionId) => {
