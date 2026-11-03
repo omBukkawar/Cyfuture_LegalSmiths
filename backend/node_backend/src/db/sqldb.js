@@ -3,7 +3,8 @@ require("dotenv").config();
 
 /**
  * TiDB Cloud & Cloud MySQL Connection Pool
- * Explicitly configures TLS 1.2+ encryption required by TiDB Serverless.
+ * Explicitly configures TLS 1.2+ encryption required by TiDB Serverless,
+ * while allowing local unencrypted MySQL when host is localhost.
  */
 let poolConfig;
 

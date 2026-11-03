@@ -16,34 +16,52 @@ OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
 OPENROUTER_BASE_URL = os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
 SERPER_API_KEY = os.getenv("SERPER_API_KEY", "")
 
-# Default fallback model (used when no module-specific chain applies)
-OPENROUTER_MODEL_NAME = os.getenv("OPENROUTER_MODEL_NAME", "openrouter/auto")
+# Default fallback model
+OPENROUTER_MODEL_NAME = os.getenv("OPENROUTER_MODEL_NAME", "nvidia/nemotron-3-ultra-550b-a55b:free")
 
 # --------------------------------------------------------------------------
 # Per-module model priority chains
-# Models are tried in order; 404/402 errors skip to the next automatically.
-# openrouter/auto at the end = ultimate safety net (picks any working free model).
 # --------------------------------------------------------------------------
 
 LEGAL_ASSISTANT_MODELS = [
-    os.getenv("LEGAL_ASSISTANT_MODEL", "google/gemma-4-31b-it:free"),
-    "mistralai/mistral-7b-instruct:free",
-    "nousresearch/hermes-3-llama-3.1-8b:free",
-    "openrouter/auto",
+    os.getenv("LEGAL_ASSISTANT_MODEL", "nvidia/nemotron-3-ultra-550b-a55b:free"),
+    "nvidia/nemotron-3.5-lightning:free",
+    "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "google/gemma-4-31b-it:free",
 ]
 
 CONTRACT_ANALYZER_MODELS = [
-    os.getenv("CONTRACT_ANALYZER_MODEL", "qwen/qwen-2.5-72b-instruct:free"),
+    os.getenv("CONTRACT_ANALYZER_MODEL", "nvidia/nemotron-3-ultra-550b-a55b:free"),
+    "nvidia/nemotron-3.5-lightning:free",
+    "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
     "google/gemma-4-31b-it:free",
-    "mistralai/mistral-7b-instruct:free",
-    "openrouter/auto",
 ]
 
 CASE_PREDICTOR_MODELS = [
-    os.getenv("CASE_PREDICTOR_MODEL", "deepseek/deepseek-r1:free"),
+    os.getenv("CASE_PREDICTOR_MODEL", "nvidia/nemotron-3-ultra-550b-a55b:free"),
+    "nvidia/nemotron-3.5-lightning:free",
+    "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
     "google/gemma-4-31b-it:free",
-    "nousresearch/hermes-3-llama-3.1-8b:free",
-    "openrouter/auto",
+]
+
+# --------------------------------------------------------------------------
+# LangGraph Case Analysis Pipeline models
+# ADVOCATE: used for claimant/defence legal briefs
+# JUDGE: judicial evaluator (supports JSON mode for structured output)
+# --------------------------------------------------------------------------
+
+ADVOCATE_MODEL = os.getenv("ADVOCATE_MODEL", "nvidia/nemotron-3-ultra-550b-a55b:free")
+ADVOCATE_FALLBACK_MODELS: list = [
+    os.getenv("ADVOCATE_FALLBACK_1", "nvidia/nemotron-3.5-lightning:free"),
+    "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "google/gemma-4-31b-it:free",
+]
+
+JUDGE_MODEL = os.getenv("JUDGE_MODEL", "nvidia/nemotron-3-ultra-550b-a55b:free")
+JUDGE_FALLBACK_MODELS: list = [
+    os.getenv("JUDGE_FALLBACK_1", "nvidia/nemotron-3.5-lightning:free"),
+    "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "google/gemma-4-31b-it:free",
 ]
 
 PORT = int(os.getenv("PORT", 8000))

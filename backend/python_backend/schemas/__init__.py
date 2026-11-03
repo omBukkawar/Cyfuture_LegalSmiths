@@ -1,6 +1,6 @@
 from .assistant_schemas import SubmissionRequest, SubmissionResponse
 from .contract_schemas import ContractSubmissionResponse, ContractAnalysis
-from .case_schemas import CasePredictionRequest, CasePredictionResponse, CaseAdvisory
+from .case_schemas import CasePredictionRequest, CasePredictionResponse, DebateVerdict
 
 __all__ = [
     "SubmissionRequest",
@@ -9,6 +9,7 @@ __all__ = [
     "ContractAnalysis",
     "CasePredictionRequest",
     "CasePredictionResponse",
-    "CaseAdvisory",
+    "DebateVerdict",
 ]
+
 
