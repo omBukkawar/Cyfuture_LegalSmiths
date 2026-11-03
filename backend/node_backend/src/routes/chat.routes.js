@@ -6,6 +6,7 @@ const {
   getChatSessions,
   getChatSessionById,
   addMessageToSession,
+  updateChatSessionTitle,
   deleteChatSession,
 } = require("../controllers/chat.controller.js");
 
@@ -14,7 +15,8 @@ router.post("/sessions", createChatSession);
 router.get("/sessions", getChatSessions);
 router.get("/sessions/:sessionId", getChatSessionById);
 router.post("/sessions/:sessionId/messages", addMessageToSession);
+router.patch("/sessions/:sessionId/title", updateChatSessionTitle);
+router.put("/sessions/:sessionId/title", updateChatSessionTitle);
 router.delete("/sessions/:sessionId", deleteChatSession);
 
 module.exports = router;
-
