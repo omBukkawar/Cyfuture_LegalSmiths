@@ -47,7 +47,7 @@ JSON Summary & Recommendations:"""
 
 
 def parse_synthesis_json(raw_text: str) -> Dict[str, Any]:
-    """Parses synthesis JSON safely."""
+    """Parses synthesis JSON safely, falling back to field regex extraction if inner quotes are unescaped."""
     cleaned = raw_text.strip()
     if "```" in cleaned:
         match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", cleaned, re.DOTALL)
@@ -55,17 +55,36 @@ def parse_synthesis_json(raw_text: str) -> Dict[str, Any]:
             cleaned = match.group(1)
 
     json_match = re.search(r"\{.*\}", cleaned, re.DOTALL)
-    if json_match:
-        try:
-            return json.loads(json_match.group(0))
-        except Exception:
-            pass
+    target = json_match.group(0) if json_match else cleaned
+
+    try:
+        return json.loads(target)
+    except Exception:
+        pass
+
+    # Resilient field-level regex extraction if LLM didn't escape inner quotes
+    extracted = {}
+    title_match = re.search(r'"title"\s*:\s*"(.*?)"(?:\s*,|\s*\n|\s*})', target, re.DOTALL)
+    if title_match:
+        extracted["title"] = title_match.group(1).replace('\\"', '"')
+
+    summary_match = re.search(r'"plain_summary"\s*:\s*"(.*?)"(?:\s*,|\s*\n\s*"recommendations"|\s*})', target, re.DOTALL)
+    if summary_match:
+        extracted["plain_summary"] = summary_match.group(1).replace('\\"', '"')
+
+    rec_match = re.search(r'"recommendations"\s*:\s*"(.*?)"(?:\s*})', target, re.DOTALL)
+    if rec_match:
+        extracted["recommendations"] = rec_match.group(1).replace('\\"', '"')
+
+    if extracted:
+        return extracted
 
     try:
         return json.loads(cleaned)
     except Exception as e:
         print(f"[Synthesis Node] JSON parsing warning: {e}")
         return {}
+
 
 
 def synthesis_formatter_node(state: ContractAnalyzerState) -> ContractAnalyzerState:

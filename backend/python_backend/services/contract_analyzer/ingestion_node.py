@@ -161,7 +161,13 @@ def ingestion_node(state: ContractAnalyzerState) -> ContractAnalyzerState:
     documents = state.get("documents", [])
     user_request = state.get("request_text", "")
 
+    # If documents is empty but user_request contains substantial text (e.g. pasted contract), wrap it as a Document
+    if not documents and len(user_request.strip()) > 80:
+        documents = [Document(page_content=user_request.strip(), metadata={"source": "pasted_text"})]
+        state["documents"] = documents
+
     if not documents or not any(getattr(d, "page_content", "").strip() for d in documents):
+
         print("[Ingestion Node] Error: No readable contract text found in uploaded files.")
         state["is_valid_doc"] = False
         state["doc_error"] = "No readable contract text found in uploaded files."

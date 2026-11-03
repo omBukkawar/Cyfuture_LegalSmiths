@@ -23,13 +23,14 @@ class LLMResponse:
 class OpenRouterLLMWrapper:
     """
     OpenRouter LLM wrapper with priority fallback chain support.
-    Tries models in order, skips any that return 404 (unavailable/deprecated),
+    Tries models in order, skips any that return 404/402/429/500,
     and logs which model was actually used.
     """
     def __init__(
         self,
         models: list,
         temperature: float = 0.0,
+        max_tokens: int = 2500,
     ):
         # Accept either a single model string or a priority list
         if isinstance(models, str):
@@ -37,6 +38,7 @@ class OpenRouterLLMWrapper:
         else:
             self.models = models
         self.temperature = temperature
+        self.max_tokens = max_tokens
         self._init_client()
 
     def _init_client(self):
@@ -53,7 +55,7 @@ class OpenRouterLLMWrapper:
     def invoke(self, prompt: Any) -> LLMResponse:
         """
         Tries each model in priority order.
-        On 404 (model deprecated/unavailable), moves to the next.
+        On 404/402/429/500 errors, gracefully moves to the next.
         Logs which model was actually used.
         """
         prompt_text = prompt.to_string() if hasattr(prompt, "to_string") else str(prompt)
@@ -64,32 +66,42 @@ class OpenRouterLLMWrapper:
                 completion = self.client.chat.completions.create(
                     model=model,
                     temperature=self.temperature,
+                    max_tokens=self.max_tokens,
                     messages=[{"role": "user", "content": prompt_text}],
                 )
                 actual_model = getattr(completion, "model", model)
-                content = completion.choices[0].message.content or ""
+                message = completion.choices[0].message
+                content = (message.content or "").strip()
+                # If content is empty (e.g. reasoning model consumed all tokens into reasoning)
+                if not content and hasattr(message, "reasoning") and message.reasoning:
+                    content = message.reasoning.strip()
+
+                if not content:
+                    print(f"[LLM] Model '{model}' returned empty content, trying next in chain...")
+                    continue
+
                 print(f"[LLM] Model used: {actual_model}")
                 return LLMResponse(content=content, model_used=actual_model)
+
             except Exception as e:
-                err_str = str(e)
-                # 404 = model deprecated/unavailable on free tier — try next
-                if "404" in err_str or "unavailable" in err_str.lower():
-                    print(f"[LLM] Model '{model}' unavailable (404), trying next in chain...")
-                    last_error = e
+                err_str = str(e).lower()
+                last_error = e
+
+                # 404 = model rotated/unavailable on free tier
+                # 402 = requires credits
+                # 429 = rate limited upstream
+                # 500/502/503/504 = temporary provider outage
+                if any(k in err_str for k in ["404", "unavailable", "402", "credits", "429", "rate limit", "502", "503", "504", "overloaded"]):
+                    print(f"[LLM] Model '{model}' temporary issue ({e}), falling back to next model...")
                     continue
-                # 402 = no credits — try next (free model may work)
-                elif "402" in err_str:
-                    print(f"[LLM] Model '{model}' requires credits (402), trying next in chain...")
-                    last_error = e
-                    continue
-                # Any other error (network, server) — raise immediately
                 else:
-                    print(f"[LLM] Model '{model}' failed: {e}")
-                    raise e
+                    print(f"[LLM] Model '{model}' encountered unexpected error: {e}, attempting next model...")
+                    continue
 
         # All models in chain exhausted
         print(f"[LLM] All models in fallback chain exhausted. Last error: {last_error}")
         raise last_error
+
 
 
 # Cache keyed by (tuple(models), temperature)

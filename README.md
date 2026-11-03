@@ -190,7 +190,7 @@ npm run dev
 | | | `PORT` | Service port (default `5000`) |
 | **Python** | `backend/python_backend/.env` | `OPENROUTER_API_KEY` | OpenRouter API authentication |
 | | | `SERPER_API_KEY` | Serper.dev Google India search key |
-| | | `OPENROUTER_MODEL_NAME` | Default fallback LLM (`openrouter/auto`) |
+| | | `OPENROUTER_MODEL_NAME` | Default fallback LLM (`meta-llama/llama-3.3-70b-instruct`) |
 | | | `PORT` | Service port (default `8000`) |
 | **Frontend** | `frontend/.env` | `VITE_NODE_API_URL` | Production Node backend URL |
 | | | `VITE_AI_API_URL` | Production Python AI backend URL |
@@ -200,14 +200,72 @@ npm run dev
 
 ---
 
-## 💡 Demo Day Warm-up Strategy
-Render free-tier Web Services go to sleep after 15 minutes of inactivity (taking 30–50 seconds to cold start). 
-To ensure zero cold-start latency during live presentations:
-1. Setup a recurring 10-minute HTTP ping on [cron-job.org](https://cron-job.org):
-   - Ping 1: `https://legalsmiths-node.onrender.com/health`
-   - Ping 2: `https://legalsmiths-ai.onrender.com/health`
-2. **1 hour before the demo:** Enable both cron jobs.
-3. **After the demo:** Disable both cron jobs to preserve compute limits.
+## 💡 Backend Keepalive & Demo Day Warm-up Guide (cron-job.org)
+
+Render's free-tier Web Services automatically spin down ("sleep") after **15 minutes of inactivity**, causing the next request to experience a **30–50 second cold start**. 
+
+To eliminate cold-start delays during hackathon evaluations, client presentations, or testing, **any team member can set up their own free automated keepalive cron jobs** on [cron-job.org](https://cron-job.org) in under 2 minutes.
+
+### 🛠️ Self-Service Setup Instructions for Teammates
+
+#### Step 1: Create a Free Account
+1. Visit **[cron-job.org](https://cron-job.org)**.
+2. Sign up for a free account (no credit card or billing details required).
+
+#### Step 2: Create Keepalive Cron Job for Node.js Backend
+1. In your dashboard, click **"CREATE CRONJOB"**.
+2. Configure the following fields:
+   * **Title:** `LegalSmiths - Node Backend Keepalive`
+   * **URL:** `https://legalsmiths-node.onrender.com/health`
+   * **Schedule:** Every **10 minutes** (`*/10 * * * *`)
+   * **Request Method:** `GET`
+3. Click **"Save"**.
+4. **Important:** Click the toggle switch next to the job so that it is **DISABLED (grey)** by default.
+
+#### Step 3: Create Keepalive Cron Job for Python AI Backend
+1. Click **"CREATE CRONJOB"** again.
+2. Configure the following fields:
+   * **Title:** `LegalSmiths - Python AI Backend Keepalive`
+   * **URL:** `https://legalsmiths-ai.onrender.com/health`
+   * **Schedule:** Every **10 minutes** (`*/10 * * * *`)
+   * **Request Method:** `GET`
+3. Click **"Save"**.
+4. Set to **DISABLED (grey)** by default.
+
+---
+
+### ⏱️ How & When to Use (Demo Day Workflow)
+
+Keep jobs disabled during normal hours to preserve Render's monthly free-tier compute budget.
+
+```text
+[1 Hour Before Demo]              [During Presentation]             [After Presentation]
+       │                                   │                                  │
+       ▼                                   ▼                                  ▼
+Login to cron-job.org             Both backends stay hot             Login to cron-job.org
+Toggle BOTH jobs: GREEN (ON) ──►  Instant sub-second response ──►   Toggle BOTH jobs: GREY (OFF)
+                                  No cold-start lag                  Services safely sleep
+```
+
+1. **1 Hour Before Demo/Testing:**
+   * Log in to **cron-job.org**.
+   * Toggle **BOTH** cron jobs to **ENABLED (Green)**.
+   * This immediately wakes up both containers and sends an HTTP ping every 10 minutes to keep them hot.
+2. **After the Demo/Testing is Finished:**
+   * Log in to **cron-job.org**.
+   * Toggle **BOTH** cron jobs to **DISABLED (Grey)**.
+   * Services will naturally sleep after 15 minutes of inactivity.
+
+---
+
+### 🔍 Why Ping `/health` Instead of the Root URL?
+
+| Metric | `/health` Endpoint (Recommended) | Root URL `/` or Web Page |
+|---|---|---|
+| **Response Payload** | Minimal JSON: `{"status":"healthy"}` (<100 bytes) | Heavy HTML / static bundle (several KB) |
+| **Database Load** | Zero database queries executed | May trigger session or query validation |
+| **Latency** | <50ms response time | 200–500ms processing time |
+| **Purpose** | Strictly keeps container process alive | Intended for real human end users |
 
 ---
 

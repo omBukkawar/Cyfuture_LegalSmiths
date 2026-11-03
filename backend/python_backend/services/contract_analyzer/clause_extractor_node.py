@@ -2,7 +2,7 @@ import re
 import json
 from typing import Dict, Any
 from services.contract_analyzer.state import ContractAnalyzerState
-from models.llm import get_llm
+from models.llm import get_contract_analyzer_llm
 
 try:
     from langchain.prompts import PromptTemplate
@@ -76,7 +76,7 @@ def clause_extractor_node(state: ContractAnalyzerState) -> ContractAnalyzerState
     prompt = PromptTemplate.from_template(CLAUSE_EXTRACTION_PROMPT).format(context=clauses)
 
     try:
-        llm = get_llm()
+        llm = get_contract_analyzer_llm()
         response = llm.invoke(prompt)
         extracted = parse_json_safely(response.content)
 

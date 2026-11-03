@@ -2,7 +2,7 @@ import re
 import json
 from typing import Dict, Any, List
 from services.contract_analyzer.state import ContractAnalyzerState
-from models.llm import get_llm
+from models.llm import get_contract_analyzer_llm
 
 try:
     from langchain.prompts import PromptTemplate
@@ -78,7 +78,7 @@ def risk_audit_node(state: ContractAnalyzerState) -> ContractAnalyzerState:
     prompt = PromptTemplate.from_template(RISK_AUDIT_PROMPT).format(context=clauses)
 
     try:
-        llm = get_llm()
+        llm = get_contract_analyzer_llm()
         response = llm.invoke(prompt)
         audit_result = parse_risk_json(response.content)
 
