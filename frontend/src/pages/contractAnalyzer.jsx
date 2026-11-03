@@ -855,11 +855,11 @@ const ContractAnalyzer = () => {
               </button>
 
               {/* Upload/Analysis progress bar */}
-              {(uploading || analyzing) && (
+              {analyzing && (
                 <div className="progress-bar">
                   <div className="progress"></div>
                   <div className="progress-text">
-                    {uploading ? "Saving to vault..." : "Evaluating cross-clause carve-outs & liabilities..."}
+                    {"Evaluating cross-clause carve-outs & liabilities..."}
                   </div>
                 </div>
               )}
