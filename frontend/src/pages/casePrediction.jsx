@@ -113,9 +113,23 @@ const CasePrediction = () => {
   }, [currentUser?.id]);
 
   useEffect(() => {
-    fetchPastCases();
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-  }, [fetchPastCases]);
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const headers = { ...getAuthHeaders(), "x-user-id": currentUser?.id || "anonymous" };
+        const res = await axios.get(`${NODE_API_URL}/cases`, { headers });
+        if (!cancelled && res.data?.success && Array.isArray(res.data.data)) {
+          setPastCases(res.data.data);
+        }
+      } catch {
+        // ignore
+      } finally {
+        if (!cancelled) setLoadingHistory(false);
+      }
+    };
+    load();
+    return () => { cancelled = true; };
+  }, [currentUser?.id]);
 
   const handleSelectCase = (c) => {
     if (!c?.prediction) return;
