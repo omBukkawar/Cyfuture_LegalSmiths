@@ -1,10 +1,10 @@
 import axios from "axios";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import "../styles/casePrediction.css";
 import backgroundImg from "../assets/background.jpeg";
 import { Link, useNavigate } from "react-router-dom";
-import { AI_API_URL } from "../config/api";
-import { logout } from "../utils/auth";
+import { AI_API_URL, NODE_API_URL, getAuthHeaders } from "../config/api";
+import { getUser, logout } from "../utils/auth";
 
 // ─── Utility helpers ──────────────────────────────────────────────────────────
 
@@ -80,6 +80,7 @@ const VerifBadge = ({ status }) => {
 
 const CasePrediction = () => {
   const navigate = useNavigate();
+  const currentUser = getUser();
 
   const [analyzing, setAnalyzing] = useState(false);
   const [message, setMessage] = useState("");
@@ -90,6 +91,70 @@ const CasePrediction = () => {
   const [incidentDate, setIncidentDate] = useState("");
   const [analysis, setAnalysis] = useState(null);
   const [activeTab, setActiveTab] = useState("overview");
+
+  // Sidebar history state
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [pastCases, setPastCases] = useState([]);
+  const [loadingHistory, setLoadingHistory] = useState(true);
+  const [currentCaseId, setCurrentCaseId] = useState(null);
+
+  const fetchPastCases = useCallback(async () => {
+    try {
+      const headers = { ...getAuthHeaders(), "x-user-id": currentUser?.id || "anonymous" };
+      const res = await axios.get(`${NODE_API_URL}/cases`, { headers });
+      if (res.data?.success && Array.isArray(res.data.data)) {
+        setPastCases(res.data.data);
+      }
+    } catch (err) {
+      console.warn("Could not fetch past cases:", err.message);
+    } finally {
+      setLoadingHistory(false);
+    }
+  }, [currentUser?.id]);
+
+  useEffect(() => { fetchPastCases(); }, [fetchPastCases]);
+
+  const handleSelectCase = (c) => {
+    if (!c?.prediction) return;
+    setCurrentCaseId(c._id);
+    setAnalysis(c.prediction);
+    setCaseInput(c.caseFacts || "");
+    setShowResults(true);
+    setActiveTab("overview");
+    setMessage("");
+    setSidebarOpen(false);
+  };
+
+  const handleDeleteCase = async (caseId, e) => {
+    e.stopPropagation();
+    if (!window.confirm("Delete this case prediction?")) return;
+    try {
+      const headers = { ...getAuthHeaders(), "x-user-id": currentUser?.id || "anonymous" };
+      await axios.delete(`${NODE_API_URL}/cases/${caseId}`, { headers });
+      setPastCases((prev) => prev.filter((c) => c._id !== caseId));
+      if (currentCaseId === caseId) startNewAnalysis();
+    } catch (err) {
+      alert("Failed to delete case.");
+    }
+  };
+
+  const saveCaseToDatabase = async (prediction, facts) => {
+    try {
+      const headers = { ...getAuthHeaders(), "x-user-id": currentUser?.id || "anonymous" };
+      const title = facts ? facts.slice(0, 60) + (facts.length > 60 ? "..." : "") : "Legal Case Assessment";
+      const res = await axios.post(
+        `${NODE_API_URL}/cases/save-prediction`,
+        { prediction, caseFacts: facts, title },
+        { headers }
+      );
+      if (res.data?.success && res.data.doc) {
+        setCurrentCaseId(res.data.doc._id);
+        fetchPastCases();
+      }
+    } catch (err) {
+      console.warn("Could not save case prediction:", err.message);
+    }
+  };
 
   // Pipeline stages shown during loading
   const stages = [
@@ -122,6 +187,7 @@ const CasePrediction = () => {
     }
     setAnalyzing(true);
     setMessage("");
+    setCurrentCaseId(null);
     const timer = startStageTimer();
 
     try {
@@ -139,10 +205,12 @@ const CasePrediction = () => {
       clearInterval(timer);
       const jsonData = response.data;
       if (jsonData.answers && jsonData.answers.length > 0) {
-        setAnalysis(jsonData.answers[0]);
+        const result = jsonData.answers[0];
+        setAnalysis(result);
         setShowResults(true);
         setMessage("Legal case outcome analysis complete!");
         setActiveTab("overview");
+        await saveCaseToDatabase(result, caseInput);
       } else {
         setMessage("No analysis data received from the server.");
       }
@@ -164,6 +232,8 @@ const CasePrediction = () => {
     setIncidentDate("");
     setMessage("");
     setStageIdx(0);
+    setCurrentCaseId(null);
+    setSidebarOpen(false);
   };
 
   // ─── Render results tabs ────────────────────────────────────────────────────
@@ -568,24 +638,113 @@ const CasePrediction = () => {
     >
       {/* Top bar */}
       <div className="top-bar">
-        <Link to="/" className="brand">LegalSmiths</Link>
-        <button
-          onClick={() => logout(navigate)}
-          className="login-link"
-          style={{
-            background: "transparent",
-            border: "none",
-            cursor: "pointer",
-            fontSize: "1rem",
-            fontFamily: "inherit",
-          }}
-        >
-          Logout
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
+          <button
+            onClick={() => navigate(-1)}
+            className="login-link"
+            style={{
+              background: "rgba(255, 255, 255, 0.18)",
+              border: "1px solid rgba(255, 255, 255, 0.3)",
+              borderRadius: "6px",
+              padding: "6px 14px",
+              cursor: "pointer",
+              fontSize: "0.9rem",
+              fontFamily: "inherit",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+            }}
+            title="Go back to previous page"
+          >
+            ← Back
+          </button>
+          <Link to="/" className="brand">LegalSmiths</Link>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
+          <Link to="/services" className="login-link">Services</Link>
+          <button
+            onClick={() => logout(navigate)}
+            className="login-link"
+            style={{ background: "transparent", border: "none", cursor: "pointer", fontSize: "1rem", fontFamily: "inherit" }}
+          >
+            Logout
+          </button>
+        </div>
       </div>
 
+      {/* Main layout with sidebar */}
+      <div className="cp-main-layout">
+        {/* Sidebar */}
+        <aside className={`cp-sidebar ${sidebarOpen ? "cp-sidebar-open" : ""}`}>
+          <button className="cp-new-btn" onClick={startNewAnalysis}>
+            <span>+</span> New Case Analysis
+          </button>
+
+          <div className="cp-sidebar-section-header">
+            <span className="cp-section-title">Past Predictions</span>
+            <span className="cp-session-badge">{pastCases.length}</span>
+          </div>
+
+          <div className="cp-case-list">
+            {loadingHistory ? (
+              <div className="cp-empty">Loading saved cases...</div>
+            ) : pastCases.length === 0 ? (
+              <div className="cp-empty">No saved cases yet.<br />Run an analysis to begin!</div>
+            ) : (
+              pastCases.map((c) => {
+                const isActive = c._id === currentCaseId;
+                const verdict = c.prediction?.winning_side || "";
+                const icon = verdict === "claimant" ? "🔵" : verdict === "defence" ? "🟣" : "⚖️";
+                return (
+                  <div
+                    key={c._id}
+                    className={`cp-case-item ${isActive ? "cp-case-item-active" : ""}`}
+                    onClick={() => handleSelectCase(c)}
+                    title={c.title}
+                  >
+                    <div className="cp-case-title-wrapper">
+                      <span>{icon}</span>
+                      <span className="cp-case-title-text">{c.title || "Legal Case"}</span>
+                    </div>
+                    <button
+                      className="cp-delete-btn"
+                      onClick={(e) => handleDeleteCase(c._id, e)}
+                      title="Delete"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          <div className="cp-sidebar-footer">
+            <div className="cp-user-badge">
+              <div className="cp-user-avatar">
+                {(currentUser?.name || currentUser?.email || "U")[0].toUpperCase()}
+              </div>
+              <div className="cp-user-details">
+                <span className="cp-user-name">{currentUser?.name || "Legal User"}</span>
+                <span className="cp-user-role">{currentUser?.email || "Signed in"}</span>
+              </div>
+            </div>
+            <button className="cp-back-services-btn" onClick={() => navigate("/services")}>
+              ← Back to Services
+            </button>
+          </div>
+        </aside>
+        {sidebarOpen && <div className="cp-sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
+
+        {/* Content */}
+        <div className="cp-content">
+          {/* Mobile menu + header */}
+          <div className="cp-content-header">
+            <button className="cp-mobile-menu-btn" onClick={() => setSidebarOpen((p) => !p)}>☰</button>
+            <h1 className="cp-content-title">⚖️ Case Outcome Prediction</h1>
+          </div>
+
       <div className="case-container">
-        <h1 className="title">⚖️ Case Outcome Prediction</h1>
         <p className="description">
           Professional legal case assessment — Claimant Brief vs Defence Written Statement evaluated
           under Indian statutory law and judicial precedents.
@@ -702,6 +861,8 @@ const CasePrediction = () => {
         <button className="back-btn" id="backBtn" onClick={() => navigate(-1)}>
           ← Back
         </button>
+      </div>
+        </div>
       </div>
     </div>
   );

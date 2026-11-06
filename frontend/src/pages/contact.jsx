@@ -50,9 +50,26 @@ const Contact = () => {
           TOP BAR NAVIGATION
          ------------------------------------------------------------- */}
       <nav className="top-bar">
-        <Link to="/" className="brand">
-          ⚖️ LegalSmiths
-        </Link>
+        <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+          <button
+            onClick={() => navigate(-1)}
+            className="login-link"
+            style={{
+              background: "rgba(255, 255, 255, 0.18)",
+              border: "1px solid rgba(255, 255, 255, 0.3)",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+              cursor: "pointer",
+            }}
+            title="Go back"
+          >
+            ← Back
+          </button>
+          <Link to="/" className="brand">
+            ⚖️ LegalSmiths
+          </Link>
+        </div>
         <div className="nav-links">
           {loggedIn ? (
             <>

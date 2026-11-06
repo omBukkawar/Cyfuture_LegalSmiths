@@ -20,10 +20,30 @@ const Services = () => {
     <div className="services">
       {/* ---------- TOP NAVIGATION BAR ---------- */}
       <div className="top-bar">
-        {/* Brand / Home link */}
-        <Link to="/" className="brand">
-          LegalSmiths
-        </Link>
+        <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
+          <button
+            onClick={() => navigate(-1)}
+            className="login-link"
+            style={{
+              background: "rgba(255, 255, 255, 0.18)",
+              border: "1px solid rgba(255, 255, 255, 0.3)",
+              borderRadius: "6px",
+              padding: "6px 14px",
+              cursor: "pointer",
+              fontSize: "0.95rem",
+              fontFamily: "inherit",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+            }}
+            title="Go back"
+          >
+            ← Back
+          </button>
+          <Link to="/" className="brand">
+            LegalSmiths
+          </Link>
+        </div>
 
         {/* Proper logout button — clears localStorage and redirects to /login */}
         <button
@@ -102,10 +122,27 @@ const Services = () => {
           </div>
         </div>
 
-        {/* Contact button */}
-        <Link to="/contact">
-          <button className="contact-btn">Contact Us</button>
-        </Link>
+        {/* Navigation & Contact buttons */}
+        <div style={{ display: "flex", justifyContent: "center", gap: "15px", margin: "3rem auto 1rem", flexWrap: "wrap" }}>
+          <button
+            onClick={() => navigate(-1)}
+            style={{
+              padding: "12px 28px",
+              background: "#475569",
+              color: "#fff",
+              border: "none",
+              borderRadius: "1rem",
+              fontSize: "1rem",
+              fontWeight: "600",
+              cursor: "pointer",
+            }}
+          >
+            ← Back
+          </button>
+          <Link to="/contact">
+            <button className="contact-btn" style={{ margin: 0 }}>Contact Us</button>
+          </Link>
+        </div>
       </main>
 
       {/* ---------- FOOTER ---------- */}

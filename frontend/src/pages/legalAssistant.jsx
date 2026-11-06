@@ -335,9 +335,25 @@ const LegalAssistant = () => {
           TOP NAVIGATION BAR (White text on background.jpeg)
          ------------------------------------------------------------- */}
       <nav className={styles.topBar}>
-        <Link to="/" className={styles.brand}>
-          ⚖️ LegalSmiths
-        </Link>
+        <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+          <button
+            onClick={() => navigate(-1)}
+            className={styles.navLink}
+            style={{
+              background: "rgba(255, 255, 255, 0.18)",
+              border: "1px solid rgba(255, 255, 255, 0.3)",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+            }}
+            title="Go back"
+          >
+            ← Back
+          </button>
+          <Link to="/" className={styles.brand}>
+            ⚖️ LegalSmiths
+          </Link>
+        </div>
 
         <div className={styles.topBarNav}>
           <Link to="/services" className={styles.navLink}>
@@ -438,6 +454,13 @@ const LegalAssistant = () => {
                 aria-label="Toggle history menu"
               >
                 ☰
+              </button>
+              <button
+                onClick={() => navigate(-1)}
+                className={styles.headerBtn}
+                title="Go back"
+              >
+                ← Back
               </button>
               <h2 className={styles.chatTitle}>{currentTitle}</h2>
               <span className={styles.chatSubtitle}>Powered by LegalSmiths AI</span>

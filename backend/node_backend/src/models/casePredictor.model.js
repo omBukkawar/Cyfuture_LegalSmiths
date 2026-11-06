@@ -35,19 +35,10 @@ const CaseSchema = new mongoose.Schema(
       enum: ["pending", "completed", "failed"],
       default: "pending",
     },
-    // Structured prediction returned by Gemini AI
+    // Structured prediction returned by the AI pipeline (stores full prediction object)
     prediction: {
-      title: String,
-      petitioner: String,
-      respondent: String,
-      successProbability: String, // e.g., "75%"
-      likelyOutcome: String,
-      strongPoints: [String],
-      weakPoints: [String],
-      legalPrecedents: [LegalPrecedentSchema],
-      strategies: [String],
-      penalties: [String],
-      finalAdvisory: String,
+      type: mongoose.Schema.Types.Mixed,
+      default: null,
     },
   },
   {

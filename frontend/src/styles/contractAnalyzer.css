@@ -74,16 +74,17 @@
 ------------------------------------------------------------- */
 .mainContainer {
   flex: 1;
-  margin: 75px auto 25px;
-  border-radius: 25px;
+  margin: 70px auto 0;
+  border-radius: 25px 25px 0 0;
   background-color: #ffffff;
   display: flex;
-  width: 92%;
-  max-width: 1320px;
-  height: calc(100vh - 105px);
+  align-items: stretch;
+  width: 95%;
+  max-width: 1360px;
+  height: calc(100vh - 70px);
   min-height: 600px;
   overflow: hidden;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.32);
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.18);
   position: relative;
   box-sizing: border-box;
 }
@@ -96,12 +97,15 @@
   min-width: 260px;
   max-width: 320px;
   background-color: #727374;
-  border-radius: 24px 0 0 24px;
+  border-radius: 25px 0 0 0;
   padding: 1.4rem 1.2rem;
   color: #ffffff;
   display: flex;
   flex-direction: column;
   height: 100%;
+  min-height: 100%;
+  align-self: stretch;
+  flex-shrink: 0;
   box-sizing: border-box;
   transition: transform 0.3s ease;
   z-index: 15;
@@ -164,7 +168,8 @@
 
 /* Scrollable Contracts List */
 .contractList {
-  flex: 1;
+  flex: 1 1 0;
+  min-height: 0;
   overflow-y: auto;
   margin: 0.3rem 0;
   padding-right: 4px;
@@ -348,13 +353,32 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  min-height: 0;
   overflow-y: auto;
   background-color: #f8fafc;
   box-sizing: border-box;
+  scroll-behavior: smooth;
+}
+
+.contentArea::-webkit-scrollbar {
+  width: 8px;
+}
+
+.contentArea::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+.contentArea::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.contentArea::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
 .contentHeader {
-  padding: 1.2rem 2rem;
+  padding: 0.85rem 1.6rem;
   border-bottom: 1px solid #e2e8f0;
   display: flex;
   justify-content: space-between;
@@ -368,7 +392,30 @@
 .headerTitleGroup {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  max-width: calc(100% - 130px);
+}
+
+.headerBackBtn {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #334155;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.headerBackBtn:hover {
+  background: #e2e8f0;
+  color: #0f172a;
 }
 
 .mobileMenuBtn {
@@ -379,13 +426,17 @@
   cursor: pointer;
   padding: 4px 10px;
   border-radius: 6px;
+  flex-shrink: 0;
 }
 
 .contentTitle {
-  font-size: 1.2rem;
+  font-size: 1.05rem;
   font-weight: 700;
   color: #1e1b4b;
   margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .contentSubtitle {
@@ -395,8 +446,8 @@
 }
 
 .contentBody {
-  padding: 2rem;
-  max-width: 900px;
+  padding: 1.5rem 2rem 5rem;
+  max-width: 960px;
   margin: 0 auto;
   width: 100%;
   box-sizing: border-box;
@@ -405,6 +456,68 @@
 /* --------------------------------
    UPLOAD & INPUT CARDS
 -------------------------------- */
+
+/* --------------------------------
+   AUDITING CAPABILITIES GUIDE (Empty State)
+-------------------------------- */
+.analyzerFeaturesGuide {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px dashed #e2e8f0;
+}
+
+.guideTitle {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1e1b4b;
+  text-align: center;
+  margin-bottom: 1.2rem;
+  letter-spacing: 0.2px;
+}
+
+.guideGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+.guideCard {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 20px 22px;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.guideCard:hover {
+  transform: translateY(-2px);
+  border-color: #cbd5e1;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+}
+
+.guideIcon {
+  font-size: 1.5rem;
+  margin-bottom: 8px;
+}
+
+.guideCard h4 {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 6px 0;
+}
+
+.guideCard p {
+  font-size: 0.78rem;
+  color: #64748b;
+  line-height: 1.5;
+  margin: 0;
+}
+
 .upload-section {
   text-align: center;
   margin: 0 auto 2rem;
@@ -666,33 +779,181 @@
   margin: 0;
 }
 
-/* Responsive Mobile Layout */
-@media (max-width: 900px) {
+/* Responsive Mobile Layout (Prevents Half-Cut Screens) */
+@media (max-width: 992px) {
   .mainContainer {
-    width: 96%;
-    height: calc(100vh - 85px);
-    margin-top: 65px;
+    width: 100%;
+    height: auto;
+    min-height: calc(100vh - 65px);
+    margin: 65px auto 0;
+    border-radius: 16px 16px 0 0;
+    overflow: visible;
   }
 
   .sidebar {
-    position: absolute;
+    position: fixed;
     top: 0;
     bottom: 0;
     left: 0;
+    width: 290px;
+    z-index: 1000;
+    border-radius: 0 20px 20px 0;
     transform: translateX(-100%);
-    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.25);
+    box-shadow: 6px 0 25px rgba(0, 0, 0, 0.35);
   }
 
   .sidebarOpen {
     transform: translateX(0);
   }
 
+  .sidebarOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
+    z-index: 999;
+  }
+
+  .contentArea {
+    height: auto;
+    overflow: visible;
+  }
+
   .mobileMenuBtn {
-    display: block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .contentHeader {
+    position: relative;
+    top: auto;
+    padding: 0.85rem 1rem;
+  }
+
+  .contentTitle {
+    max-width: 320px;
+    font-size: 0.98rem;
   }
 
   .quickies {
     flex-direction: column;
+  }
+}
+
+@media (max-width: 640px) {
+  .topBar {
+    left: 15px;
+    right: 15px;
+    top: 14px;
+  }
+
+  .brand {
+    font-size: 1.2rem;
+  }
+
+  .navLink {
+    font-size: 0.82rem;
+    padding: 4px 8px;
+  }
+
+  .contentHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .headerTitleGroup {
+    max-width: 100%;
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .contentTitle {
+    max-width: 220px;
+    font-size: 0.92rem;
+  }
+
+  .contentBody {
+    padding: 1rem 0.8rem 4rem;
+  }
+
+  .points {
+    gap: 8px;
+  }
+
+  .points h3 {
+    font-size: 0.82rem;
+    padding-bottom: 6px;
+  }
+
+  
+/* --------------------------------
+   AUDITING CAPABILITIES GUIDE (Empty State)
+-------------------------------- */
+.analyzerFeaturesGuide {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px dashed #e2e8f0;
+}
+
+.guideTitle {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1e1b4b;
+  text-align: center;
+  margin-bottom: 1.2rem;
+  letter-spacing: 0.2px;
+}
+
+.guideGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+.guideCard {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 20px 22px;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.guideCard:hover {
+  transform: translateY(-2px);
+  border-color: #cbd5e1;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+}
+
+.guideIcon {
+  font-size: 1.5rem;
+  margin-bottom: 8px;
+}
+
+.guideCard h4 {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 6px 0;
+}
+
+.guideCard p {
+  font-size: 0.78rem;
+  color: #64748b;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.upload-section {
+    padding: 16px 12px;
   }
 }
 

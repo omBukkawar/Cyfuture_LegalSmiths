@@ -110,6 +110,18 @@ async def contract_analyzer_endpoint(
             "plain_summary": "Could not extract text from uploaded file.",
         }])
 
+    # --- Guardrail: Validate extracted document text content ---
+    full_extracted_sample = " ".join([getattr(d, "page_content", "") for d in docs])[:3500].strip()
+    is_doc_safe, doc_guard_msg = guard_contract_analyzer(full_extracted_sample)
+    if not is_doc_safe:
+        print(f"[Guardrail] Contract Analyzer: blocked document content")
+        return ContractSubmissionResponse(answers=[{
+            "error": True,
+            "message": doc_guard_msg,
+            "title": "Document Content Blocked",
+            "plain_summary": doc_guard_msg,
+        }])
+
     # Run the analysis pipeline
     try:
         analysis_result = run_contract_analyzer_pipeline(request, docs)

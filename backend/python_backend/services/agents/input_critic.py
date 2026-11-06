@@ -131,8 +131,8 @@ _MODULE_META = {
         ),
     },
     "contract_analyzer": {
-        "description": "Legal contract analysis — reviews uploaded PDF/DOCX contracts for risks, red flags, missing protections, liability clauses, SLA weaknesses, indemnification issues",
-        "max_chars": 2000,
+        "description": "Legal contract analysis — reviews uploaded PDF/DOCX contracts or pasted agreements for risks, red flags, missing protections, liability clauses, SLA weaknesses, indemnification issues",
+        "max_chars": 100000,
         "off_topic_msg": (
             "I am LegalSmiths Contract Analyzer — a tool for reviewing legal contracts and agreements.\n"
             "Your request appears unrelated to contract analysis.\n"

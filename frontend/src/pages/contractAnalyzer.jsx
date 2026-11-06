@@ -562,9 +562,26 @@ const ContractAnalyzer = () => {
           TOP NAVIGATION BAR (Uniform with Legal Assistant)
          ------------------------------------------------------------- */}
       <nav className="topBar">
-        <Link to="/" className="brand">
-          ⚖️ LegalSmiths
-        </Link>
+        <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+          <button
+            onClick={() => navigate(-1)}
+            className="navLink"
+            style={{
+              background: "rgba(255, 255, 255, 0.18)",
+              border: "1px solid rgba(255, 255, 255, 0.3)",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+              cursor: "pointer",
+            }}
+            title="Go back"
+          >
+            ← Back
+          </button>
+          <Link to="/" className="brand">
+            ⚖️ LegalSmiths
+          </Link>
+        </div>
 
         <div className="topBarNav">
           <Link to="/services" className="navLink">
@@ -656,6 +673,7 @@ const ContractAnalyzer = () => {
             </button>
           </div>
         </aside>
+        {sidebarOpen && <div className="sidebarOverlay" onClick={() => setSidebarOpen(false)} />}
 
         {/* -----------------------------------------------------------
             MAIN CONTENT AREA (Right Panel)
@@ -671,8 +689,15 @@ const ContractAnalyzer = () => {
               >
                 ☰
               </button>
-              <div>
-                <h2 className="contentTitle">{currentTitle}</h2>
+              <button
+                onClick={() => navigate(-1)}
+                className="headerBackBtn"
+                title="Back to previous page"
+              >
+                ← Back
+              </button>
+              <div style={{ overflow: "hidden" }}>
+                <h2 className="contentTitle" title={currentTitle}>{currentTitle}</h2>
                 <span className="contentSubtitle">Agentic Cross-Clause Legal Intelligence</span>
               </div>
             </div>
@@ -868,6 +893,35 @@ const ContractAnalyzer = () => {
 
             {/* Anchor for results */}
             <div ref={resultsRef}></div>
+
+            {/* Auditing Capabilities Guide for Empty State */}
+            {!analysis && !analyzing && (
+              <div className="analyzerFeaturesGuide">
+                <h3 className="guideTitle">What Smart Contract Auditor Evaluates</h3>
+                <div className="guideGrid">
+                  <div className="guideCard">
+                    <div className="guideIcon">🛡️</div>
+                    <h4>Financial Exposure & Liability</h4>
+                    <p>Detects uncapped indemnification, consequential damages carve-outs, and asymmetrical payout obligations.</p>
+                  </div>
+                  <div className="guideCard">
+                    <div className="guideIcon">⚖️</div>
+                    <h4>Clause Symmetry & Fairness</h4>
+                    <p>Identifies one-sided termination clauses, non-mutual IP assignments, and unreciprocated cure periods.</p>
+                  </div>
+                  <div className="guideCard">
+                    <div className="guideIcon">🔍</div>
+                    <h4>Evidence-Backed Red Flags</h4>
+                    <p>Extracts exact verbatim clause citations with actionable drafting recommendations before signing.</p>
+                  </div>
+                  <div className="guideCard">
+                    <div className="guideIcon">📑</div>
+                    <h4>Multi-Format Vault Support</h4>
+                    <p>Audit contracts from PDF, Word (.docx), or plain text, with automatic save and export to PDF/JSON.</p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Analysis Report Section */}
             {analysis && (
@@ -1262,6 +1316,28 @@ const ContractAnalyzer = () => {
                 </div>
               </div>
             )}
+            {/* Bottom Back Button */}
+            <div style={{ display: "flex", justifyContent: "center", margin: "2.5rem 0 1rem" }}>
+              <button
+                onClick={() => navigate(-1)}
+                style={{
+                  background: "#ffffff",
+                  border: "1px solid #cbd5e1",
+                  color: "#334155",
+                  padding: "9px 24px",
+                  borderRadius: "8px",
+                  fontWeight: "600",
+                  fontSize: "0.88rem",
+                  cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
+                }}
+              >
+                ← Back to Previous Page
+              </button>
+            </div>
           </div>
         </main>
       </div>

@@ -43,6 +43,7 @@ router.get("/cases/:id", getCaseById);
 // Update
 router.patch("/cases/:id", updateCase);
 router.patch("/cases/:id/prediction", saveCasePrediction);
+router.post("/cases/save-prediction", saveCasePrediction);
 
 // Delete
 router.delete("/cases/:id", deleteCase);
