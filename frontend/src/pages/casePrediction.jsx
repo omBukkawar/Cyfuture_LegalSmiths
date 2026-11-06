@@ -112,7 +112,10 @@ const CasePrediction = () => {
     }
   }, [currentUser?.id]);
 
-  useEffect(() => { fetchPastCases(); }, [fetchPastCases]);
+  useEffect(() => {
+    fetchPastCases();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+  }, [fetchPastCases]);
 
   const handleSelectCase = (c) => {
     if (!c?.prediction) return;
@@ -133,7 +136,7 @@ const CasePrediction = () => {
       await axios.delete(`${NODE_API_URL}/cases/${caseId}`, { headers });
       setPastCases((prev) => prev.filter((c) => c._id !== caseId));
       if (currentCaseId === caseId) startNewAnalysis();
-    } catch (err) {
+    } catch {
       alert("Failed to delete case.");
     }
   };
