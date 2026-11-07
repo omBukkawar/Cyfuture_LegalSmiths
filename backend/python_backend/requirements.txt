@@ -26,7 +26,6 @@ unstructured>=0.13.0
 
 # Rate limiting
 slowapi>=0.1.9
-slowapi[redis]>=0.1.9
 rank-bm25>=0.2.2
 faiss-cpu>=1.7.4
 sentence-transformers>=2.7.0

@@ -5,7 +5,7 @@
 ![Build Status](https://img.shields.io/badge/build-passing-brightgreen?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-MIT-blue?style=for-the-badge)
 ![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=white)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688?style=for-the-badge&logo=fastapi&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688?style=for-the-badge&logo=fastapi&logoColor=white)
 ![Express](https://img.shields.io/badge/Express-5-000000?style=for-the-badge&logo=express&logoColor=white)
 ![LangGraph](https://img.shields.io/badge/LangGraph-Agentic-FF6B35?style=for-the-badge)
 ![OpenRouter](https://img.shields.io/badge/OpenRouter-LLM_Gateway-7C3AED?style=for-the-badge)
@@ -13,22 +13,12 @@
 ![MySQL](https://img.shields.io/badge/MySQL-TiDB_Cloud-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
 ![Deployed on Render](https://img.shields.io/badge/Deployed_on-Render-46E3B7?style=for-the-badge&logo=render&logoColor=white)
 
-**A full-stack AI legal intelligence platform engineered for the Indian legal ecosystem.**  
-Conversational legal Q&A · Contract risk analysis · Case outcome prediction — all powered by agentic LangGraph pipelines.
+**An enterprise-grade, full-stack AI legal intelligence platform engineered for the Indian legal ecosystem.**  
+Live statutory Q&A · 8-category commercial contract risk audit · Adversarial case outcome prediction.
 
-[🌐 Live Demo](https://legalsmiths.onrender.com) · [🤖 AI Backend](https://legalsmiths-ai.onrender.com/docs) · [📡 Node API](https://legalsmiths-node.onrender.com)
+[🌐 Live Web Application](https://legalsmiths.onrender.com) · [🤖 Python AI Backend Docs](https://legalsmiths-ai.onrender.com/docs) · [📡 Node API Gateway](https://legalsmiths-node.onrender.com)
 
 </div>
-
----
-
-## 📸 Screenshots
-
-> _Screenshots / GIF demos go here._
-
-| Homepage | Legal Assistant | Contract Analyzer | Case Predictor |
-|---|---|---|---|
-| ![Home](docs/screenshots/home.png) | ![Assistant](docs/screenshots/assistant.png) | ![Contracts](docs/screenshots/contracts.png) | ![Predictor](docs/screenshots/predictor.png) |
 
 ---
 
@@ -36,833 +26,558 @@ Conversational legal Q&A · Contract risk analysis · Case outcome prediction �
 
 1. [Overview](#-overview)
 2. [Architecture](#-architecture)
-3. [Tech Stack](#-tech-stack)
-4. [AI Pipelines](#-ai-pipelines)
-5. [Database Design](#-database-design)
-6. [Frontend Routes](#-frontend-routes)
-7. [API Reference](#-api-reference)
-8. [Environment Variables](#-environment-variables)
-9. [Local Setup](#-local-setup)
-10. [Project Structure](#-project-structure)
-11. [Deployment (Render)](#-deployment-render)
-12. [Contributing](#-contributing)
-13. [License](#-license)
+3. [Two-Critic Agentic Security Architecture](#-two-critic-agentic-security-architecture)
+4. [Tech Stack & Rationale](#-tech-stack--rationale)
+5. [AI Pipelines Deep Dive](#-ai-pipelines-deep-dive)
+   - [1. Legal Assistant](#1-legal-assistant)
+   - [2. Contract Analyzer](#2-contract-analyzer)
+   - [3. Case Outcome Predictor](#3-case-outcome-predictor)
+6. [User Guides & Feature Walkthroughs](#-user-guides--feature-walkthroughs)
+7. [Security & Abuse Prevention](#-security--abuse-prevention)
+8. [Database Architecture](#-database-architecture)
+9. [Frontend Routes & Navigation](#-frontend-routes--navigation)
+10. [API Reference](#-api-reference)
+11. [Environment Variables Reference](#-environment-variables-reference)
+12. [Local Setup Guide](#-local-setup-guide)
+13. [Project Directory Structure](#-project-directory-structure)
+14. [Deployment (Render Blueprint)](#-deployment-render-blueprint)
+15. [Contributing Guidelines](#-contributing-guidelines)
+16. [License](#-license)
 
 ---
 
 ## 🧭 Overview
 
-**LegalSmiths** is a production-grade, full-stack AI platform that democratises access to Indian legal intelligence. It exposes three distinct AI-powered features, each backed by its own agentic pipeline:
-
-| Feature | What It Does |
-|---|---|
-| **⚡ Legal Assistant** | Conversational AI for Indian legal Q&A with live Google India search, cited grounded answers |
-| **📄 Contract Analyzer** | Upload PDF / DOCX contracts → 4-node agentic pipeline → risk audit with grounded evidence, red flags, missing protections, and PDF report |
-| **⚖️ Case Outcome Predictor** | LangGraph adversarial debate: Claimant brief → Defence brief → Citation audit → Judicial evaluator → Win probability verdict |
+**LegalSmiths** is a production-hardened platform designed to give lawyers, legal researchers, and enterprises verifiable, grounded legal analysis. The platform solves the core weaknesses of consumer LLMs in legal workflows: **hallucinated evidence**, **invented section numbers**, **one-sided reasoning**, and **unvetted prompts**.
 
 The platform is split into **three independently deployed services**:
 
-| Service | Technology | Port | Live URL |
+| Service | Technology Stack | Port | Production URL |
 |---|---|---|---|
-| **Frontend** | React 18 + Vite + React Router | 5173 | [legalsmiths.onrender.com](https://legalsmiths.onrender.com) |
-| **Node Backend** | Express 5 + MongoDB Atlas + MySQL (TiDB) | 5000 | [legalsmiths-node.onrender.com](https://legalsmiths-node.onrender.com) |
-| **Python AI Backend** | FastAPI + LangGraph + OpenRouter | 8000 | [legalsmiths-ai.onrender.com](https://legalsmiths-ai.onrender.com) |
+| **Frontend** | React 18, Vite 7, React Router v7, Custom CSS | `5173` | [https://legalsmiths.onrender.com](https://legalsmiths.onrender.com) |
+| **Node Backend** | Express 5, Mongoose 8, MySQL2, TiDB Cloud, express-rate-limit | `5000` | [https://legalsmiths-node.onrender.com](https://legalsmiths-node.onrender.com) |
+| **Python AI Backend** | FastAPI 0.110+, LangGraph, OpenRouter, slowapi, FAISS, BM25 | `8000` | [https://legalsmiths-ai.onrender.com](https://legalsmiths-ai.onrender.com) |
 
 ---
 
 ## 🏗️ Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                              USER BROWSER                                   │
-│                      React 18 + Vite (Port 5173)                            │
-│          /legalAssistant  /contractAnalyzer  /casePrediction                │
-└───────────────────────────────┬─────────────────────────────────────────────┘
-                                │  REST / JSON
-                                ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                        NODE.JS BACKEND  (Port 5000)                         │
-│                     Express 5 · JWT Auth · Multer                           │
-│                                                                             │
-│   ┌──────────────┐    ┌──────────────────┐    ┌────────────────────────┐   │
-│   │  MySQL/TiDB  │    │  MongoDB Atlas   │    │  Proxy → AI Backend    │   │
-│   │  (users)     │    │  (chats/cases/   │    │  (FastAPI Port 8000)   │   │
-│   └──────────────┘    │   contracts)     │    └────────────────────────┘   │
-│                       └──────────────────┘                                  │
-└───────────────────────────────┬─────────────────────────────────────────────┘
-                                │  REST / JSON
-                                ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                     PYTHON AI BACKEND  (Port 8000)                          │
-│                 FastAPI · LangChain · LangGraph · OpenRouter                │
-│                                                                             │
-│  ┌─────────────────┐  ┌──────────────────────┐  ┌───────────────────────┐  │
-│  │  Legal Assistant │  │  Contract Analyzer   │  │  Case Predictor       │  │
-│  │  4-Node Pipeline │  │  4-Node Agentic      │  │  Adversarial Debate   │  │
-│  │  (LangGraph)     │  │  Pipeline (LangGraph)│  │  Pipeline (LangGraph) │  │
-│  └────────┬─────────┘  └──────────┬───────────┘  └──────────┬────────────┘  │
-│           │                       │                          │               │
-│           └───────────────────────┼──────────────────────────┘               │
-│                                   ▼                                          │
-│               ┌───────────────────────────────────────┐                     │
-│               │          OpenRouter LLM Gateway        │                     │
-│               │  Llama 3.3 70B · GPT-4o-mini ·        │                     │
-│               │  Mistral Small · Nemotron (fallback)   │                     │
-│               └───────────────────────────────────────┘                     │
-│                                                                             │
-│           ┌─────────────────┐          ┌──────────────────────┐             │
-│           │  Serper.dev API  │          │  FAISS + BM25 +      │             │
-│           │  (Google India)  │          │  CrossEncoder RAG    │             │
-│           └─────────────────┘          └──────────────────────┘             │
-└─────────────────────────────────────────────────────────────────────────────┘
+                               ┌─────────────────────────────────────────────────────────┐
+                               │                      USER BROWSER                       │
+                               │             React 18 + Vite SPA (Port 5173)             │
+                               │   /legalAssistant   /contractAnalyzer   /casePrediction │
+                               └───────────┬─────────────────────────────────┬───────────┘
+                                           │                                 │
+           Auth, Sessions, Vault, History  │                                 │ Direct AI Inference Requests
+        HTTPS / httpOnly Cookies / JWT Bearer                              │ REST / JSON (No Gateway Hop)
+                                           ▼                                 ▼
+┌────────────────────────────────────────────────────────┐ ┌─────────────────────────────────────────────────────────┐
+│          NODE.JS BACKEND GATEWAY (Port 5000)           │ │           PYTHON AI MICROSERVICE (Port 8000)            │
+│  Express 5 · Dual Token Auth · Rate Limiting · Multer  │ │    FastAPI · LangGraph · slowapi · OpenRouter Failover  │
+│                                                        │ │                                                         │
+│   ┌──────────────────────┐  ┌──────────────────────┐   │ │ ┌───────────────────┐ ┌─────────────────┐ ┌───────────┐ │
+│   │  MySQL / TiDB Cloud  │  │    MongoDB Atlas     │   │ │ │  Legal Assistant  │ │Contract Analyzer│ │  Case Pred │ │
+│   │  (Users & Passwords) │  │  (Chats, Contracts,  │   │ │ │ 4-Node LangGraph  │ │4-Node Flow + RAG│ │ 5-Stage RAG │ │
+│   │                      │  │   Cases, Summaries)  │   │ │ └─────────┬─────────┘ └────────┬────────┘ └─────┬─────┘ │
+│   └──────────────────────┘  └──────────────────────┘   │ │           │                    │                │       │
+└────────────────────────────────────────────────────────┘ │           ▼                    ▼                ▼       │
+                                                           │     input_critic.py      input_critic.py   input_critic │
+                                                           │     output_critic.py     output_critic.py  output_critic│
+                                                           │           └────────────────────┼────────────────┘       │
+                                                           │                                ▼                        │
+                                                           │                 ┌─────────────────────────────┐         │
+                                                           │                 │   OpenRouter LLM Gateway    │         │
+                                                           │                 │ Llama 3.3 70B · GPT-4o-mini │         │
+                                                           │                 │ Mistral 24B · Nemotron 550B │         │
+                                                           │                 └──────────────┬──────────────┘         │
+                                                           │                                │                        │
+                                                           │           ┌────────────────────┴───────────────────┐    │
+                                                           │           ▼                                        ▼    │
+                                                           │ ┌───────────────────┐                    ┌────────────┐ │
+                                                           │ │Serper.dev Search  │                    │FAISS + BM25│ │
+                                                           │ │(Google India)     │                    │CrossEncoder│ │
+                                                           │ └───────────────────┘                    └────────────┘ │
+                                                           └─────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 🛠️ Tech Stack
+## 🛡️ Two-Critic Agentic Security Architecture
+
+Raw regex filters break easily when faced with minor typos, leetspeak (`1gn0r3`), or standard legal terminology (e.g. "drop charges", "court select"). LegalSmiths implements an **intelligent 2-Critic system**:
+
+```
+                       User Request (Text / Contract / Case Facts)
+                                            │
+                                            ▼
+┌─────────────────────────────────────────────────────────────────────────────────────────┐
+│               LAYER 1: Structural Guard (Regex / Zero Latency)                          │
+│   • Payload Size Limits (5k chars for Assistant, 2k for Contract prompt, 6k for Case)   │
+│   • Character & Repetition Flooding / DoS Protection                                    │
+│   • XSS Injection (<script>, javascript:, onload=, eval())                              │
+│   • Path Traversal & Shell Injection (../, /etc/passwd, $(...))                         │
+└───────────────────────────────────────────┬─────────────────────────────────────────────┘
+                                            │ PASS
+                                            ▼
+┌─────────────────────────────────────────────────────────────────────────────────────────┐
+│               LAYER 2: Input Critic Agent (Semantic Intent Classifier)                  │
+│   • Invokes gpt-4o-mini to categorize input into:                                       │
+│     - LEGAL: Valid legal inquiry (PROCEED)                                              │
+│     - OFF_TOPIC: Questions about cooking (paneer tikka), sports, movies, coding        │
+│     - INJECTION: Jailbreak attempts, DAN mode, instruction override tricks              │
+│     - ILLICIT: Solicitations on how to forge deeds, bribe officials, launder money      │
+│     - UNCLEAR: Ambiguous inputs (PROCEED via fail-open policy)                          │
+│   • Blocked requests return clear, module-specific role guidance.                       │
+│   • Fail-Open: Upstream critic failure never prevents legitimate user workflows.        │
+└───────────────────────────────────────────┬─────────────────────────────────────────────┘
+                                            │ SAFE
+                                            ▼
+                            AI PIPELINE EXECUTES (LangGraph)
+                                            │
+                                            ▼
+┌─────────────────────────────────────────────────────────────────────────────────────────┐
+│               LAYER 3: Output Critic Agent (Post-Execution Quality Review)              │
+│   • Evaluates completeness, grounding, and absence of raw escaped JSON artifacts.       │
+│   • High confidence threshold (≥85%) required to block bad outputs.                     │
+│   • Fail-Open: Never suppresses valid pipeline answers due to critic uncertainty.       │
+└─────────────────────────────────────────────────────────────────────────────────────────┘
+                                            │
+                                            ▼
+                                  200 OK Final Response
+```
+
+---
+
+## 🛠️ Tech Stack & Rationale
 
 ### Frontend
-
-| Technology | Version | Why Chosen |
+| Technology | Version | Rationale |
 |---|---|---|
-| **React** | 18 | Concurrent rendering, battle-tested ecosystem, component reuse across 3 feature pages |
-| **Vite** | 5 | Sub-second HMR, ES module native bundling — 10× faster DX than CRA |
-| **React Router** | 6 | Nested layouts, `<Outlet>`, declarative protected routes |
-| **Poppins (Google Fonts)** | — | Clean, modern font that projects legal authority without heaviness |
-| **Custom CSS (no Tailwind)** | — | Full design control, smaller CSS bundle, no purge configuration needed |
+| **React** | `18.2.0` | Concurrent rendering, declarative state management, custom hook modularity. |
+| **Vite** | `^7.1.2` | Native ES modules provide instant dev server startup and optimized Rollup production chunking. |
+| **React Router** | `^7.18.5` | Centralized route guards (`ProtectedRoute`), nested layouts, and smooth navigation. |
+| **Axios** | `^1.6.7` | Interceptors for automated JWT cookie forwarding and custom header attachment. |
+| **Custom CSS** | Pure CSS | Zero runtime overhead; full control over legal aesthetics, cards, and Poppins font tokens. |
 
 ### Node.js Backend
-
-| Technology | Version | Why Chosen |
+| Technology | Version | Rationale |
 |---|---|---|
-| **Express** | 5 | Minimal HTTP framework; v5 async error handling eliminates try/catch boilerplate |
-| **jsonwebtoken** | — | Stateless auth — access (15 min) + refresh (7 d) token pair for secure session management |
-| **bcryptjs** | — | Password hashing with salt — industry standard, pure JS (no native deps) |
-| **Multer** | — | Streaming file upload middleware; feeds PDF/DOCX directly to AI backend |
-| **MySQL2 / TiDB Cloud** | — | ACID transactions for user identity; TiDB is MySQL-compatible serverless with free tier |
-| **Mongoose / MongoDB Atlas** | — | Flexible schema for heterogeneous AI outputs (chat history, contract analysis JSON, case verdicts) |
-| **CORS + Helmet** | — | Security headers, cross-origin control between the three services |
+| **Express** | `^5.1.0` | Native async route handlers eliminate boilerplate promise catch wrappers. |
+| **express-rate-limit**| `^7.5.0` | 3-tier sliding window rate limiter: auth (20/15m), AI routes (30/15m), general (200/15m). |
+| **cookie-parser** | `^1.4.7` | Parses encrypted httpOnly session tokens, protecting against XSS credential theft. |
+| **jsonwebtoken** | `^9.0.2` | Stateless cryptographic authentication with access (15m) and refresh (7d) tokens. |
+| **bcryptjs** | `^3.0.3` | Password hashing with 10 salt rounds for secure user identity storage. |
+| **Mongoose** | `^8.18.0` | Strict schemas and validators for chat histories, contract vault, and case verdicts. |
+| **MySQL2 / TiDB** | `^3.14.3` | Serverless cloud relational database ensuring ACID guarantees for user accounts. |
 
 ### Python AI Backend
-
-| Technology | Version | Why Chosen |
+| Technology | Version | Rationale |
 |---|---|---|
-| **FastAPI** | 0.100+ | Async-first, automatic OpenAPI docs (`/docs`), Pydantic validation, 3× faster than Flask under load |
-| **LangGraph** | — | Stateful agentic graph execution with explicit node → edge routing; enables rollback and conditional branching |
-| **LangChain** | — | Unified LLM interface, prompt templates, chain composition; reduces boilerplate across 3 pipelines |
-| **OpenRouter** | — | Single API key → 200+ models; automatic failover across model hierarchy without code changes |
-| **Serper.dev** | — | Google India geotargeted search API; returns real legal citations from Indian courts |
-| **BeautifulSoup4** | — | Lightweight HTML scraping to extract full page content from search result URLs |
-| **FAISS** | — | Facebook's vector similarity search — GPU-optionally scales to millions of contract chunks |
-| **BM25 (rank_bm25)** | — | Keyword-based retrieval complements dense FAISS for exact clause term matching |
-| **CrossEncoder (sentence-transformers)** | — | Reranks retrieved chunks by relevance before LLM context injection |
-| **sentence-transformers** | — | Local embedding generation (no API cost) for contract vectorisation |
-| **PyPDF2 + python-docx** | — | Extracts raw text from uploaded PDF and DOCX contracts |
-| **ReportLab / WeasyPrint** | — | PDF report generation for Contract Analyzer output |
+| **FastAPI** | `0.110+` | High-throughput asynchronous endpoints with Pydantic validation and automatic OpenAPI specs. |
+| **slowapi** | `0.1.9+` | Per-route rate limiting: Legal Assistant (20/min), Contract & Case Predictor (10/min). |
+| **LangGraph & LangChain**| Latest | Stateful cyclic and acyclic multi-node graph pipelines with conditional branching. |
+| **OpenRouter** | API | Single unified gateway to non-Chinese enterprise LLMs with automatic fallback chains. |
+| **FAISS (`faiss-cpu`)**| `^1.7.4` | In-memory approximate nearest neighbor vector similarity search. |
+| **BM25 (`rank-bm25`)** | `^0.2.2` | Lexical keyword matching to capture exact statute numbers, parties, and clause titles. |
+| **CrossEncoder** | Latest | Joint query-chunk reranking for precise contract clause prioritization. |
+| **Serper.dev** | API | Low-latency Google India live legal search with jurisdiction targeting (`gl=in`). |
 
 ---
 
-## 🤖 AI Pipelines
+## 🤖 AI Pipelines Deep Dive
 
-### 1. Legal Assistant — 4-Node LangGraph Pipeline
-
-```
- User Query
-     │
-     ▼
-┌─────────────────────────────────┐
-│  NODE 1: GUARDRAIL              │
-│  • Safety classification        │
-│  • Blocks prompt injection      │
-│  • Rejects off-topic queries    │
-│  • Routes: PASS → Node 2        │
-│            FAIL → Reject msg    │
-└───────────────┬─────────────────┘
-                │ (safe query)
-                ▼
-┌─────────────────────────────────┐
-│  NODE 2: SEARCH                 │
-│  • Serper API → Google India    │
-│  • Fetches top-N result URLs    │
-│  • BeautifulSoup page scrape    │
-│  • Returns raw text snippets    │
-└───────────────┬─────────────────┘
-                │ (search results)
-                ▼
-┌─────────────────────────────────┐
-│  NODE 3: EVALUATOR              │
-│  • LLM relevance scoring        │
-│  • Filters low-quality results  │
-│  • Routes: OK → Node 4          │
-│            NO_RESULTS → retry   │
-└───────────────┬─────────────────┘
-                │ (validated results)
-                ▼
-┌─────────────────────────────────┐
-│  NODE 4: SYNTHESIS              │
-│  Model: Llama-3.3-70B           │
-│  • Grounded answer generation   │
-│  • Inline citation injection    │
-│  • Indian legal context framing │
-│  • Returns: answer + sources[]  │
-└─────────────────────────────────┘
-
-Model Hierarchy (failover order):
-  meta-llama/llama-3.3-70b-instruct
-    → openai/gpt-4o-mini
-      → mistralai/mistral-small-24b-instruct-2501
-        → nvidia/nemotron-3.5-lightning:free
-```
-
----
-
-### 2. Contract Analyzer — 4-Node Agentic Pipeline
+### 1. Legal Assistant
+- **Endpoint**: `POST /legalassistant`
+- **Execution Flow**: 4-Node LangGraph Flow
+- **Model Hierarchy**: `meta-llama/llama-3.3-70b-instruct` ➔ `openai/gpt-4o-mini` ➔ `mistralai/mistral-small-24b-instruct-2501` ➔ `nvidia/nemotron-3.5-lightning:free`
 
 ```
- Upload: PDF / DOCX
-     │
-     ▼
-┌─────────────────────────────────────────────────┐
-│  NODE 1: INGESTION                              │
-│  • PyPDF2 / python-docx text extraction         │
-│                                                 │
-│  if doc ≤ 65,000 chars:                         │
-│    └─► Full-document context window mode        │
-│                                                 │
-│  if doc > 65,000 chars:                         │
-│    └─► Hybrid RAG mode:                         │
-│          • Chunk + embed (sentence-transformers)│
-│          • FAISS MMR vector retrieval           │
-│          • BM25 keyword retrieval               │
-│          • CrossEncoder reranking               │
-│          • Top-K chunks assembled               │
-└───────────────────┬─────────────────────────────┘
-                    │ (text context)
-                    ▼
-┌─────────────────────────────────────────────────┐
-│  NODE 2: CLAUSE EXTRACTOR                       │
-│  Extracts structured fields:                    │
-│  • Parties (names, roles)                       │
-│  • Effective & Expiry Dates                     │
-│  • Payment Terms & Milestones                   │
-│  • Obligations (each party)                     │
-│  • Termination Conditions                       │
-└───────────────────┬─────────────────────────────┘
-                    │ (structured clauses)
-                    ▼
-┌─────────────────────────────────────────────────┐
-│  NODE 3: RISK AUDIT                             │
-│  8-Category Risk Checklist:                     │
-│  1. Liability Caps & Indemnification            │
-│  2. SLA & Performance Guarantees               │
-│  3. Pricing & Payment Escalation                │
-│  4. IP Ownership & Assignment                   │
-│  5. Subcontracting & Assignment Rights          │
-│  6. Dispute Resolution & Jurisdiction           │
-│  7. Data Protection & Confidentiality           │
-│  8. Force Majeure & Change of Control           │
-│                                                 │
-│  Grounding Engine:                              │
-│  • Verifies every evidence quote against        │
-│    real contract text (prevents hallucination)  │
-│  • Corrects section references automatically    │
-└───────────────────┬─────────────────────────────┘
-                    │ (risk audit JSON)
-                    ▼
-┌─────────────────────────────────────────────────┐
-│  NODE 4: SYNTHESIS FORMATTER                    │
-│  • Executive summary (3-5 sentences)            │
-│  • Priority recommendations list               │
-│  • Red flags (immediate attention)              │
-│  • Missing protections checklist                │
-│  • Final structured JSON output                 │
-│  • PDF report generation (ReportLab)            │
-└─────────────────────────────────────────────────┘
+User Query ──► Input Critic ──► guardrail_node ──► search_node (Serper.dev + BS4)
+                                                         │
+                                                         ▼
+                                                  evaluator_node (Relevance)
+                                                         │
+                                                         ▼
+                                                  synthesis_node (Llama 3.3 70B)
+                                                         │
+                                                         ▼
+                                                  Output Critic ──► 200 OK Response
+```
 
-Model Hierarchy (failover order):
-  openai/gpt-4o-mini
-    → meta-llama/llama-3.3-70b-instruct
-      → mistralai/mistral-small-24b-instruct-2501
-        → nvidia/nemotron-3.5-lightning:free
+### 2. Contract Analyzer
+- **Endpoint**: `POST /contractanalyzer` (multipart/form-data)
+- **Execution Flow**: 4-Node Agentic Pipeline + Grounding Engine
+- **Model Hierarchy**: `openai/gpt-4o-mini` ➔ `meta-llama/llama-3.3-70b-instruct` ➔ `mistralai/mistral-small-24b-instruct-2501` ➔ `nvidia/nemotron-3.5-lightning:free`
+
+```
+Upload (PDF/DOCX/TXT) ──► Input Critic ──► ingestion_node:
+                                                ├── ≤ 65k chars: Full Document Context
+                                                └── > 65k chars: Hybrid RAG (BM25 + FAISS + CrossEncoder)
+                                                        │
+                                                        ▼
+                                           clause_extractor_node (Parties, Dates, Terms)
+                                                        │
+                                                        ▼
+                                           risk_audit_node ◄──► grounding_engine.py
+                                                        │       (Quote Verification & Section Map)
+                                                        ▼
+                                           synthesis_formatter_node (Summary & Actionable Fixes)
+                                                        │
+                                                        ▼
+                                           Output Critic ──► 200 OK Audit JSON
+```
+
+### 3. Case Outcome Predictor
+- **Endpoint**: `POST /caseoutcomeprediction`
+- **Execution Flow**: 5-Stage LangGraph Adversarial Debate Pipeline
+- **Model Hierarchy**: `meta-llama/llama-3.3-70b-instruct` ➔ `openai/gpt-4o-mini` ➔ `mistralai/mistral-small-24b-instruct-2501` ➔ `nvidia/nemotron-3-ultra-550b-a55b:free`
+
+```
+Dispute Facts ──► Input Critic ──► legal_research_node (Precedents & Statutes)
+                                             │
+                       ┌─────────────────────┴─────────────────────┐
+                       ▼                                           ▼
+             claimant_counsel_node                       defence_counsel_node
+          (Case Theory & Proof Elements)              (Defences, Rebuttals, Bars)
+                       └─────────────────────┬─────────────────────┘
+                                             ▼
+                                    citation_audit_node
+                                             ▼
+                                  judicial_evaluator_node (Impartial Ruling)
+                                             │
+                                             ▼
+                                  Output Critic ──► 200 OK Verdict JSON
 ```
 
 ---
 
-### 3. Case Outcome Predictor — LangGraph Adversarial Debate
+## 📖 User Guides & Feature Walkthroughs
 
-```
- Case Facts Input (Claimant's Brief)
-     │
-     ▼
-┌──────────────────────────────────────────┐
-│  NODE 1: LEGAL RESEARCH                  │
-│  • Retrieves relevant Indian case law    │
-│  • Statutes, precedents, IPC/CPC refs    │
-│  • Structures factual-legal matrix       │
-└──────────────────┬───────────────────────┘
-                   │
-         ┌─────────┴──────────┐
-         ▼                    ▼
-┌────────────────┐    ┌────────────────────┐
-│  NODE 2:       │    │  NODE 3:           │
-│  CLAIMANT      │    │  DEFENCE COUNSEL   │
-│  COUNSEL       │    │                    │
-│  • Arguments   │    │  • Counter-args    │
-│  • Precedents  │    │  • Rebuttals       │
-│  • Relief ask  │    │  • Defences        │
-└────────┬───────┘    └─────────┬──────────┘
-         │                      │
-         └──────────┬───────────┘
-                    ▼
-┌──────────────────────────────────────────┐
-│  NODE 4: CITATION AUDIT                  │
-│  • Verifies all cited cases exist        │
-│  • Flags hallucinated citations          │
-│  • Validates statutory references        │
-└──────────────────┬───────────────────────┘
-                   │ (verified briefs)
-                   ▼
-┌──────────────────────────────────────────┐
-│  NODE 5: JUDICIAL EVALUATOR              │
-│  • Weighs both sides' arguments          │
-│  • Applies Indian jurisprudence          │
-│  • Outputs structured JSON verdict:      │
-│    {                                     │
-│      win_probability: 0.0–1.0,           │
-│      likely_outcome: "...",              │
-│      key_strengths: [...],               │
-│      key_weaknesses: [...],              │
-│      recommended_strategy: "..."        │
-│    }                                     │
-└──────────────────────────────────────────┘
+### 1. Using the Legal Assistant
+1. Navigate to `/legalAssistant` (requires login).
+2. Enter any legal query regarding Indian statutes, Consumer Protection, CrPC, IPC, or civil procedure.
+3. The assistant triggers real-time search, parses official law sources, and provides an authoritative response with inline citations.
+4. **History Sidebar**: All discussions are automatically saved to your account. Click any past chat to resume or click the trash icon to permanently remove it.
 
-Model Hierarchy (failover order):
-  meta-llama/llama-3.3-70b-instruct  (Claimant + Judge)
-    → openai/gpt-4o-mini
-      → mistralai/mistral-small-24b-instruct-2501
-        → nvidia/nemotron-3-ultra-550b-a55b:free
-```
+### 2. Using the Contract Analyzer
+1. Navigate to `/contractAnalyzer`.
+2. **Input Options**:
+   - **Upload Document**: Drag and drop any `.pdf`, `.docx`, `.doc`, or `.txt` file (up to 20MB).
+   - **Paste Text**: Switch to the "Paste Text" tab and enter contract clauses directly.
+3. Click **"Analyze Contract"**.
+4. **Explore the 5 Audit Tabs**:
+   - **Red Flags**: View prioritized risks with exact verbatim evidence quotes from the agreement.
+   - **Missing Protections**: Identify missing market-standard clauses (e.g. mutual indemnification, audit rights).
+   - **Key Terms**: Review extracted Parties, Effective Dates, Payment Terms, and Termination Triggers.
+   - **Drafting Ambiguities**: Identify subjective phrases or conflicting obligations.
+   - **Recommendations**: Read clear negotiation action steps before signing.
+5. **Review the 4-Quadrant Risk Rubric**: Evaluate Financial Exposure, Dispute Probability, Clause Symmetry, and Cross-Clause Interactions.
+6. **Exports**:
+   - Click **"Download PDF Report"** to open a clean, multi-section legal memorandum print dialog.
+   - Click **"Export JSON"** to download raw analysis data.
+7. **Contract Vault**: Previous audits are preserved in the left sidebar for instant reloading or deletion.
+
+### 3. Using the Case Outcome Predictor
+1. Navigate to `/casePrediction`.
+2. Enter the narrative case facts, incident date, and jurisdiction.
+3. Click **"Predict Outcome"**.
+4. The system executes the adversarial debate pipeline (~60–90 seconds) and displays:
+   - **Claimant Legal Brief**
+   - **Defence Written Statement**
+   - **Judicial Bench Verdict** with win probability percentage, key deciding factors, and actionable next steps for counsel.
 
 ---
 
-## 🗄️ Database Design
+## 🔒 Security & Abuse Prevention
 
-### MySQL / TiDB Cloud — Relational (User Identity)
+| Layer | Implementation |
+|---|---|
+| **Session Protection** | Dual-token auth via `httpOnly` cookies (`accessToken`: 15m, `refreshToken`: 7d). Authorization Bearer header fallback. |
+| **Rate Limiting (Node)** | 3 tiers: `/api/auth` (20/15m), AI proxies (30/15m), general CRUD (200/15m). |
+| **Rate Limiting (Python)**| `slowapi`: Legal Assistant (20/min), Contract & Case Predictor (10/min). |
+| **Input Critic** | Two-layer guard: Layer 1 structural regex + Layer 2 LLM intent classifier (`gpt-4o-mini`). |
+| **Output Critic** | Post-generation LLM review checking for completeness and valid legal structure (threshold $\ge 85\%$). |
+| **Execution Timeouts** | ThreadPoolExecutor wrappers: Legal Assistant (90s), Contract & Case Predictors (180s). |
+| **Upload Safety** | Multer MIME-type filters; maximum file size capped at 20MB; maximum 5 files per audit. |
+| **Database Injection** | Parameterized queries for MySQL via `mysql2`; Mongoose schema typing and validators for MongoDB. |
 
+---
+
+## 🗄️ Database Architecture
+
+### 1. Relational Identity Store (MySQL / TiDB Cloud)
 ```sql
 CREATE TABLE users (
   id             INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   name           VARCHAR(255)        NOT NULL,
   email          VARCHAR(255) UNIQUE NOT NULL,
-  password_hash  VARCHAR(255)        NOT NULL,
+  password       VARCHAR(255)        NOT NULL,
+  phone_number   VARCHAR(20)         NOT NULL,
+  refresh_token  TEXT                DEFAULT NULL,
   created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  updated_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_users_email (email)
 );
 ```
 
-### MongoDB Atlas — Document Store (AI Session Data)
-
-| Collection | Description | Key Fields |
-|---|---|---|
-| `chats` | Legal Assistant conversation history | `userId`, `sessionId`, `messages[]`, `createdAt` |
-| `contracts` | Contract Analyzer vault | `userId`, `filename`, `rawText`, `analysis` (full JSON), `uploadedAt` |
-| `cases` | Case Predictor results | `userId`, `caseTitle`, `facts`, `verdict` (JSON), `createdAt` |
-| `summaries` | Stored contract executive summaries | `contractId`, `summary`, `redFlags[]`, `recommendations[]` |
+### 2. Document Collections (MongoDB Atlas)
+- **`chats`**: User ID, conversation title, category, and message array (max 500 messages, max 20k chars per message).
+- **`contracts`**: User ID, original filename, MIME type, file size, contract text (up to 500k chars), and complete `Mixed` analysis JSON.
+- **`cases`**: User ID, title, dispute facts narrative (max 20k chars), status, and `Mixed` adversarial verdict JSON.
+- **`summaries`**: User ID, title, document summary text (max 50k chars), and categorization tags.
 
 ---
 
-## 🛣️ Frontend Routes
+## 🛣️ Frontend Routes & Navigation
 
-| Route | Access | Component | Description |
+| Route | Access | Component | Purpose |
 |---|---|---|---|
-| `/` | Public | `HomePage` | Landing page with feature overview |
-| `/register` | Public | `RegisterPage` | New user registration |
-| `/login` | Public | `LoginPage` | JWT login, stores tokens |
-| `/services` | Protected | `ServicesPage` | Feature selection hub |
-| `/legalAssistant` | Protected | `LegalAssistantPage` | Conversational chat UI |
-| `/contractAnalyzer` | Protected | `ContractAnalyzerPage` | File upload + analysis dashboard |
-| `/casePrediction` | Protected | `CasePredictionPage` | Case form + adversarial verdict display |
-
-> Protected routes redirect to `/login` when no valid JWT is present.
+| `/` | Public | `homepage.jsx` | Platform landing page and service previews |
+| `/login` | Public | `login.jsx` | User authentication via credentials |
+| `/register` | Public | `register.jsx` | User account creation |
+| `/services` | 🔒 Protected | `services.jsx` | Navigation hub for all legal services |
+| `/legalAssistant` | 🔒 Protected | `legalAssistant.jsx` | Conversational legal research & session vault |
+| `/contractAnalyzer` | 🔒 Protected | `contractAnalyzer.jsx` | Complete contract risk audit dashboard & vault |
+| `/casePrediction` | 🔒 Protected | `casePrediction.jsx` | Adversarial dispute outcome simulator |
+| `/contact` | Public | `contact.jsx` | Inquiries and support form |
 
 ---
 
 ## 📡 API Reference
 
-### Node.js Backend — `https://legalsmiths-node.onrender.com`
+### Node.js Backend Gateway (`/api/*`)
+- `POST /api/auth/register` — Register new user account.
+- `POST /api/auth/login` — Login user; sets `httpOnly` cookies.
+- `POST /api/auth/refresh-token` — Issue fresh access token from refresh token.
+- `GET /api/auth/me` — Retrieve authenticated user profile.
+- `POST /api/auth/logout` — Clear session cookies.
+- `GET /api/chats/sessions` — Retrieve past legal chat sessions.
+- `POST /api/chats/sessions` — Create a new chat session.
+- `GET /api/chats/sessions/:sessionId` — Retrieve message history for a specific session.
+- `POST /api/chats/sessions/:sessionId/messages` — Append user query or assistant reply.
+- `PATCH /api/chats/sessions/:sessionId/title` — Rename chat session title.
+- `DELETE /api/chats/sessions/:sessionId` — Delete chat session.
+- `GET /api/contracts/contracts` — List all analyzed contracts in user vault.
+- `POST /api/contracts/contracts/save-audit` — Save contract text and audit results.
+- `GET /api/contracts/contracts/:id` — Fetch complete analysis report for a contract.
+- `DELETE /api/contracts/contracts/:id` — Delete contract from vault.
+- `GET /api/cases/cases` — List case outcome prediction history.
+- `POST /api/cases/cases/save-prediction` — Store case outcome prediction.
+- `GET /api/cases/cases/:id` — Fetch full judicial verdict details.
+- `DELETE /api/cases/cases/:id` — Delete case prediction record.
+- `GET /api/summaries/summaries` — List saved legal document summaries.
+- `POST /api/summaries/summaries` — Create new document summary.
+- `GET /api/summaries/summaries/:id` — Fetch single summary by ID.
+- `PATCH /api/summaries/summaries/:id` — Update summary record.
+- `DELETE /api/summaries/summaries/:id` — Delete summary record.
+- `GET /health` — Check MongoDB connection health.
 
-#### Auth
-
-| Method | Endpoint | Auth | Description |
-|---|---|---|---|
-| `POST` | `/api/auth/register` | None | Register new user |
-| `POST` | `/api/auth/login` | None | Login, returns `accessToken` + `refreshToken` |
-| `POST` | `/api/auth/refresh` | Refresh token | Issue new access token |
-| `POST` | `/api/auth/logout` | Bearer token | Invalidate refresh token |
-
-#### Legal Assistant
-
-| Method | Endpoint | Auth | Description |
-|---|---|---|---|
-| `POST` | `/api/chat/query` | Bearer | Send legal question, proxy to AI backend |
-| `GET` | `/api/chat/history` | Bearer | Get user's chat history |
-| `DELETE` | `/api/chat/:sessionId` | Bearer | Delete a chat session |
-
-#### Contract Analyzer
-
-| Method | Endpoint | Auth | Description |
-|---|---|---|---|
-| `POST` | `/api/contracts/analyze` | Bearer | Upload PDF/DOCX, proxy to AI backend |
-| `GET` | `/api/contracts` | Bearer | List user's analyzed contracts |
-| `GET` | `/api/contracts/:id` | Bearer | Get single contract analysis |
-| `DELETE` | `/api/contracts/:id` | Bearer | Remove contract from vault |
-| `GET` | `/api/contracts/:id/report` | Bearer | Download PDF risk report |
-
-#### Case Predictor
-
-| Method | Endpoint | Auth | Description |
-|---|---|---|---|
-| `POST` | `/api/cases/predict` | Bearer | Submit case facts, proxy to AI backend |
-| `GET` | `/api/cases` | Bearer | List user's case predictions |
-| `GET` | `/api/cases/:id` | Bearer | Get single case verdict |
+### Python AI Backend (`/*`)
+- `GET /` — Microservice root status, version, and active endpoint catalog.
+- `GET /health` — Health check returning compute device (`cpu`/`cuda`).
+- `GET /docs` — Interactive OpenAPI / Swagger UI documentation.
+- `POST /legalassistant` — 4-Node LangGraph legal Q&A pipeline (Rate limit: 20/min).
+- `POST /contractanalyzer` — 4-Node contract risk audit pipeline (Rate limit: 10/min).
+- `POST /caseoutcomeprediction` — 5-Stage adversarial debate pipeline (Rate limit: 10/min).
 
 ---
 
-### Python AI Backend — `https://legalsmiths-ai.onrender.com`
+## 🔐 Environment Variables Reference
 
-> Interactive docs at `/docs` (Swagger UI) and `/redoc`.
+### Python AI Backend (`backend/python_backend/.env`)
+```env
+PORT=8000
+HOST=0.0.0.0
+DEVICE=cpu
+INDEX_DIR=./data/indexes
 
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/health` | Health check |
-| `POST` | `/legal-assistant/query` | Run 4-node legal Q&A pipeline |
-| `POST` | `/contract-analyzer/analyze` | Run 4-node contract analysis pipeline (multipart/form-data) |
-| `POST` | `/case-predictor/predict` | Run adversarial LangGraph debate pipeline |
+OPENROUTER_API_KEY=sk-or-v1-your-key-here
+OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
+OPENROUTER_MODEL_NAME=meta-llama/llama-3.3-70b-instruct
 
----
+SERPER_API_KEY=your-serper-key-here
 
-## 🔐 Environment Variables
+LEGAL_ASSISTANT_MODEL=meta-llama/llama-3.3-70b-instruct
+CONTRACT_ANALYZER_MODEL=openai/gpt-4o-mini
+CASE_PREDICTOR_MODEL=meta-llama/llama-3.3-70b-instruct
+ADVOCATE_MODEL=meta-llama/llama-3.3-70b-instruct
+JUDGE_MODEL=meta-llama/llama-3.3-70b-instruct
 
-### Python AI Backend (`.env` in `/ai-backend`)
+LEGAL_ASSISTANT_TIMEOUT=90
+CONTRACT_ANALYZER_TIMEOUT=180
+CASE_PREDICTOR_TIMEOUT=180
+ALLOWED_ORIGINS=http://localhost:5173,https://legalsmiths.onrender.com
+```
 
-| Variable | Required | Description | Example |
-|---|---|---|---|
-| `OPENROUTER_API_KEY` | ✅ | OpenRouter unified LLM gateway key | `sk-or-v1-...` |
-| `OPENROUTER_BASE_URL` | ✅ | OpenRouter base URL | `https://openrouter.ai/api/v1` |
-| `SERPER_API_KEY` | ✅ | Serper.dev Google India search | `abc123...` |
-| `LEGAL_ASSISTANT_MODEL` | ✅ | Primary model for Legal Assistant | `meta-llama/llama-3.3-70b-instruct` |
-| `CONTRACT_ANALYZER_MODEL` | ✅ | Primary model for Contract Analyzer | `openai/gpt-4o-mini` |
-| `CASE_PREDICTOR_MODEL` | ✅ | Primary model for Claimant/Research | `meta-llama/llama-3.3-70b-instruct` |
-| `ADVOCATE_MODEL` | ✅ | Model for Defence Counsel node | `meta-llama/llama-3.3-70b-instruct` |
-| `JUDGE_MODEL` | ✅ | Model for Judicial Evaluator node | `meta-llama/llama-3.3-70b-instruct` |
-| `DEVICE` | ✅ | Torch device for embeddings | `cpu` |
-| `PORT` | ✅ | FastAPI server port | `8000` |
+### Node.js Backend (`backend/node_backend/.env`)
+```env
+PORT=5000
+ALLOWED_ORIGINS=http://localhost:5173,https://legalsmiths.onrender.com
+MONGODB_URI=mongodb+srv://user:password@cluster.mongodb.net/legalData?retryWrites=true&w=majority
+MYSQL_URL=mysql://user:password@gateway.tidbcloud.com:4000/users?ssl={"rejectUnauthorized":true}
 
-### Node.js Backend (`.env` in `/node-backend`)
+ACCESS_TOKEN_SECRET=your_64_char_hex_access_token_secret
+REFRESH_TOKEN_SECRET=your_64_char_hex_refresh_token_secret
+ACCESS_TOKEN_EXPIRY=15m
+REFRESH_TOKEN_EXPIRY=7d
+```
 
-| Variable | Required | Description | Example |
-|---|---|---|---|
-| `MONGODB_URI` | ✅ | MongoDB Atlas connection string | `mongodb+srv://user:pass@cluster...` |
-| `MYSQL_URL` | ✅ | TiDB Cloud MySQL connection URL | `mysql://user:pass@gateway...` |
-| `JWT_SECRET` | ✅ | Legacy JWT signing secret (keep for migration) | `super_secret_string` |
-| `ACCESS_TOKEN_SECRET` | ✅ | Access token signing secret (15 min) | `access_secret_string` |
-| `REFRESH_TOKEN_SECRET` | ✅ | Refresh token signing secret (7 d) | `refresh_secret_string` |
-| `PORT` | ✅ | Express server port | `5000` |
-
-### Frontend (`.env` in `/frontend`)
-
-| Variable | Required | Description | Example |
-|---|---|---|---|
-| `VITE_NODE_API_URL` | ✅ | Node.js backend base URL | `https://legalsmiths-node.onrender.com` |
-| `VITE_AI_API_URL` | ✅ | Python AI backend base URL | `https://legalsmiths-ai.onrender.com` |
-
----
-
-## ⚙️ Local Setup
-
-### Prerequisites
-
-| Tool | Minimum Version | Install |
-|---|---|---|
-| Node.js | 18+ | [nodejs.org](https://nodejs.org) |
-| Python | 3.10+ | [python.org](https://python.org) |
-| pnpm or npm | — | `npm i -g pnpm` |
-| MongoDB Atlas | — | [cloud.mongodb.com](https://cloud.mongodb.com) (free tier) |
-| TiDB Cloud / MySQL | — | [tidbcloud.com](https://tidbcloud.com) or local MySQL |
-| Git | 2.x | [git-scm.com](https://git-scm.com) |
-
----
-
-### Step 1 — Clone the Repository
-
-```bash
-git clone https://github.com/your-username/legalsmiths.git
-cd legalsmiths
+### Frontend (`frontend/.env`)
+```env
+VITE_NODE_API_URL=http://localhost:5000
+VITE_AI_API_URL=http://localhost:8000
 ```
 
 ---
 
-### Step 2 — Python AI Backend
+## ⚙️ Local Setup Guide
 
+### 1. Clone Repository
 ```bash
-# Navigate to the AI backend directory
-cd ai-backend
+git clone https://github.com/Pavankumar-Batchu1185/Cyfuture_LegalSmiths.git
+cd Cyfuture_LegalSmiths
+```
 
-# Create and activate a virtual environment
+### 2. Setup Python AI Backend
+```bash
+cd backend/python_backend
 python -m venv venv
 
-# macOS / Linux
+# Windows PowerShell:
+.\venv\Scripts\Activate.ps1
+# macOS / Linux:
 source venv/bin/activate
 
-# Windows (PowerShell)
-.\venv\Scripts\Activate.ps1
-
-# Install dependencies
 pip install -r requirements.txt
-
-# Copy the environment template and fill in your keys
 cp .env.example .env
-# Edit .env with your OPENROUTER_API_KEY, SERPER_API_KEY, etc.
+# Edit .env with your OPENROUTER_API_KEY and SERPER_API_KEY
 
-# Start the FastAPI server
 uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-> API will be available at `http://localhost:8000`  
-> Swagger UI: `http://localhost:8000/docs`
-
----
-
-### Step 3 — Node.js Backend
-
+### 3. Setup Node.js Backend Gateway
+Open a second terminal:
 ```bash
-# From the repo root
-cd node-backend
-
-# Install dependencies
+cd backend/node_backend
 npm install
-# or: pnpm install
-
-# Copy the environment template and fill in your URIs and secrets
 cp .env.example .env
-# Edit .env with MONGODB_URI, MYSQL_URL, JWT secrets, etc.
+# Edit .env with your MONGODB_URI, MYSQL_URL, and token secrets
 
-# Run database migrations (if applicable)
-npm run migrate
-
-# Start the Express server
 npm run dev
 ```
 
-> API will be available at `http://localhost:5000`
-
----
-
-### Step 4 — Frontend
-
+### 4. Setup React Frontend
+Open a third terminal:
 ```bash
-# From the repo root
 cd frontend
-
-# Install dependencies
 npm install
-# or: pnpm install
-
-# Copy the environment template
 cp .env.example .env
-# Set:
-#   VITE_NODE_API_URL=http://localhost:5000
-#   VITE_AI_API_URL=http://localhost:8000
+# Verify VITE_NODE_API_URL=http://localhost:5000 and VITE_AI_API_URL=http://localhost:8000
 
-# Start the Vite dev server
 npm run dev
 ```
-
-> App will be available at `http://localhost:5173`
-
----
-
-### Running All Three Services Together
-
-You can use three separate terminal windows/tabs, or install `concurrently`:
-
-```bash
-# From the repo root
-npm install -g concurrently
-
-concurrently \
-  "cd ai-backend && uvicorn main:app --port 8000 --reload" \
-  "cd node-backend && npm run dev" \
-  "cd frontend && npm run dev"
-```
+Open **http://localhost:5173** in your browser.
 
 ---
 
-## 📁 Project Structure
+## 📁 Project Directory Structure
 
 ```
-legalsmiths/
+Cyfuture_LegalSmiths/
+├── .github/workflows/ci.yml           # Automated CI/CD pipeline (lint, test, build, deploy)
+├── README.md                          # Master documentation
 │
-├── frontend/                        # React 18 + Vite SPA
-│   ├── public/
-│   ├── src/
-│   │   ├── components/              # Shared UI components
-│   │   │   ├── Navbar.jsx
-│   │   │   ├── ProtectedRoute.jsx
-│   │   │   └── ...
-│   │   ├── pages/
-│   │   │   ├── HomePage.jsx
-│   │   │   ├── LoginPage.jsx
-│   │   │   ├── RegisterPage.jsx
-│   │   │   ├── ServicesPage.jsx
-│   │   │   ├── LegalAssistantPage.jsx
-│   │   │   ├── ContractAnalyzerPage.jsx
-│   │   │   └── CasePredictionPage.jsx
-│   │   ├── services/                # API client functions
-│   │   │   ├── authService.js
-│   │   │   ├── chatService.js
-│   │   │   ├── contractService.js
-│   │   │   └── caseService.js
-│   │   ├── context/                 # React Contexts (Auth, etc.)
-│   │   ├── styles/                  # Custom CSS (Poppins-based design)
-│   │   ├── App.jsx
-│   │   └── main.jsx
-│   ├── .env.example
+├── data/indexes/                      # Local directory for cached FAISS and BM25 indexes
+│
+├── frontend/                          # React 18 + Vite SPA
 │   ├── index.html
 │   ├── vite.config.js
-│   └── package.json
+│   ├── package.json
+│   ├── README.md                      # Frontend documentation
+│   └── src/
+│       ├── components/                # ProtectedRoute, Footer
+│       ├── config/api.js              # Axios base endpoints & getAuthHeaders()
+│       ├── pages/                     # homepage, login, register, services,
+│       │                              # legalAssistant, contractAnalyzer, casePrediction, contact
+│       ├── styles/                    # Dedicated page stylesheets (Poppins, CSS tokens)
+│       └── utils/auth.js              # Token management & user session helpers
 │
-├── node-backend/                    # Express 5 REST API
-│   ├── src/
-│   │   ├── controllers/
-│   │   │   ├── authController.js
-│   │   │   ├── chatController.js
-│   │   │   ├── contractController.js
-│   │   │   └── caseController.js
-│   │   ├── middleware/
-│   │   │   ├── authMiddleware.js    # JWT verification
-│   │   │   ├── uploadMiddleware.js  # Multer config
-│   │   │   └── errorHandler.js
-│   │   ├── models/
-│   │   │   ├── Chat.js              # Mongoose schema
-│   │   │   ├── Contract.js          # Mongoose schema
-│   │   │   └── Case.js              # Mongoose schema
-│   │   ├── routes/
-│   │   │   ├── authRoutes.js
-│   │   │   ├── chatRoutes.js
-│   │   │   ├── contractRoutes.js
-│   │   │   └── caseRoutes.js
-│   │   ├── config/
-│   │   │   ├── db.js                # MongoDB + MySQL connection
-│   │   │   └── jwt.js
-│   │   └── app.js
-│   ├── .env.example
-│   ├── server.js
-│   └── package.json
-│
-├── ai-backend/                      # FastAPI + LangGraph AI Engine
-│   ├── pipelines/
-│   │   ├── legal_assistant/
-│   │   │   ├── graph.py             # LangGraph definition
-│   │   │   ├── nodes/
-│   │   │   │   ├── guardrail.py
-│   │   │   │   ├── search.py
-│   │   │   │   ├── evaluator.py
-│   │   │   │   └── synthesis.py
-│   │   │   └── state.py
-│   │   ├── contract_analyzer/
-│   │   │   ├── graph.py
-│   │   │   ├── nodes/
-│   │   │   │   ├── ingestion.py     # Adaptive context / Hybrid RAG
-│   │   │   │   ├── clause_extractor.py
-│   │   │   │   ├── risk_audit.py
-│   │   │   │   └── synthesis_formatter.py
-│   │   │   └── state.py
-│   │   └── case_predictor/
-│   │       ├── graph.py
-│   │       ├── nodes/
-│   │       │   ├── legal_research.py
-│   │       │   ├── claimant_counsel.py
-│   │       │   ├── defence_counsel.py
-│   │       │   ├── citation_audit.py
-│   │       │   └── judicial_evaluator.py
-│   │       └── state.py
-│   ├── services/
-│   │   ├── llm_client.py            # OpenRouter + failover logic
-│   │   ├── search_client.py         # Serper.dev integration
-│   │   ├── rag_engine.py            # FAISS + BM25 + CrossEncoder
-│   │   └── pdf_generator.py         # Report generation
-│   ├── routers/
-│   │   ├── legal_assistant.py
-│   │   ├── contract_analyzer.py
-│   │   └── case_predictor.py
-│   ├── .env.example
-│   ├── main.py
-│   └── requirements.txt
-│
-├── docs/
-│   └── screenshots/                 # UI screenshots for README
-│
-├── .gitignore
-├── README.md                        # This file
-└── render.yaml                      # Render multi-service config
+├── backend/
+│   ├── node_backend/                  # Express 5 Identity & Persistence Service
+│   │   ├── server.js                  # Database connection & server bootstrap
+│   │   ├── package.json
+│   │   ├── Dockerfile                 # Production Docker configuration
+│   │   ├── readme.md                  # Node Backend documentation
+│   │   └── src/
+│   │       ├── app.js                 # Rate limiters, cookies, CORS, routes
+│   │       ├── controllers/           # auth, chat, contract, case, summary
+│   │       ├── middlewares/           # verifyToken (cookie+header), multer
+│   │       ├── models/                # chat, contract, casePredictor, summary
+│   │       ├── routes/                # auth, chat, contract, case, summary
+│   │       ├── db/                    # mongodb.js, sqldb.js
+│   │       └── utils/                 # apiFeatures.js
+│   │
+│   └── python_backend/                # FastAPI Multi-Agentic AI Microservice
+│       ├── main.py                    # App entry, slowapi rate limiter, CORS, lifespan
+│       ├── limiter.py                 # Standalone slowapi Limiter instance
+│       ├── requirements.txt
+│       ├── Dockerfile                 # Production Docker configuration
+│       ├── README.md                  # Python AI Backend documentation
+│       ├── config/settings.py         # OpenRouter model priority chains & timeouts
+│       ├── models/                    # llm.py (OpenRouter failover), embeddings.py
+│       ├── routers/                   # legal_assistant, contract_analyzer, case_prediction
+│       ├── schemas/                   # Pydantic request/response schemas
+│       └── services/
+│           ├── agents/                # input_critic.py, output_critic.py
+│           ├── legal_assistant/       # 4-node LangGraph pipeline
+│           ├── contract_analyzer/     # 4-node agentic pipeline + grounding_engine.py
+│           ├── case_service.py        # 5-stage adversarial debate pipeline
+│           ├── contract_service.py    # Service facade delegating to contract analyzer
+│           ├── document_service.py    # Multi-format text extraction (PyPDF, docx, unstructured)
+│           ├── input_guard.py         # Input validation facade delegating to Input Critic
+│           ├── rag_service.py         # Hybrid FAISS vector store + BM25 retrieval
+│           └── search_service.py      # Serper.dev Google India search wrapper
 ```
 
 ---
 
-## 🚀 Deployment (Render)
+## 🚀 Deployment (Render & GitHub Actions CI/CD)
 
-All three services are deployed on [Render](https://render.com). The recommended approach uses a `render.yaml` blueprint for one-click multi-service deployment.
+The project utilizes automated CI/CD via [`.github/workflows/ci.yml`](.github/workflows/ci.yml). Upon every push to `main`, GitHub Actions performs verification (frontend build, Node backend app load, Python FastAPI import, and Docker container builds) before invoking Render Deploy Hooks:
 
-### `render.yaml` Blueprint
-
-```yaml
-services:
-  # ── Frontend (Static Site) ──────────────────────────────────────────
-  - type: web
-    name: legalsmiths
-    runtime: static
-    rootDir: frontend
-    buildCommand: npm install && npm run build
-    staticPublishPath: dist
-    envVars:
-      - key: VITE_NODE_API_URL
-        value: https://legalsmiths-node.onrender.com
-      - key: VITE_AI_API_URL
-        value: https://legalsmiths-ai.onrender.com
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
-
-  # ── Node.js Backend ─────────────────────────────────────────────────
-  - type: web
-    name: legalsmiths-node
-    runtime: node
-    rootDir: node-backend
-    buildCommand: npm install
-    startCommand: node server.js
-    envVars:
-      - key: MONGODB_URI
-        sync: false
-      - key: MYSQL_URL
-        sync: false
-      - key: ACCESS_TOKEN_SECRET
-        sync: false
-      - key: REFRESH_TOKEN_SECRET
-        sync: false
-      - key: JWT_SECRET
-        sync: false
-      - key: PORT
-        value: "5000"
-
-  # ── Python AI Backend ────────────────────────────────────────────────
-  - type: web
-    name: legalsmiths-ai
-    runtime: python
-    rootDir: ai-backend
-    buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
-    envVars:
-      - key: OPENROUTER_API_KEY
-        sync: false
-      - key: OPENROUTER_BASE_URL
-        value: https://openrouter.ai/api/v1
-      - key: SERPER_API_KEY
-        sync: false
-      - key: LEGAL_ASSISTANT_MODEL
-        value: meta-llama/llama-3.3-70b-instruct
-      - key: CONTRACT_ANALYZER_MODEL
-        value: openai/gpt-4o-mini
-      - key: CASE_PREDICTOR_MODEL
-        value: meta-llama/llama-3.3-70b-instruct
-      - key: ADVOCATE_MODEL
-        value: meta-llama/llama-3.3-70b-instruct
-      - key: JUDGE_MODEL
-        value: meta-llama/llama-3.3-70b-instruct
-      - key: DEVICE
-        value: cpu
+```
+Push to main ──► GitHub Actions CI/CD ──► 1. Frontend Lint & Build
+                                      ──► 2. Node.js Verification
+                                      ──► 3. Python AI Import Test
+                                      ──► 4. Docker Build Verification
+                                      ──► 5. Trigger Render Deploy Hooks ──► Services Updated
 ```
 
-### Manual Deployment Steps
+### Render Services Configuration
 
-1. **Push to GitHub** — Render auto-deploys on push to `main`.
-2. **Create services** on [dashboard.render.com](https://dashboard.render.com):
-   - Frontend → **Static Site** → root: `frontend/`, build: `npm run build`, publish: `dist`
-   - Node Backend → **Web Service** → root: `node-backend/`, start: `node server.js`
-   - Python Backend → **Web Service** → root: `ai-backend/`, start: `uvicorn main:app --host 0.0.0.0 --port $PORT`
-3. **Add Environment Variables** via the Render dashboard for each service (mark sensitive values as secret).
-4. **Enable Auto-Deploy** so every push to `main` triggers a rebuild.
+| Service | Render Type | Root Directory | Build Command | Start Command / Publish |
+|---|---|---|---|---|
+| **Frontend** | Static Site | `frontend` | `npm install && npm run build` | Publish: `dist`, Rewrite: `/*` ➔ `/index.html` |
+| **Node Backend** | Web Service (Node) | `backend/node_backend` | `npm install` | `node server.js` |
+| **Python AI Backend** | Web Service (Python) | `backend/python_backend` | `pip install -r requirements.txt` | `uvicorn main:app --host 0.0.0.0 --port $PORT` |
 
-> **Note on cold starts:** Render free-tier services spin down after 15 minutes of inactivity. The first request after idle may take 30–60 seconds. Consider upgrading to a paid plan for production use.
+> [!NOTE]
+> On the free tier, services sleep after 15 minutes of inactivity. Initial wake-up takes ~45–75 seconds while models and database pools reinitialize.
 
 ---
 
-## 🤝 Contributing
+## 🤝 Contributing Guidelines
 
-Contributions are welcome! Please follow the steps below:
-
-1. **Fork** the repository and create your branch from `main`:
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
-
-2. **Follow the code style** — ESLint for JS/JSX, Black + isort for Python.
-
-3. **Write meaningful commits:**
-   ```
-   feat(contract-analyzer): add grounding score threshold config
-   fix(auth): refresh token rotation on concurrent requests
-   docs(readme): update local setup for Windows users
-   ```
-
-4. **Test your changes** before opening a PR:
-   ```bash
-   # Python
-   cd ai-backend && pytest
-
-   # Node
-   cd node-backend && npm test
-   ```
-
-5. **Open a Pull Request** against `main` with a clear description of what changed and why.
-
-### Code of Conduct
-
-Please be respectful, inclusive, and constructive. We follow the [Contributor Covenant](https://www.contributor-covenant.org/).
+1. Fork the repository and create your branch: `git checkout -b feature/improvement-name`.
+2. Ensure code standards:
+   - Frontend: `npm run lint` and `npm run build` must succeed without warnings.
+   - Python: Follow PEP 8 guidelines.
+3. Commit using semantic commit messages (`feat: ...`, `fix: ...`, `docs: ...`).
+4. Submit a Pull Request describing your changes.
 
 ---
 
 ## 📄 License
 
-```
-MIT License
-
-Copyright (c) 2024 LegalSmiths Contributors
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-```
-
----
-
-<div align="center">
-
-Built with ❤️ for the Indian legal ecosystem · Powered by LangGraph, OpenRouter & FastAPI
-
-</div>
+MIT License — Copyright (c) 2026 LegalSmiths Contributors.

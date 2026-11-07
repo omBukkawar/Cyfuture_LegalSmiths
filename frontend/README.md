@@ -1,352 +1,241 @@
-# ⚖️ LegalSmiths — Frontend
+# LegalSmiths — Frontend
 
-> **AI-powered Indian legal intelligence platform** — React 18 + Vite SPA delivering a Legal Assistant, Contract Analyzer, and Case Outcome Predictor in a unified, accessible interface.
+> **AI-Powered Indian Legal Intelligence Platform** — High-performance React 18 + Vite SPA delivering a Legal Assistant, Contract Risk Auditor, and Adversarial Case Outcome Predictor with zero-framework custom CSS and Poppins typography.
 
 ---
 
-## 📋 Table of Contents
+## Table of Contents
 
 1. [Overview](#overview)
-2. [Live Demo & Screenshots](#live-demo--screenshots)
-3. [Tech Stack & Rationale](#tech-stack--rationale)
-4. [Design System](#design-system)
-5. [Pages & Features](#pages--features)
-   - [Homepage](#homepage-)
-   - [Register & Login](#register--login-)
-   - [Services](#services-)
-   - [Legal Assistant](#legal-assistant-)
-   - [Contract Analyzer](#contract-analyzer-)
-   - [Case Outcome Predictor](#case-outcome-predictor-)
-   - [Contact](#contact-)
-6. [Authentication Flow](#authentication-flow)
-7. [File Structure](#file-structure)
-8. [Environment Variables](#environment-variables)
-9. [Local Development](#local-development)
-10. [Building for Production](#building-for-production)
-11. [Deployment](#deployment)
-12. [Contributing](#contributing)
+2. [Live Application](#live-application)
+3. [Direct AI Microservice Routing](#direct-ai-microservice-routing)
+4. [Tech Stack & Rationale](#tech-stack--rationale)
+5. [Design System](#design-system)
+6. [Pages & Features](#pages--features)
+   - [1. Homepage](#1-homepage)
+   - [2. Authentication (Login & Register)](#2-authentication-login--register)
+   - [3. Services Hub](#3-services-hub)
+   - [4. Legal Assistant](#4-legal-assistant)
+   - [5. Contract Analyzer](#5-contract-analyzer)
+   - [6. Case Outcome Predictor](#6-case-outcome-predictor)
+   - [7. Contact](#7-contact)
+7. [Authentication Architecture](#authentication-architecture)
+8. [File Structure](#file-structure)
+9. [Environment Variables](#environment-variables)
+10. [Local Development](#local-development)
+11. [Production Build & Optimization](#production-build--optimization)
+12. [Deployment (Render)](#deployment-render)
+13. [Contributing](#contributing)
+14. [License](#license)
 
 ---
 
 ## Overview
 
-**LegalSmiths** is a full-stack, AI-driven legal intelligence platform tailored for the Indian legal ecosystem. The frontend is a performant React 18 Single Page Application (SPA) built with Vite, exposing three core AI-powered tools:
+**LegalSmiths** is a full-stack, AI-driven legal intelligence platform engineered specifically for the Indian legal ecosystem. The frontend is a single-page application built on React 18 and Vite.
 
-| Tool | Description |
-|------|-------------|
-| **Legal Assistant** | Conversational AI chat with persistent session history for Indian law queries |
-| **Contract Analyzer** | Upload or paste contracts to receive a structured risk audit with severity-coded red flags, missing protections, ambiguities, and actionable recommendations |
-| **Case Outcome Predictor** | Provide case facts to receive an adversarial brief (claimant + defence) and a judicial verdict with win probability percentage |
-
-All AI features are gated behind JWT authentication. Public-facing pages (Homepage, Register, Login, Contact) are freely accessible.
+### Core Capabilities
+- **Legal Assistant (`/legalAssistant`)**: Interactive conversational AI for Indian statutory queries, court procedures, and legal research with persistent session history.
+- **Contract Analyzer (`/contractAnalyzer`)**: Complete commercial contract risk auditing supporting PDF/DOCX/TXT upload or direct text paste. Features a 5-tab analysis dashboard, 4-quadrant Risk Rubric, verbatim evidence quoting, and formatted PDF memorandum export.
+- **Case Outcome Predictor (`/casePrediction`)**: Adversarial simulation pitting claimant legal briefs against defence statements before an impartial judicial evaluator to project outcome likelihood and strategic action steps.
 
 ---
 
-## Live Demo & Screenshots
+## Live Application
 
-> 🚀 **Live:** [https://legalsmiths.vercel.app](https://legalsmiths.vercel.app) *(update with production URL)*
+- **Production URL**: [https://legalsmiths.onrender.com](https://legalsmiths.onrender.com)
+- **Node Backend Gateway**: [https://legalsmiths-node.onrender.com](https://legalsmiths-node.onrender.com)
+- **Python AI Microservice Docs**: [https://legalsmiths-ai.onrender.com/docs](https://legalsmiths-ai.onrender.com/docs)
 
-| Page | Preview |
-|------|---------|
-| Homepage | *[Screenshot placeholder]* |
-| Legal Assistant | *[Screenshot placeholder]* |
-| Contract Analyzer | *[Screenshot placeholder]* |
-| Case Predictor | *[Screenshot placeholder]* |
+---
+
+## Direct AI Microservice Routing
+
+The frontend architecture uses a **dual-backend model**:
+
+```
+                              REACT FRONTEND
+                                     │
+           ┌─────────────────────────┴─────────────────────────┐
+           ▼                                                   ▼
+┌───────────────────────────────┐               ┌───────────────────────────────┐
+│     Node.js Express Backend   │               │     Python FastAPI AI Backend │
+│        (VITE_NODE_API_URL)    │               │        (VITE_AI_API_URL)      │
+├───────────────────────────────┤               ├───────────────────────────────┤
+│ • User Registration & Login   │               │ • Legal Assistant Synthesis   │
+│ • JWT Cookie Management       │               │ • Contract Risk Audit Pipeline│
+│ • Chat Session Persistence    │               │ • Adversarial Case Outcome    │
+│ • Contract Vault Storage      │               │   Prediction Pipeline         │
+│ • Case Prediction History     │               │ • Live Google Search (Serper) │
+└───────────────────────────────┘               └───────────────────────────────┘
+```
+
+- **Inference calls**: Sent **directly** from the browser to `VITE_AI_API_URL` (`POST /legalassistant`, `POST /contractanalyzer`, `POST /caseoutcomeprediction`). Node.js does not proxy these heavy AI workflows.
+- **Persistence calls**: Sent to `VITE_NODE_API_URL` (`/api/auth/*`, `/api/chats/*`, `/api/contracts/*`, `/api/cases/*`, `/api/summaries/*`) to store, list, and delete user-owned records.
 
 ---
 
 ## Tech Stack & Rationale
 
-| Technology | Version | Role | Why |
+| Technology | Version | Role | Why Chosen |
 |---|---|---|---|
-| **React** | 18 | UI framework | Hooks-based component model, concurrent features, wide ecosystem |
-| **Vite** | Latest | Build tool & dev server | Sub-second HMR, ES module-native, dramatically faster than CRA/Webpack for development |
-| **React Router** | v7 | Client-side routing | Declarative route definitions, nested routes, programmatic navigation, v7 future-flags |
-| **Axios** | Latest | HTTP client | Interceptor support for auth headers, clean promise API, consistent error handling |
-| **Custom CSS** | — | Styling | Zero-dependency approach; Poppins font, CSS custom properties, module-scoped stylesheets — no Tailwind or MUI overhead |
-| **ESLint** | Latest | Code quality | `react-hooks` plugin enforces Rules of Hooks; `react-refresh` ensures HMR compatibility |
-
-### Why Vite over CRA?
-
-Vite leverages native ES modules in development — only the files the browser actually requests are transformed, giving instant startup regardless of project size. Production builds use Rollup under the hood for optimal tree-shaking and chunk splitting.
+| **React** | `18.2.0` | UI Library | Component-driven architecture, concurrent rendering, and hook-based local state management. |
+| **Vite** | `^7.1.2` | Build Tool & Dev Server | Lightning-fast Hot Module Replacement (HMR) using native browser ES modules, drastically reducing dev startup times compared to Webpack/CRA. |
+| **React Router** | `^7.18.5` | Client-Side Routing | Declarative nested routing, clean programmatic navigation, and route protection HOC patterns. |
+| **Axios** | `^1.6.7` | HTTP Client | Request/response interceptors, automated CSRF cookie transmission (`withCredentials`), and uniform error handling. |
+| **Custom CSS** | Pure CSS | Design & Styling | Zero runtime overhead; full aesthetic freedom without the bundle weight, style collisions, or configuration bloat of Tailwind or MUI. |
+| **ESLint** | `^10.14.0` | Code Quality | Enforces modern React hooks safety (`eslint-plugin-react-hooks`) and strict variable usage in CI/CD pipelines. |
 
 ---
 
 ## Design System
 
-LegalSmiths uses a bespoke design language with no utility-class framework dependency.
+LegalSmiths adheres to a clean, authoritative legal design language optimized for readability and accessibility.
 
 ### Typography
+- **Primary Typeface**: `Poppins`, sans-serif (all weights self-hosted locally in `src/assets/Poppins/`)
+- **Body Size**: `16px` base, line-height `1.6`
+- **Headings**: Semibold & Bold (`600`, `700`)
 
-| Token | Value |
-|---|---|
-| Font family | `'Poppins', sans-serif` (self-hosted, all weights) |
-| Base size | `16px` |
+### Brand & Interface Palette
 
-### Color Palette
-
-| Token | Hex | Usage |
+| Color Token | Hex Code | Application |
 |---|---|---|
-| Sidebar background | `#727374` | Left sidebar in Legal Assistant & Contract Analyzer |
-| CTA / Primary action | `#3437C2` | Buttons, links, interactive highlights |
-| Card background | `#ffffff` | Main content area cards |
-| Risk — Critical | `#dc2626` | Contract red flags: Critical severity |
-| Risk — High | `#f59e0b` | Contract red flags: High severity |
-| Risk — Medium | `#eab308` | Contract red flags: Medium severity |
-| Risk — Low | `#22c55e` | Contract red flags: Low severity |
+| **Sidebar Neutral** | `#727374` | Left persistent navigation sidebar on Legal Assistant & Contract Analyzer |
+| **Primary Brand CTA** | `#3437C2` | Primary action buttons, tabs, interactive accents, focus rings |
+| **Workspace Card** | `#FFFFFF` | Container cards, analysis modules, document viewer backgrounds |
+| **Canvas Background** | `#F8FAFC` | Page body background |
+| **Text Primary** | `#0F172A` | Main body text and high-contrast headings |
+| **Text Muted** | `#64748B` | Subheadings, metadata, section references, clause numbers |
 
-### Layout Patterns
+### Risk Severity Colors
 
-- **2-column layout** (`sidebar + main`): Used in Legal Assistant and Contract Analyzer for consistent spatial organization.
-- **Uniform sidebar**: `#727374` background across all protected pages for visual consistency.
-- **Card-based content**: White cards on a light background for content sections.
-
-### CSS Architecture
-
-- Global resets and variables in `src/index.css` and `src/App.css`
-- Page-level stylesheets in `src/styles/` (e.g., `contractAnalyzer.css`, `legalAssistant.css`)
-- CSS custom properties (`--var`) for theming tokens
+| Severity Level | Hex Code | Badge / Card Border Style |
+|---|---|---|
+| **Critical** | `#DC2626` | Red border, `#FEE2E2` background tint |
+| **High** | `#F59E0B` | Amber border, `#FEF3C7` background tint |
+| **Medium** | `#EAB308` | Yellow border, `#FEFCE8` background tint |
+| **Low** | `#22C55E` | Green border, `#F0FDF4` background tint |
 
 ---
 
 ## Pages & Features
 
-### Homepage `/`
+### 1. Homepage (`/`)
+- **Access**: Public
+- **Features**: Hero presentation, value propositions, interactive feature preview cards for the 3 core tools, and quick authentication triggers.
 
-**Access:** Public
+### 2. Authentication (`/login` & `/register`)
+- **Access**: Public (auto-redirects if already authenticated)
+- **Features**: Clean login and signup forms with real-time error handling. Sets `httpOnly` session cookies and persists local fallback tokens via `auth.js`.
 
-The entry point to the platform. Features:
-
-- **Hero section** — Headline, sub-headline, and primary CTA directing visitors to register or explore features.
-- **Feature cards** — Visual overview of Legal Assistant, Contract Analyzer, and Case Predictor with iconography and brief descriptions.
-- **Call to action** — Secondary CTA prompting sign-up or login.
-
----
-
-### Register & Login `/register` `/login`
-
-**Access:** Public
-
-Standard authentication pages:
-
-- **Register** — Email + password form. On success, stores `accessToken` and `refreshToken` in `localStorage` and redirects to the dashboard/services page.
-- **Login** — Email + password JWT authentication. Same token storage behaviour as register.
-- Both pages redirect authenticated users away to prevent re-auth.
+### 3. Services Hub (`/services`)
+- **Access**: Protected
+- **Features**: Central navigation dashboard routing verified users to Legal Assistant, Contract Analyzer, or Case Predictor.
 
 ---
 
-### Services `/services`
-
-**Access:** 🔒 Protected
-
-An authenticated landing/hub page that presents all available AI-powered services with navigation cards linking to each tool.
-
----
-
-### Legal Assistant `/legalAssistant`
-
-**Access:** 🔒 Protected
-
-A full-featured conversational AI chat interface for Indian legal queries.
-
-#### Layout
+### 4. Legal Assistant (`/legalAssistant`)
+- **Access**: Protected
+- **Layout**: 2-Column Responsive Workspace (Sidebar + Chat Area)
 
 ```
-┌─────────────────┬────────────────────────────────┐
-│   Session       │                                │
-│   Sidebar       │        Chat Area               │
-│                 │                                │
-│  [New Chat]     │  ┌──────────────────────────┐  │
-│                 │  │  User message bubble     │  │
-│  Past Session 1 │  └──────────────────────────┘  │
-│  Past Session 2 │  ┌──────────────────────────┐  │
-│  Past Session 3 │  │  AI response (formatted) │  │
-│  ...            │  └──────────────────────────┘  │
-│                 │  [────────── Input ──────────]  │
-└─────────────────┴────────────────────────────────┘
++---------------------------+--------------------------------------------------------+
+|     SESSION SIDEBAR       |                     CHAT WORKSPACE                     |
+|                           |                                                        |
+|  [+ New Legal Chat]       |  +--------------------------------------------------+  |
+|                           |  |  User Query: Anticipatory bail under CrPC 438    |  |
+|  Past Conversations:      |  +--------------------------------------------------+  |
+|  - Property Dispute 2024  |  +--------------------------------------------------+  |
+|  - Cheque Bounce Case     |  |  LegalSmiths AI: Statutory Analysis & Citations  |  |
+|  - Employment Agreement   |  +--------------------------------------------------+  |
+|                           |                                                        |
+|  (Load or Delete sessions)|  [ Type your legal question...             ] [ Send ]  |
++---------------------------+--------------------------------------------------------+
 ```
 
-#### Key Features
-
-- **Session sidebar** — Lists all past sessions retrieved from MongoDB. Each entry supports:
-  - **Load** — Restores the full message history for that session into the chat area.
-  - **Delete** — Permanently removes the session from the database.
-  - **New Chat** — Clears the current view and starts a fresh session.
-- **Chat area** — Renders message bubbles with distinct styles for user vs. AI messages. AI responses support markdown-style formatting: section headers, bullet points, bold text.
-- **Auto-scroll** — Automatically scrolls the chat window to the latest message after every AI response.
-- **Submit on Enter** — Keyboard-friendly input (Shift+Enter for newlines).
-- **Session persistence** — Each conversation is saved to MongoDB via the Node.js backend, keyed by user ID.
+#### Features:
+- **Session Sidebar**: Fetches user history from MongoDB. Click to load past conversations or permanently delete old threads.
+- **Markdown & Legal Formatting**: Renders statutory citations, court cases, bullet points, and section references cleanly.
+- **Auto-Scroll & Keyboard Shortcuts**: Auto-scrolls on new answers; supports `Enter` to submit and `Shift + Enter` for multi-line inputs.
 
 ---
 
-### Contract Analyzer `/contractAnalyzer`
-
-**Access:** 🔒 Protected
-
-The most feature-rich page on the platform — a comprehensive contract risk audit tool.
-
-#### Layout
+### 5. Contract Analyzer (`/contractAnalyzer`)
+- **Access**: Protected
+- **Layout**: 2-Column Workspace with Contract Vault Sidebar
 
 ```
-┌─────────────────┬────────────────────────────────┐
-│   Contract      │                                │
-│   Vault         │      Analysis Workspace        │
-│   Sidebar       │                                │
-│                 │  [Upload / Paste Toggle]        │
-│  [+ New Audit]  │                                │
-│                 │  ┌──────────────────────────┐  │
-│  Contract 1     │  │  Drag & Drop / Paste     │  │
-│  Contract 2     │  └──────────────────────────┘  │
-│  Contract 3     │                                │
-│  ...            │  [Analyze] button              │
-│                 │                                │
-│                 │  ┌── Tab Bar ───────────────┐  │
-│                 │  │ Red Flags | Missing | ... │  │
-│                 │  └──────────────────────────┘  │
-│                 │                                │
-│                 │  [Analysis Results]            │
-└─────────────────┴────────────────────────────────┘
++---------------------------+--------------------------------------------------------+
+|      CONTRACT VAULT       |                   AUDIT WORKSPACE                      |
+|                           |                                                        |
+|  [+ New Contract Audit]   |  [ Upload File (PDF/DOCX/TXT) ]  or  [ Paste Text ]    |
+|                           |                                                        |
+|  Saved Audits:            |  +--------------------------------------------------+  |
+|  - Master Service Agrmt   |  | Drag & drop agreement or paste clauses here...   |  |
+|  - NDA Vendor 2024        |  +--------------------------------------------------+  |
+|  - Software License       |  [ Run AI Audit ]                                      |
+|                           |                                                        |
+|                           |  [ Red Flags (3) ] [ Missing Protections ] [ Key Terms ]|
+|                           |  +--------------------------------------------------+  |
+|                           |  | #1 Uncapped Indemnification (Section 13)         |  |
+|                           |  |    Evidence: "Neither party's liability..."      |  |
+|                           |  |    Impact: Uncapped financial exposure           |  |
+|                           |  |    Recommendation: Insert aggregate super-cap    |  |
+|                           |  +--------------------------------------------------+  |
+|                           |  [ Download PDF Report ]   [ Export JSON ]              |
++---------------------------+--------------------------------------------------------+
 ```
 
-#### Input Modes
-
-| Mode | Description |
-|------|-------------|
-| **File Upload** | Drag-and-drop or browse for `.pdf`, `.docx`, `.txt` files. Auto-clears previous analysis when a new file is selected. |
-| **Text Paste** | Paste raw contract text directly into a textarea for instant analysis. |
-
-#### Analysis Tabs
-
-| Tab | Content |
-|-----|---------|
-| **Red Flags** | Severity-coded risk cards (see below) |
-| **Missing Protections** | Clauses or provisions absent from the contract that industry standards recommend |
-| **Key Terms** | Extracted important defined terms, dates, obligations, and parties |
-| **Ambiguities** | Vague or legally unclear language that could lead to disputes |
-| **Recommendations** | Actionable legal suggestions to strengthen the contract |
-
-#### Red Flag Severity Cards
-
-Each flagged risk is rendered as a card colour-coded by severity:
-
-| Severity | Colour | Hex |
-|----------|--------|-----|
-| Critical | 🔴 Red | `#dc2626` |
-| High | 🟠 Amber | `#f59e0b` |
-| Medium | 🟡 Yellow | `#eab308` |
-| Low | 🟢 Green | `#22c55e` |
-
-Each card includes:
-- **Evidence quote block** — Verbatim clause text from the contract
-- **Clause reference** — Section/clause identifier
-- **Legal impact** — Plain-English explanation of the legal risk
-- **Recommendation** — Suggested fix or alternative wording
-
-#### Risk Rubric Matrix
-
-A 4-quadrant visual display assessing the contract across four dimensions:
-
-| Quadrant | Description |
-|----------|-------------|
-| **Financial Exposure** | Monetary risk and liability exposure |
-| **Dispute Probability** | Likelihood of contractual disputes |
-| **Clause Symmetry** | Balance of obligations between parties |
-| **Cross-Clause Interaction** | Conflicts or dependencies between clauses |
-
-#### Export Options
-
-| Export | Behaviour |
-|--------|-----------|
-| **PDF Export** | Opens the browser print dialog with a structured HTML legal memorandum. Sections: Executive Summary → Red Flags → Missing Protections → Ambiguities → Recommendations → Operational Clauses table |
-| **JSON Export** | Downloads the raw analysis JSON for integration with other systems |
-
-#### Contract Vault
-
-Past analyses are saved to MongoDB (keyed by user). The sidebar vault allows:
-- **Load** — Restore a previous analysis into the workspace
-- **Delete** — Remove from the vault
+#### Key Capabilities:
+- **Dual Input Modes**: Upload contracts (`.pdf`, `.docx`, `.doc`, `.txt` up to 20MB) or paste raw text.
+- **Automatic Output Reset**: Selecting a new file or switching modes automatically clears stale results.
+- **5-Tab Analysis Dashboard**:
+  1. **Red Flags**: Severity-coded cards with exact verbatim evidence quotes from the contract, identified clause numbers, legal impact, and suggested negotiation amendments.
+  2. **Missing Protections**: Standard protective clauses absent from the agreement (e.g. mutual indemnity, audit rights).
+  3. **Key Terms**: Operational clauses (Parties, Effective Dates, Payment Terms, Termination Triggers, Key Obligations).
+  4. **Drafting Ambiguities**: Vague wording, subjective metrics, or contradictory provisions.
+  5. **Recommendations**: Prioritized, actionable roadmap for legal counsel before contract execution.
+- **4-Quadrant Risk Rubric**: Visual assessment across Financial Exposure, Dispute Probability, Clause Symmetry, and Cross-Clause Interactions.
+- **Professional PDF Export**: Generates a clean, multi-section legal memorandum print window without raw JSON formatting.
+- **Contract Vault**: Past audits are automatically persisted in MongoDB, allowing counsel to reload or delete prior reviews.
 
 ---
 
-### Case Outcome Predictor `/casePrediction`
+### 6. Case Outcome Predictor (`/casePrediction`)
+- **Access**: Protected
+- **Features**: Input case facts, jurisdiction, and legal domains to trigger the LangGraph adversarial simulation. Displays Claimant Legal Brief, Defence Written Statement, and the Judicial Verdict Scorecard with calculated win probability.
 
-**Access:** 🔒 Protected
-
-An adversarial AI pipeline that simulates both sides of a legal case and delivers a judicial verdict.
-
-#### Input Form
-
-| Field | Description |
-|-------|-------------|
-| Case Facts | Narrative description of the case |
-| Parties | Claimant and defendant details |
-| Legal Domain | Area of law (e.g., Contract Law, Family Law, Property Law) |
-
-#### Output
-
-| Section | Description |
-|---------|-------------|
-| **Claimant's Brief** | AI-generated legal argument from the claimant's perspective |
-| **Defence Brief** | AI-generated counter-arguments from the defendant's perspective |
-| **Judicial Verdict** | Simulated judgment with win probability percentage and reasoning |
-
-> ⚠️ **Note:** The adversarial pipeline typically takes **60–120 seconds** to complete. Animated loading states keep the user informed throughout.
+### 7. Contact (`/contact`)
+- **Access**: Public
+- **Features**: Direct support and inquiry form.
 
 ---
 
-### Contact `/contact`
+## Authentication Architecture
 
-**Access:** Public
-
-Standard contact form or information page for enquiries and support.
-
----
-
-## Authentication Flow
+LegalSmiths employs an enterprise dual-token model:
 
 ```
-                    ┌──────────┐
-                    │ Register │
-                    │  /Login  │
-                    └────┬─────┘
-                         │  POST /auth/register OR /auth/login
-                         ▼
-                   Node.js Backend
-                         │
-              ┌──────────┴──────────┐
-              │                     │
-        accessToken (15m)   refreshToken (7d)
-              │                     │
-              └──────────┬──────────┘
-                         │  Stored in localStorage
-                         ▼
-              ┌──────────────────────┐
-              │  getAuthHeaders()    │  — injects Authorization: Bearer <token>
-              │  in api.js config    │  — adds x-user-id header
-              └──────────────────────┘
-                         │
-                         ▼
-              ┌──────────────────────┐
-              │   ProtectedRoute     │  — checks token presence
-              │   HOC                │  — redirects to /login if absent
-              └──────────────────────┘
-                         │
-                         ▼
-              Protected Pages
-         (/services, /legalAssistant,
-          /contractAnalyzer, /casePrediction)
+               User Submits Credentials (/login or /register)
+                                    │
+                                    ▼
+                          Node.js Backend Authenticates
+                                    │
+            ┌───────────────────────┴───────────────────────┐
+            ▼                                               ▼
+   httpOnly Cookie (Primary)                    Response JSON Body (Fallback)
+   • accessToken (15 min)                      • accessToken
+   • refreshToken (7 d, /api/auth)             • refreshToken
+            │                                               │
+            └───────────────────────┬───────────────────────┘
+                                    │
+                                    ▼
+     Browser sends cookies automatically + getAuthHeaders() injects Bearer header
+                                    │
+                                    ▼
+         ProtectedRoute.jsx validates active token before rendering routes
 ```
-
-| Token | Expiry | Storage |
-|-------|--------|---------|
-| `accessToken` | 15 minutes | `localStorage` |
-| `refreshToken` | 7 days | `localStorage` |
-
-**Key utilities:**
-
-- **`src/config/api.js`** — Exports `AI_API_URL`, `NODE_API_URL`, and `getAuthHeaders()` for use across all API calls.
-- **`src/utils/auth.js`** — Exports `getUser()`, `logout()`, and token helper functions.
-- **`src/components/ProtectedRoute.jsx`** — HOC that wraps protected routes; reads token from localStorage and redirects unauthenticated users to `/login`.
 
 ---
 
@@ -354,236 +243,153 @@ Standard contact form or information page for enquiries and support.
 
 ```
 frontend/
-├── index.html                     # Vite HTML entrypoint
-├── vite.config.js                 # Vite configuration
-├── package.json                   # Dependencies & scripts
-├── eslint.config.js               # ESLint rules (react-hooks, react-refresh)
-├── vercel.json                    # SPA rewrite rule for client-side routing
-├── .env                           # Local environment variables (gitignored)
-├── .env.example                   # Environment variable template
+├── .env.example                       # Reference environment variables
+├── eslint.config.js                   # ESLint flat configuration for React Hooks & Refresh
+├── index.html                         # Vite HTML template with Poppins font preloads
+├── package-lock.json                  # Pinned frontend dependency tree
+├── package.json                       # Frontend dependencies and npm scripts
+├── README.md                          # Frontend documentation
+├── vite.config.js                     # Vite build configuration with React plugin
+│
 └── src/
-    ├── main.jsx                   # React DOM root; wraps app in BrowserRouter
-    ├── App.jsx                    # Route definitions; ProtectedRoute applied to guarded routes
-    ├── App.css                    # Global app-level styles
-    ├── index.css                  # CSS reset, font imports, custom properties
+    ├── App.css                        # App-level styling
+    ├── App.jsx                        # Route definitions and ProtectedRoute wrapping
+    ├── index.css                      # Global resets, root design tokens, typography
+    ├── main.jsx                       # Application entry point; mounts BrowserRouter
     │
-    ├── config/
-    │   └── api.js                 # AI_API_URL, NODE_API_URL, getAuthHeaders()
-    │
-    ├── utils/
-    │   └── auth.js                # getUser(), logout(), token helpers
+    ├── assets/                        # Local images, SVG icons, and font archives
+    │   ├── ChatGPT_Clone_assets.zip   # Legacy design asset archive
+    │   ├── Poppins.zip                # Backup font archive
+    │   ├── Poppins/                   # Extracted Poppins font files (Black, Bold, Regular, etc.)
+    │   └── ...                        # Backgrounds, service images, and icons
     │
     ├── components/
-    │   └── ProtectedRoute.jsx     # Auth guard HOC — redirects to /login if unauthenticated
+    │   ├── Footer.jsx                 # Global footer component
+    │   └── ProtectedRoute.jsx         # Guard component redirecting unauthenticated users to /login
+    │
+    ├── config/
+    │   └── api.js                     # Base API endpoints (AI_API_URL, NODE_API_URL) & getAuthHeaders()
     │
     ├── pages/
-    │   ├── homepage.jsx           # /  — Hero, feature cards, CTA
-    │   ├── register.jsx           # /register — Email/password signup
-    │   ├── login.jsx              # /login — JWT login
-    │   ├── services.jsx           # /services — Protected service hub
-    │   ├── legalAssistant.jsx     # /legalAssistant — Chat + session sidebar
-    │   ├── contractAnalyzer.jsx   # /contractAnalyzer — Full contract audit tool
-    │   ├── casePrediction.jsx     # /casePrediction — Adversarial case predictor
-    │   └── contact.jsx            # /contact — Contact page
+    │   ├── casePrediction.jsx         # Adversarial case outcome simulation view
+    │   ├── contact.jsx                # Contact and support form
+    │   ├── contractAnalyzer.jsx       # Complete contract risk audit dashboard & vault
+    │   ├── homepage.jsx               # Landing page with feature showcases
+    │   ├── legalAssistant.jsx         # Chat assistant with conversation history
+    │   ├── login.jsx                  # User login page
+    │   ├── register.jsx               # New user signup page
+    │   └── services.jsx               # Service selection hub
     │
-    └── styles/
-        ├── homepage.css
-        ├── legalAssistant.css
-        ├── contractAnalyzer.css
-        ├── casePrediction.css
-        └── ...                    # Additional page-scoped stylesheets
+    ├── styles/
+    │   ├── auth.css                   # Authentication form styling (login & register)
+    │   ├── casePrediction.css         # Case prediction styling
+    │   ├── contact.css                # Contact form styling
+    │   ├── contractAnalyzer.css       # Complete contract audit & vault styling
+    │   ├── homepage.css               # Landing page styling
+    │   ├── legalAssistant.module.css  # Assistant chat interface styling (modular CSS)
+    │   └── services.css               # Hub styling
+    │
+    └── utils/
+        └── auth.js                    # Auth token helpers (getUser, logout, token extraction)
 ```
 
 ---
 
 ## Environment Variables
 
-Create a `.env` file in the `frontend/` directory (copy from `.env.example`):
+Create `.env` in the `frontend/` directory (see `.env.example`):
 
 ```env
+# Node.js Express Backend URL
 VITE_NODE_API_URL=http://localhost:5000
+
+# Python FastAPI AI Backend URL
 VITE_AI_API_URL=http://localhost:8000
 ```
 
-| Variable | Description | Local Value | Production Value |
-|---|---|---|---|
-| `VITE_NODE_API_URL` | Base URL for the Node.js REST API (auth, sessions, vault) | `http://localhost:5000` | `https://legalsmiths-node.onrender.com` |
-| `VITE_AI_API_URL` | Base URL for the Python AI API (chat, analysis, prediction) | `http://localhost:8000` | `https://legalsmiths-ai.onrender.com` |
+### Production Values (Render)
+```env
+VITE_NODE_API_URL=https://legalsmiths-node.onrender.com
+VITE_AI_API_URL=https://legalsmiths-ai.onrender.com
+```
 
-> **Note:** All Vite environment variables **must** be prefixed with `VITE_` to be exposed to the browser bundle. Never store secrets in frontend env files.
+> **Note**: All Vite environment variables must begin with the `VITE_` prefix to be embedded in client-side bundles during build time. Never store private API secrets in frontend env files.
 
 ---
 
 ## Local Development
 
 ### Prerequisites
-
-| Requirement | Minimum Version |
-|---|---|
-| Node.js | 18.x or higher |
-| npm | 9.x or higher |
-| Git | Any recent version |
+- Node.js `18.x` or higher
+- npm or pnpm
 
 ### Setup Steps
 
 ```bash
-# 1. Clone the repository
-git clone https://github.com/your-org/legalsmiths.git
-cd legalsmiths/frontend
+# 1. Navigate to the frontend directory
+cd frontend
 
 # 2. Install dependencies
 npm install
 
-# 3. Set up environment variables
+# 3. Configure environment
 cp .env.example .env
-# Edit .env to point to your local backend URLs
+# Verify VITE_NODE_API_URL and VITE_AI_API_URL point to local backend instances
 
-# 4. Start the Vite development server
+# 4. Start Vite development server with HMR
 npm run dev
+
+# Application will be accessible at: http://localhost:5173
 ```
-
-The dev server starts at **http://localhost:5173** with Hot Module Replacement (HMR) enabled.
-
-### Available Scripts
-
-| Script | Command | Description |
-|--------|---------|-------------|
-| Development server | `npm run dev` | Starts Vite HMR dev server on port 5173 |
-| Production build | `npm run build` | Compiles & bundles to `dist/` |
-| Preview build | `npm run preview` | Serves the production `dist/` locally for testing |
-| Lint | `npm run lint` | Runs ESLint across all source files |
 
 ---
 
-## Building for Production
+## Production Build & Optimization
+
+To compile the production distribution bundle:
 
 ```bash
-# Generate optimised production bundle
 npm run build
+```
 
-# Output directory: frontend/dist/
-# Vite performs:
-#   - Tree-shaking (removes unused exports)
-#   - Code splitting (vendor / page chunks)
-#   - Asset fingerprinting for cache busting
-#   - Minification (esbuild)
+Vite outputs production assets into `frontend/dist/`:
+- **Tree-Shaking**: Strips unused dependencies.
+- **Chunk Splitting**: Splits third-party vendor code from application logic for optimal browser caching.
+- **Asset Fingerprinting**: Hashes filenames (`index-[hash].js`, `index-[hash].css`) to ensure automatic cache busting on updates.
 
-# Optionally preview the build before deploying
+To preview the production bundle locally:
+```bash
 npm run preview
 ```
 
-The `dist/` directory is the deployment artifact. It contains a single `index.html` with hashed asset filenames.
-
 ---
 
-## Deployment
+## Deployment (Render)
 
-### Vercel (Recommended)
+The frontend is deployed as a **Render Static Site**:
+- **Runtime**: `Static Site`
+- **Root Directory**: `frontend`
+- **Build Command**: `npm run build`
+- **Publish Directory**: `dist`
+- **Rewrite Rule**: In Render dashboard -> Redirects/Rewrites:
+  - Source: `/*`
+  - Destination: `/index.html`
+  - Action: `Rewrite`
+  This ensures client-side React Router navigation resolves correctly upon browser page refreshes.
 
-The repository includes a [`vercel.json`](./vercel.json) with an SPA rewrite rule that redirects all unknown paths to `index.html`, enabling React Router to handle client-side navigation correctly.
-
-```json
-{
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
-}
-```
-
-**Steps:**
-
-1. Import the repository in the [Vercel dashboard](https://vercel.com/new).
-2. Set **Framework Preset** to `Vite`.
-3. Set **Root Directory** to `frontend`.
-4. Add environment variables (`VITE_NODE_API_URL`, `VITE_AI_API_URL`) in Project Settings → Environment Variables.
-5. Deploy. Auto-deploys trigger on every push to `main`.
-
-### Render (Static Site)
-
-| Setting | Value |
-|---------|-------|
-| **Build Command** | `npm run build` |
-| **Publish Directory** | `dist` |
-| **Root Directory** | `frontend` |
-
-Add the same environment variables in the Render dashboard under Environment.
-
-> **SPA routing on Render:** Add a redirect rule — Source: `/*`, Destination: `/index.html`, HTTP Status: `200` — to handle client-side routes on page refresh.
-
-### Manual / Other Hosts
-
-Upload the contents of `dist/` to any static hosting service (S3 + CloudFront, GitHub Pages, Netlify, etc.). Ensure your host is configured to serve `index.html` for all routes (SPA fallback).
+Automated deployments are triggered via GitHub Actions (`.github/workflows/ci.yml`) using the `RENDER_DEPLOY_HOOK_FRONTEND` webhook secret.
 
 ---
 
 ## Contributing
 
-Contributions are welcome! Please follow these guidelines to keep the codebase consistent.
-
-### Branch Strategy
-
-```
-main          ← production-ready code, protected
-dev           ← integration branch for features
-feature/*     ← individual feature branches
-fix/*         ← bug fix branches
-```
-
-### Development Workflow
-
-```bash
-# 1. Fork the repo and create a feature branch
-git checkout -b feature/your-feature-name
-
-# 2. Make changes and verify linting passes
-npm run lint
-
-# 3. Test your changes in both dev and production build modes
-npm run dev
-npm run build && npm run preview
-
-# 4. Commit using Conventional Commits
-git commit -m "feat(contractAnalyzer): add clause severity filter"
-
-# 5. Push and open a Pull Request against `dev`
-git push origin feature/your-feature-name
-```
-
-### Conventional Commit Types
-
-| Prefix | Usage |
-|--------|-------|
-| `feat` | New feature |
-| `fix` | Bug fix |
-| `style` | CSS/visual-only changes |
-| `refactor` | Code restructuring without behaviour change |
-| `docs` | Documentation updates |
-| `chore` | Build/tooling/config changes |
-
-### Code Style
-
-- **Components** — Functional components with hooks only; no class components.
-- **File naming** — `camelCase.jsx` for pages and components (matches existing convention).
-- **CSS** — Add page-scoped stylesheets in `src/styles/`; use CSS custom properties for colour tokens rather than hardcoded hex values.
-- **API calls** — Always use `getAuthHeaders()` from `src/config/api.js` for authenticated requests.
-- **No external UI libraries** — Maintain the custom-CSS-only design system; do not introduce Tailwind, MUI, or similar.
-
-### Pull Request Checklist
-
-- [ ] `npm run lint` passes with no errors
-- [ ] `npm run build` completes successfully
-- [ ] New routes are added to `App.jsx` with correct `ProtectedRoute` wrapping
-- [ ] Environment variable usage follows the `VITE_` prefix convention
-- [ ] No `console.log` statements left in production code
-- [ ] PR description explains the change and links any relevant issue
+1. Fork the repository and create your feature branch: `git checkout -b feature/ui-improvement`
+2. Ensure ESLint passes cleanly: `npm run lint`
+3. Verify production build succeeds: `npm run build`
+4. Submit a Pull Request describing your changes.
 
 ---
 
 ## License
 
-This project is proprietary software developed for Cyfuture / LegalSmiths. All rights reserved.
-
----
-
-<div align="center">
-  <strong>Built with ⚖️ for the Indian legal ecosystem</strong><br/>
-  React 18 · Vite · React Router v7 · Custom CSS · Poppins
-</div>
+MIT License — Copyright (c) 2026 LegalSmiths.
