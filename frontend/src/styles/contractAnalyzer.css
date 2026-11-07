@@ -873,6 +873,8 @@
 .new-audit-header-btn:hover {
   background: #2b2ea6;
 }
+
+.points {
   display: flex;
   gap: 1.2rem;
   margin: 1.5rem 0 1rem;
@@ -1088,69 +1090,7 @@
     padding-bottom: 6px;
   }
 
-  
-/* --------------------------------
-   AUDITING CAPABILITIES GUIDE (Empty State)
--------------------------------- */
-.analyzerFeaturesGuide {
-  margin-top: 1.5rem;
-  padding-top: 1.5rem;
-  border-top: 1px dashed #e2e8f0;
-}
-
-.guideTitle {
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: #1e1b4b;
-  text-align: center;
-  margin-bottom: 1.2rem;
-  letter-spacing: 0.2px;
-}
-
-.guideGrid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 14px;
-}
-
-.guideCard {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  padding: 20px 22px;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.guideCard:hover {
-  transform: translateY(-2px);
-  border-color: #cbd5e1;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
-}
-
-.guideIcon {
-  font-size: 1.5rem;
-  margin-bottom: 8px;
-}
-
-.guideCard h4 {
-  font-size: 0.88rem;
-  font-weight: 700;
-  color: #1e293b;
-  margin: 0 0 6px 0;
-}
-
-.guideCard p {
-  font-size: 0.78rem;
-  color: #64748b;
-  line-height: 1.5;
-  margin: 0;
-}
-
-.upload-section {
+  .upload-section {
     padding: 16px 12px;
   }
 }

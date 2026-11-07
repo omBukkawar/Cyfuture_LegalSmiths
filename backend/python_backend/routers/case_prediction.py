@@ -7,7 +7,7 @@ from schemas.case_schemas import CasePredictionRequest, CasePredictionResponse
 from services.case_service import predict_case_outcome
 from services.input_guard import guard_case_predictor
 from services.agents.output_critic import case_predictor_output_critic
-from main import limiter
+from limiter import limiter
 
 router = APIRouter(tags=["Case Outcome Prediction"])
 

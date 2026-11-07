@@ -9,7 +9,7 @@ from services.document_service import extract_elements_from_stream
 from services.contract_analyzer import run_contract_analyzer_pipeline
 from services.input_guard import guard_contract_analyzer
 from services.agents.output_critic import contract_analyzer_output_critic
-from main import limiter
+from limiter import limiter
 
 router = APIRouter(tags=["Contract Analyzer"])
 

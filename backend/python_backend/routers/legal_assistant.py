@@ -6,7 +6,7 @@ from schemas.assistant_schemas import SubmissionRequest, SubmissionResponse
 from services.legal_assistant import run_legal_assistant_pipeline
 from services.input_guard import guard_legal_assistant
 from services.agents.output_critic import legal_assistant_output_critic
-from main import limiter
+from limiter import limiter
 
 router = APIRouter(tags=["Legal Assistant"])
 
