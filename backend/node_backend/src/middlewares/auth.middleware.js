@@ -2,16 +2,18 @@ const jwt = require("jsonwebtoken");
 
 function verifyToken(req, res, next) {
   try {
+    // Prefer httpOnly cookie, fall back to Authorization header
+    const cookieToken = req.cookies?.accessToken;
     const authHeader = req.headers["authorization"] || req.headers["Authorization"];
+    const headerToken = authHeader?.startsWith("Bearer ") ? authHeader.split(" ")[1] : null;
+    const token = cookieToken || headerToken;
 
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    if (!token) {
       return res.status(401).json({
         success: false,
-        message: "Access denied. No token provided or invalid format.",
+        message: "Access denied. No token provided.",
       });
     }
-
-    const token = authHeader.split(" ")[1];
 
     jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
       if (err) {
@@ -21,7 +23,6 @@ function verifyToken(req, res, next) {
           expired: err.name === "TokenExpiredError",
         });
       }
-
       req.user = decoded;
       next();
     });
@@ -34,7 +35,5 @@ function verifyToken(req, res, next) {
   }
 }
 
-module.exports = {
-  verifyToken,
-};
+module.exports = { verifyToken };
 

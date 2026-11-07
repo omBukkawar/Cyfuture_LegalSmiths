@@ -530,6 +530,137 @@
   box-sizing: border-box;
 }
 
+/* Mode toggle */
+.mode-toggle {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
+}
+
+.mode-btn {
+  padding: 8px 20px;
+  border-radius: 20px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #334155;
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+.mode-btn:hover {
+  border-color: #3437C2;
+  color: #3437C2;
+}
+
+.mode-btn-active {
+  border: 2px solid #3437C2;
+  background: #3437C2;
+  color: #ffffff;
+}
+
+/* Collapsed text bar */
+.text-collapsed-bar {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 12px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.text-collapsed-info {
+  font-size: 0.85rem;
+  color: #334155;
+}
+
+.edit-text-btn {
+  background: #3437C2;
+  color: #fff;
+  border: none;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.edit-text-btn:hover {
+  background: #2b2ea6;
+}
+
+/* Textarea */
+.textarea-meta {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.contract-textarea {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  font-family: inherit;
+  font-size: 0.85rem;
+  resize: vertical;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease;
+}
+
+.contract-textarea:focus {
+  outline: none;
+  border-color: #3437C2;
+}
+
+/* File selected box */
+.file-selected-box {
+  text-align: left;
+  margin-bottom: 15px;
+  background: #f8fafc;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.file-selected-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.file-selected-header h4 {
+  font-size: 0.85rem;
+  color: #334155;
+  margin: 0;
+}
+
+.remove-file-btn {
+  background: none;
+  border: none;
+  color: #dc2626;
+  font-size: 0.75rem;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.file-list {
+  font-size: 0.8rem;
+  color: #475569;
+  margin: 0;
+  padding-left: 20px;
+}
+
 .file-drop {
   background: #f8fafc;
   padding: 20px;
@@ -673,8 +804,75 @@
   margin-top: 0.3rem;
 }
 
-/* Navigation Tabs */
-.points {
+/* Report header & export bar */
+.report-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 2rem 0 1rem;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.report-title {
+  font-size: 1.4rem;
+  margin: 0;
+  color: #1e1b4b;
+  font-weight: 700;
+}
+
+.export-bar {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.export-btn {
+  border: none;
+  border-radius: 20px;
+  padding: 7px 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: opacity 0.2s ease;
+}
+
+.export-btn:hover {
+  opacity: 0.88;
+}
+
+.export-btn-pdf {
+  background: #dc2626;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(220, 38, 38, 0.2);
+}
+
+.export-btn-json {
+  background: #059669;
+  color: #ffffff;
+}
+
+/* New Audit header button */
+.new-audit-header-btn {
+  background: #3437C2;
+  color: #ffffff;
+  border: none;
+  padding: 7px 16px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.new-audit-header-btn:hover {
+  background: #2b2ea6;
+}
   display: flex;
   gap: 1.2rem;
   margin: 1.5rem 0 1rem;

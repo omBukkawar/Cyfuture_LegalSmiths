@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const { verifyToken } = require("../middlewares/auth.middleware.js");
 
 const {
   uploadContract,
@@ -29,30 +30,30 @@ function aliasRecentContracts(req, res, next) {
 }
 
 // Aliased Routes
-router.get("/contracts/high-risk", aliasHighRiskContracts, getContracts);
-router.get("/contracts/recent", aliasRecentContracts, getContracts);
+router.get("/contracts/high-risk", verifyToken, aliasHighRiskContracts, getContracts);
+router.get("/contracts/recent", verifyToken, aliasRecentContracts, getContracts);
 
 // Create (File Upload or Text)
-router.post("/upload-contract", upload.single("file"), uploadContract);
-router.post("/contracts", upload.single("file"), uploadContract);
+router.post("/upload-contract", verifyToken, upload.single("file"), uploadContract);
+router.post("/contracts", verifyToken, upload.single("file"), uploadContract);
 
 // Save complete audit report (analysis + contract text)
-router.post("/contracts/save-audit", saveCompleteAudit);
+router.post("/contracts/save-audit", verifyToken, saveCompleteAudit);
 
 // Read All (with filtering, sorting, field limiting, search & pagination)
-router.get("/contracts", getContracts);
+router.get("/contracts", verifyToken, getContracts);
 
 // Read One
-router.get("/contracts/:id", getContractById);
+router.get("/contracts/:id", verifyToken, getContractById);
 
 // Update
-router.patch("/contracts/:id", updateContract);
-router.patch("/contracts/:id/analysis", saveContractAnalysis);
+router.patch("/contracts/:id", verifyToken, updateContract);
+router.patch("/contracts/:id/analysis", verifyToken, saveContractAnalysis);
 
 // Delete
-router.delete("/contracts/:id", deleteContract);
+router.delete("/contracts/:id", verifyToken, deleteContract);
 
 // Download / Stream File
-router.get("/contracts/:id/download", downloadContract);
+router.get("/contracts/:id/download", verifyToken, downloadContract);
 
 module.exports = router;

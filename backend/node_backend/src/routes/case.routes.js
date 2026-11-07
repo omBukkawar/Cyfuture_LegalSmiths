@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const { verifyToken } = require("../middlewares/auth.middleware.js");
 
 const {
   uploadCase,
@@ -27,28 +28,28 @@ function aliasCompletedCases(req, res, next) {
 }
 
 // Aliased Routes
-router.get("/cases/recent", aliasRecentCases, getCases);
-router.get("/cases/completed", aliasCompletedCases, getCases);
+router.get("/cases/recent", verifyToken, aliasRecentCases, getCases);
+router.get("/cases/completed", verifyToken, aliasCompletedCases, getCases);
 
 // Create
-router.post("/upload-case", upload.single("file"), uploadCase);
-router.post("/cases", upload.single("file"), uploadCase);
+router.post("/upload-case", verifyToken, upload.single("file"), uploadCase);
+router.post("/cases", verifyToken, upload.single("file"), uploadCase);
 
 // Read All (with filtering, sorting, field limiting, search & pagination)
-router.get("/cases", getCases);
+router.get("/cases", verifyToken, getCases);
 
 // Read One
-router.get("/cases/:id", getCaseById);
+router.get("/cases/:id", verifyToken, getCaseById);
 
 // Update
-router.patch("/cases/:id", updateCase);
-router.patch("/cases/:id/prediction", saveCasePrediction);
-router.post("/cases/save-prediction", saveCasePrediction);
+router.patch("/cases/:id", verifyToken, updateCase);
+router.patch("/cases/:id/prediction", verifyToken, saveCasePrediction);
+router.post("/cases/save-prediction", verifyToken, saveCasePrediction);
 
 // Delete
-router.delete("/cases/:id", deleteCase);
+router.delete("/cases/:id", verifyToken, deleteCase);
 
 // Download
-router.get("/cases/:id/download", downloadCase);
+router.get("/cases/:id/download", verifyToken, downloadCase);
 
 module.exports = router;

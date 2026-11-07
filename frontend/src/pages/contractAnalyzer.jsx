@@ -702,20 +702,8 @@ const ContractAnalyzer = () => {
               </div>
             </div>
 
-            <div style={{ display: "flex", gap: "10px" }}>
-              <button
-                onClick={handleStartNewAudit}
-                style={{
-                  background: "#3437C2",
-                  color: "#ffffff",
-                  border: "none",
-                  padding: "7px 16px",
-                  borderRadius: "20px",
-                  fontSize: "0.85rem",
-                  fontWeight: "600",
-                  cursor: "pointer",
-                }}
-              >
+            <div>
+              <button className="new-audit-header-btn" onClick={handleStartNewAudit}>
                 + New Audit
               </button>
             </div>
@@ -724,40 +712,16 @@ const ContractAnalyzer = () => {
           {/* Body */}
           <div className="contentBody">
             {/* Input Mode Selector */}
-            <div style={{ display: "flex", justifyContent: "center", gap: "12px", marginBottom: "15px", flexWrap: "wrap" }}>
+            <div className="mode-toggle">
               <button
-                onClick={() => {
-                  setInputMode("file");
-                  setAnalysis(null);
-                  setMessage("");
-                }}
-                style={{
-                  padding: "8px 20px",
-                  borderRadius: "20px",
-                  border: inputMode === "file" ? "2px solid #3437C2" : "1px solid #cbd5e1",
-                  background: inputMode === "file" ? "#3437C2" : "#ffffff",
-                  color: inputMode === "file" ? "#ffffff" : "#334155",
-                  fontWeight: "600",
-                  cursor: "pointer",
-                }}
+                className={`mode-btn ${inputMode === "file" ? "mode-btn-active" : ""}`}
+                onClick={() => { setInputMode("file"); setAnalysis(null); setMessage(""); }}
               >
                 📁 Upload Contract File
               </button>
               <button
-                onClick={() => {
-                  setInputMode("text");
-                  setAnalysis(null);
-                  setMessage("");
-                }}
-                style={{
-                  padding: "8px 20px",
-                  borderRadius: "20px",
-                  border: inputMode === "text" ? "2px solid #3437C2" : "1px solid #cbd5e1",
-                  background: inputMode === "text" ? "#3437C2" : "#ffffff",
-                  color: inputMode === "text" ? "#ffffff" : "#334155",
-                  fontWeight: "600",
-                  cursor: "pointer",
-                }}
+                className={`mode-btn ${inputMode === "text" ? "mode-btn-active" : ""}`}
+                onClick={() => { setInputMode("text"); setAnalysis(null); setMessage(""); }}
               >
                 📝 Paste Contract Text
               </button>
@@ -789,20 +753,12 @@ const ContractAnalyzer = () => {
                   </div>
 
                   {files.length > 0 && (
-                    <div style={{ textAlign: "left", marginBottom: "15px", background: "#f8fafc", padding: "10px 14px", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <h4 style={{ fontSize: "0.85rem", color: "#334155", margin: 0 }}>Selected File:</h4>
-                        <button
-                          onClick={() => {
-                            setFiles([]);
-                            setAnalysis(null);
-                          }}
-                          style={{ background: "none", border: "none", color: "#dc2626", fontSize: "0.75rem", cursor: "pointer" }}
-                        >
-                          Remove
-                        </button>
+                    <div className="file-selected-box">
+                      <div className="file-selected-header">
+                        <h4>Selected File:</h4>
+                        <button className="remove-file-btn" onClick={() => { setFiles([]); setAnalysis(null); }}>Remove</button>
                       </div>
-                      <ul style={{ fontSize: "0.8rem", color: "#475569", margin: "6px 0 0 0", paddingLeft: "20px" }}>
+                      <ul className="file-list">
                         {files.map((file, index) => (
                           <li key={index}>📄 <strong>{file.name}</strong> ({(file.size / 1024).toFixed(1)} KB)</li>
                         ))}
@@ -813,61 +769,28 @@ const ContractAnalyzer = () => {
               ) : (
                 <div style={{ marginBottom: "15px" }}>
                   {isTextCollapsed && analysis ? (
-                    <div
-                      style={{
-                        background: "#f1f5f9",
-                        border: "1px solid #cbd5e1",
-                        borderRadius: "10px",
-                        padding: "12px 18px",
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                      }}
-                    >
-                      <span style={{ fontSize: "0.85rem", color: "#334155" }}>
+                    <div className="text-collapsed-bar">
+                      <span className="text-collapsed-info">
                         📄 <strong>Pasted Contract:</strong> {pastedText.split(/\s+/).filter(Boolean).length} words ({pastedText.length} chars)
                       </span>
-                      <button
-                        onClick={() => setIsTextCollapsed(false)}
-                        style={{
-                          background: "#3437C2",
-                          color: "#fff",
-                          border: "none",
-                          padding: "4px 12px",
-                          borderRadius: "6px",
-                          fontSize: "0.8rem",
-                          cursor: "pointer",
-                        }}
-                      >
+                      <button className="edit-text-btn" onClick={() => setIsTextCollapsed(false)}>
                         Edit Text
                       </button>
                     </div>
                   ) : (
                     <>
-                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px", fontSize: "0.8rem", color: "#666" }}>
+                      <div className="textarea-meta">
                         <span>Paste contract clauses or complete agreement:</span>
                         {pastedText && (
                           <span>{pastedText.split(/\s+/).filter(Boolean).length} words ({pastedText.length} chars)</span>
                         )}
                       </div>
                       <textarea
+                        className="contract-textarea"
                         rows={6}
                         value={pastedText}
-                        onChange={(e) => {
-                          setPastedText(e.target.value);
-                          if (analysis) setAnalysis(null);
-                        }}
+                        onChange={(e) => { setPastedText(e.target.value); if (analysis) setAnalysis(null); }}
                         placeholder="Paste contract clauses, terms, or complete agreement text here for instant evidence-backed audit..."
-                        style={{
-                          width: "100%",
-                          padding: "12px",
-                          borderRadius: "10px",
-                          border: "1px solid #cbd5e1",
-                          fontFamily: "inherit",
-                          fontSize: "0.85rem",
-                          resize: "vertical",
-                          boxSizing: "border-box",
-                        }}
                       />
                     </>
                   )}
@@ -926,48 +849,13 @@ const ContractAnalyzer = () => {
             {/* Analysis Report Section */}
             {analysis && (
               <div>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", margin: "2rem 0 1rem", flexWrap: "wrap", gap: "10px" }}>
-                  <h2 style={{ fontSize: "1.4rem", margin: 0, color: "#1e1b4b", fontWeight: "700" }}>
-                    Contract Audit Report
-                  </h2>
-
-                  {/* Export Bar */}
-                  <div className="export-bar" style={{ display: "flex", gap: "10px" }}>
-                    <button
-                      onClick={handleDownloadPDF}
-                      style={{
-                        background: "#dc2626",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "20px",
-                        padding: "7px 16px",
-                        fontSize: "0.85rem",
-                        fontWeight: "600",
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "6px",
-                        boxShadow: "0 2px 6px rgba(220, 38, 38, 0.2)",
-                      }}
-                    >
+                <div className="report-header">
+                  <h2 className="report-title">Contract Audit Report</h2>
+                  <div className="export-bar">
+                    <button className="export-btn export-btn-pdf" onClick={handleDownloadPDF}>
                       📄 Download PDF Report
                     </button>
-                    <button
-                      onClick={handleDownloadJSON}
-                      style={{
-                        background: "#059669",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "20px",
-                        padding: "7px 16px",
-                        fontSize: "0.85rem",
-                        fontWeight: "600",
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "6px",
-                      }}
-                    >
+                    <button className="export-btn export-btn-json" onClick={handleDownloadJSON}>
                       📥 Export JSON
                     </button>
                   </div>

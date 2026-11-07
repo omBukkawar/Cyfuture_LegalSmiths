@@ -2,9 +2,21 @@
  * Centralized Authentication & Token Management Utilities
  */
 
+// Decode JWT payload without verifying signature (client-side expiry check only)
+function decodeTokenPayload(token) {
+  try {
+    return JSON.parse(atob(token.split(".")[1]));
+  } catch {
+    return null;
+  }
+}
+
 export const isAuthenticated = () => {
   const token = localStorage.getItem("accessToken");
-  return Boolean(token && token.trim() !== "");
+  if (!token || !token.trim()) return false;
+  const payload = decodeTokenPayload(token);
+  if (!payload?.exp) return false;
+  return payload.exp * 1000 > Date.now();
 };
 
 export const getUser = () => {

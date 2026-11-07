@@ -1,23 +1,28 @@
 import io
 import time
+import concurrent.futures
 from typing import List
-from fastapi import APIRouter, UploadFile, File, Form
+from fastapi import APIRouter, Request, UploadFile, File, Form
 from fastapi.responses import JSONResponse
 from schemas.contract_schemas import ContractSubmissionResponse
 from services.document_service import extract_elements_from_stream
 from services.contract_analyzer import run_contract_analyzer_pipeline
 from services.input_guard import guard_contract_analyzer
+from services.agents.output_critic import contract_analyzer_output_critic
+from main import limiter
 
 router = APIRouter(tags=["Contract Analyzer"])
 
-# Allowed file types and max file size
 ALLOWED_EXTENSIONS = {".pdf", ".docx", ".doc", ".txt"}
-MAX_FILE_SIZE_BYTES = 20 * 1024 * 1024   # 20 MB per file
+MAX_FILE_SIZE_BYTES = 20 * 1024 * 1024
 MAX_FILES = 5
+PIPELINE_TIMEOUT_SECS = int(__import__("os").getenv("CONTRACT_ANALYZER_TIMEOUT", "180"))
 
 
 @router.post("/contractanalyzer", response_model=ContractSubmissionResponse)
+@limiter.limit("10/minute")
 async def contract_analyzer_endpoint(
+    req: Request,
     request: str = Form("Please perform a complete evidence-backed contract risk audit."),
     files: List[UploadFile] = File(...),
 ):
@@ -122,14 +127,31 @@ async def contract_analyzer_endpoint(
             "plain_summary": doc_guard_msg,
         }])
 
-    # Run the analysis pipeline
+    # Run the analysis pipeline with timeout
     try:
-        analysis_result = run_contract_analyzer_pipeline(request, docs)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+            future = executor.submit(run_contract_analyzer_pipeline, request, docs)
+            analysis_result = future.result(timeout=PIPELINE_TIMEOUT_SECS)
+    except concurrent.futures.TimeoutError:
+        print(f"[Contract Analyzer] Pipeline timeout after {PIPELINE_TIMEOUT_SECS}s")
+        return JSONResponse(status_code=504, content={
+            "message": "Contract analysis timed out. Please try a shorter document or try again shortly."
+        })
     except Exception as exc:
         print(f"[Contract Analyzer] Pipeline error: {exc}")
         return JSONResponse(status_code=500, content={
             "message": f"Contract analysis failed: {type(exc).__name__}: {exc}"
         })
+
+    # --- Output critic ---
+    decision = contract_analyzer_output_critic.review(analysis_result)
+    if not decision.valid:
+        return ContractSubmissionResponse(answers=[{
+            "error": True,
+            "message": decision.fallback_message,
+            "title": "Analysis Quality Check Failed",
+            "plain_summary": decision.fallback_message,
+        }])
 
     total_time = time.time() - start_time
     print(f"[Contract Analyzer] ✅ Analyzed {len(files)} file(s) in {total_time:.2f}s")

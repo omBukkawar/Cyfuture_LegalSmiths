@@ -2,6 +2,23 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const pool = require("../db/sqldb.js");
 
+const IS_PROD = process.env.NODE_ENV === "production";
+
+const COOKIE_OPTS_ACCESS = {
+  httpOnly: true,
+  secure: IS_PROD,
+  sameSite: IS_PROD ? "none" : "lax",
+  maxAge: 15 * 60 * 1000,           // 15 min
+};
+
+const COOKIE_OPTS_REFRESH = {
+  httpOnly: true,
+  secure: IS_PROD,
+  sameSite: IS_PROD ? "none" : "lax",
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  path: "/api/auth",               // Refresh token only sent to auth routes
+};
+
 // Helper: Generate Access Token (Short-lived: 15m)
 function generateAccessToken(user) {
   return jwt.sign(
@@ -66,6 +83,9 @@ async function registerUser(req, res) {
 
     await saveRefreshToken(newUser.id, refreshToken);
 
+    res.cookie("accessToken", accessToken, COOKIE_OPTS_ACCESS);
+    res.cookie("refreshToken", refreshToken, COOKIE_OPTS_REFRESH);
+
     return res.status(201).json({
       success: true,
       message: "User registered successfully",
@@ -106,6 +126,9 @@ async function loginUser(req, res) {
 
     delete user.password;
     delete user.refresh_token;
+
+    res.cookie("accessToken", accessToken, COOKIE_OPTS_ACCESS);
+    res.cookie("refreshToken", refreshToken, COOKIE_OPTS_REFRESH);
 
     return res.json({
       success: true,
@@ -151,6 +174,9 @@ async function refreshAccessToken(req, res) {
 
       await saveRefreshToken(user.id, newRefreshToken);
 
+      res.cookie("accessToken", newAccessToken, COOKIE_OPTS_ACCESS);
+      res.cookie("refreshToken", newRefreshToken, COOKIE_OPTS_REFRESH);
+
       return res.json({
         success: true,
         message: "Token refreshed successfully",
@@ -171,6 +197,8 @@ async function logoutUser(req, res) {
     if (userId) {
       await saveRefreshToken(userId, null);
     }
+    res.clearCookie("accessToken");
+    res.clearCookie("refreshToken", { path: "/api/auth" });
     return res.json({ success: true, message: "Logged out successfully" });
   } catch (e) {
     console.error("Logout error:", e);

@@ -1,16 +1,22 @@
 import time
 import traceback
-from fastapi import APIRouter
+import concurrent.futures
+from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 from schemas.case_schemas import CasePredictionRequest, CasePredictionResponse
 from services.case_service import predict_case_outcome
 from services.input_guard import guard_case_predictor
+from services.agents.output_critic import case_predictor_output_critic
+from main import limiter
 
 router = APIRouter(tags=["Case Outcome Prediction"])
 
+PIPELINE_TIMEOUT_SECS = int(__import__("os").getenv("CASE_PREDICTOR_TIMEOUT", "180"))
+
 
 @router.post("/caseoutcomeprediction", response_model=CasePredictionResponse)
-def case_outcome_prediction_endpoint(request: CasePredictionRequest):
+@limiter.limit("10/minute")
+def case_outcome_prediction_endpoint(request: CasePredictionRequest, req: Request):
     """
     Runs the LangGraph adversarial legal analysis pipeline for each case.
     Protected by multi-layer guardrails: prompt injection, XSS, SQL injection,
@@ -43,13 +49,40 @@ def case_outcome_prediction_endpoint(request: CasePredictionRequest):
             continue
 
         try:
-            prediction = predict_case_outcome(
-                case_facts=question,
-                case_type=request.case_type or "unspecified",
-                jurisdiction=request.jurisdiction or "India",
-                incident_date=request.incident_date or "",
-            )
-            answers.append(prediction)
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                future = executor.submit(
+                    predict_case_outcome,
+                    question,
+                    request.case_type or "unspecified",
+                    request.jurisdiction or "India",
+                    request.incident_date or "",
+                )
+                prediction = future.result(timeout=PIPELINE_TIMEOUT_SECS)
+
+            # --- Output critic ---
+            decision = case_predictor_output_critic.review(prediction)
+            if not decision.valid:
+                answers.append({
+                    "error": True,
+                    "verdict_summary": decision.fallback_message,
+                    "comparative_verdict": "ANALYSIS_FAILED",
+                    "winning_side": "none",
+                    "confidence_score": 0,
+                    "disclaimer": decision.fallback_message,
+                })
+            else:
+                answers.append(prediction)
+        except concurrent.futures.TimeoutError:
+            print(f"[Case Prediction] Pipeline timeout after {PIPELINE_TIMEOUT_SECS}s")
+            answers.append({
+                "error": True,
+                "verdict_summary": "The case analysis pipeline timed out. Please try again shortly.",
+                "comparative_verdict": "TIMEOUT",
+                "winning_side": "none",
+                "confidence_score": 0,
+                "disclaimer": "Analysis timed out.",
+            })
+            continue
         except Exception as exc:
             total_time = time.time() - start_time
             print(f"[Case Prediction] ❌ Unhandled error after {total_time:.2f}s: {exc}")

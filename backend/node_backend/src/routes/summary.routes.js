@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const { verifyToken } = require("../middlewares/auth.middleware.js");
 
 const {
   addSummary,
@@ -10,19 +11,19 @@ const {
 } = require("../controllers/summary.controller.js");
 
 // Create
-router.post("/add-summary", addSummary);
-router.post("/summaries", addSummary);
+router.post("/add-summary", verifyToken, addSummary);
+router.post("/summaries", verifyToken, addSummary);
 
 // Read All (with filtering, sorting, field limiting, search & pagination)
-router.get("/summaries", getSummaries);
+router.get("/summaries", verifyToken, getSummaries);
 
 // Read One
-router.get("/summaries/:id", getSummaryById);
+router.get("/summaries/:id", verifyToken, getSummaryById);
 
 // Update
-router.patch("/summaries/:id", updateSummary);
+router.patch("/summaries/:id", verifyToken, updateSummary);
 
 // Delete
-router.delete("/summaries/:id", deleteSummary);
+router.delete("/summaries/:id", verifyToken, deleteSummary);
 
 module.exports = router;

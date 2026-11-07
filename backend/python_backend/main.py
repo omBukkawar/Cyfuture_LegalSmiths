@@ -1,10 +1,19 @@
+import os
 import uvicorn
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 
 from config.settings import PORT, HOST, DEVICE, INDEX_DIR
 from routers import assistant_router, contract_router, case_router
+
+# Rate limiter — keyed by IP
+limiter = Limiter(key_func=get_remote_address, default_limits=["60/minute"])
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -25,13 +34,24 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# Attach rate limiter
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
+
 # CORS Configuration
+_raw_origins = os.getenv(
+    "ALLOWED_ORIGINS",
+    "http://localhost:5173,http://localhost:5000,https://legalsmiths.onrender.com,https://legalsmiths-node.onrender.com",
+)
+ALLOWED_ORIGINS = [o.strip() for o in _raw_origins.split(",") if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["POST", "GET", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type"],
 )
 
 # Mount Routers
@@ -45,13 +65,7 @@ def read_root():
         "status": "online",
         "service": "LegalSmiths AI Backend",
         "version": "2.0.0",
-        "endpoints": [
-            "/legalassistant",
-            "/contractanalyzer",
-            "/caseoutcomeprediction",
-            "/health",
-            "/docs",
-        ],
+        "endpoints": ["/legalassistant", "/contractanalyzer", "/caseoutcomeprediction", "/health", "/docs"],
     }
 
 @app.get("/health")
@@ -60,4 +74,3 @@ def health_check():
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host=HOST, port=PORT, reload=True)
-

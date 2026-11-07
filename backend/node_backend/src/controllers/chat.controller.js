@@ -1,26 +1,8 @@
 const ChatSession = require("../models/chat.model.js");
-const jwt = require("jsonwebtoken");
 
-// Helper to safely extract userId from verified token, header, or query
+// Extract userId from verified token only (set by verifyToken middleware)
 function extractUserId(req) {
-  if (req.user?.id) return String(req.user.id);
-  const authHeader = req.headers["authorization"] || req.headers["Authorization"];
-  if (authHeader && authHeader.startsWith("Bearer ")) {
-    try {
-      const token = authHeader.split(" ")[1];
-      const decoded = jwt.decode(token);
-      if (decoded?.id) return String(decoded.id);
-      if (decoded?.email) return String(decoded.email);
-    } catch (err) {
-      // Ignore token decode failure
-    }
-  }
-  return (
-    req.headers["x-user-id"] ||
-    req.query?.userId ||
-    req.body?.userId ||
-    "anonymous"
-  );
+  return req.user?.id ? String(req.user.id) : "anonymous";
 }
 
 // 1. Create a New Chat Session

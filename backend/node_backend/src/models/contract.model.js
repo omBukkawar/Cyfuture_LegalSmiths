@@ -4,50 +4,59 @@ const ContractSchema = new mongoose.Schema(
   {
     userId: {
       type: String,
-      required: true,
+      required: [true, "userId is required"],
+      trim: true,
       index: true,
     },
     originalName: {
       type: String,
-      required: true,
+      required: [true, "originalName is required"],
       trim: true,
+      maxlength: [500, "File name cannot exceed 500 characters"],
     },
     mimeType: {
       type: String,
       default: "application/pdf",
+      enum: {
+        values: ["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/msword", "text/plain"],
+        message: "Unsupported file type: {VALUE}",
+      },
     },
     fileSize: {
-      type: Number, // in bytes
+      type: Number,
       default: 0,
+      min: [0, "File size cannot be negative"],
+      max: [20 * 1024 * 1024, "File size cannot exceed 20 MB"],
     },
-    // Raw contract text (useful for pasted text or extracted document text)
     contractText: {
       type: String,
       default: "",
+      maxlength: [500000, "Contract text cannot exceed 500,000 characters"],
     },
-    // Excluded from default queries so GET /contracts stays super fast
-    fileData: {
-      type: String,
-      select: false,
-    },
+    fileData: { type: String, select: false },
     status: {
       type: String,
-      enum: ["uploaded", "analyzing", "analyzed", "failed"],
+      enum: {
+        values: ["uploaded", "analyzing", "analyzed", "failed"],
+        message: "Invalid status: {VALUE}",
+      },
       default: "uploaded",
     },
-    // Complete structured legal audit returned by the AI pipeline
-    // Uses Mixed to store rich evidence-backed red flags, missing protections, and rubric matrix
     analysis: {
       type: mongoose.Schema.Types.Mixed,
       default: null,
+      validate: {
+        validator: function (v) {
+          if (v === null) return true;
+          return typeof v === "object" && !Array.isArray(v);
+        },
+        message: "Analysis must be a plain object or null",
+      },
     },
   },
-  {
-    timestamps: true, // Automatically manages createdAt and updatedAt
-  }
+  { timestamps: true }
 );
 
-// Compound index for fast user dashboard queries
 ContractSchema.index({ userId: 1, createdAt: -1 });
 
 module.exports = mongoose.model("Contract", ContractSchema, "contracts");
