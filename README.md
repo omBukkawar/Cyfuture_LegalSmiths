@@ -412,10 +412,11 @@ ALLOWED_ORIGINS=http://localhost:5173,https://legalsmiths.onrender.com
 
 ### Node.js Backend (`backend/node_backend/.env`)
 ```env
+NODE_ENV=production
 PORT=5000
 ALLOWED_ORIGINS=http://localhost:5173,https://legalsmiths.onrender.com
-MONGODB_URI=mongodb+srv://user:password@cluster.mongodb.net/legalData?retryWrites=true&w=majority
-MYSQL_URL=mysql://user:password@gateway.tidbcloud.com:4000/users?ssl={"rejectUnauthorized":true}
+MONGODB_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/legalData?retryWrites=true&w=majority
+MYSQL_URL=mysql://<username>:<password>@gateway.tidbcloud.com:4000/users?ssl={"rejectUnauthorized":true}
 
 ACCESS_TOKEN_SECRET=your_64_char_hex_access_token_secret
 REFRESH_TOKEN_SECRET=your_64_char_hex_refresh_token_secret

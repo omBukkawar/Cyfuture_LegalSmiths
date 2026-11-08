@@ -490,6 +490,8 @@ Create `.env` in `backend/python_backend/` (template provided in `.env.example`)
 | `LEGAL_ASSISTANT_TIMEOUT`| Optional | `90` | Legal Assistant execution timeout in seconds |
 | `CONTRACT_ANALYZER_TIMEOUT`| Optional| `180` | Contract Analyzer execution timeout in seconds |
 | `CASE_PREDICTOR_TIMEOUT` | Optional | `180` | Case Predictor execution timeout in seconds |
+| ALLOWED_ORIGINS | Optional | http://localhost:5173,https://legalsmiths.onrender.com | Comma-separated CORS origins permitted to query API |
+| OPENROUTER_MODEL_NAME | Optional | meta-llama/llama-3.3-70b-instruct | Global fallback model identifier across all pipelines |
 
 ---
 

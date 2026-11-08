@@ -318,6 +318,9 @@ Validates MongoDB database connectivity (`mongoose.connection.readyState`).
 Create `.env` in `backend/node_backend/` (reference `.env.example`):
 
 ```env
+# Runtime Environment
+NODE_ENV=production
+
 # Server Port
 PORT=5000
 

@@ -22,7 +22,7 @@ const authLimiter = rateLimit({
   message: { success: false, message: "Too many auth attempts. Please try again in 15 minutes." },
 });
 
-// AI proxy endpoints: 30 requests per 15 min per user
+// AI audit endpoints: 30 requests per 15 min per user
 const aiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 30,
@@ -42,15 +42,48 @@ const generalLimiter = rateLimit({
 });
 
 // ── Global Middleware ────────────────────────────────────────
-app.use(cors({
-  origin: (process.env.ALLOWED_ORIGINS || "http://localhost:5173").split(",").map(o => o.trim()),
-  credentials: true,
-}));
+// Dynamic CORS origin handler: allows localhost (dev), production Render domains,
+// custom origins specified in ALLOWED_ORIGINS env var, or requests without origin.
+const defaultAllowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "https://legalsmiths.onrender.com",
+];
+
+const configuredOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(",").map((o) => o.trim()).filter(Boolean)
+  : [];
+
+const allowedOriginsSet = new Set([...defaultAllowedOrigins, ...configuredOrigins]);
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true);
+      if (allowedOriginsSet.has(origin) || origin.endsWith(".onrender.com")) {
+        return callback(null, true);
+      }
+      return callback(new Error(`CORS policy does not allow access from origin ${origin}`));
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+  })
+);
+
 app.use(express.json({ limit: "2mb" }));
 app.use(cookieParser());
 app.use(generalLimiter);
 
 // ── Routes ───────────────────────────────────────────────────
+// 1. Root Routes (ensures 100% backward compatibility with legacy frontend callers: /login, /register, /sessions, etc.)
+app.use("/", authLimiter, authRoutes);
+app.use("/", aiLimiter, contractRoutes);
+app.use("/", aiLimiter, caseRoutes);
+app.use("/", generalLimiter, summaryRoutes);
+app.use("/", generalLimiter, chatRoutes);
+
+// 2. Namespaced API Routes (modern REST architecture: /api/auth, /api/contracts, etc.)
 app.use("/api/auth", authLimiter, authRoutes);
 app.use("/api/contracts", aiLimiter, contractRoutes);
 app.use("/api/cases", aiLimiter, caseRoutes);
