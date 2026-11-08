@@ -568,17 +568,6 @@ Push to main ──► GitHub Actions CI/CD ──► 1. Frontend Lint & Build
 
 ---
 
-## 🤝 Contributing Guidelines
-
-1. Fork the repository and create your branch: `git checkout -b feature/improvement-name`.
-2. Ensure code standards:
-   - Frontend: `npm run lint` and `npm run build` must succeed without warnings.
-   - Python: Follow PEP 8 guidelines.
-3. Commit using semantic commit messages (`feat: ...`, `fix: ...`, `docs: ...`).
-4. Submit a Pull Request describing your changes.
-
----
-
 ## 📄 License
 
 MIT License — Copyright (c) 2026 LegalSmiths Contributors.
