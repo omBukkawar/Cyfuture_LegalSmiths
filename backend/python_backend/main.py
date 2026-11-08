@@ -39,16 +39,17 @@ app.add_middleware(SlowAPIMiddleware)
 # CORS Configuration
 _raw_origins = os.getenv(
     "ALLOWED_ORIGINS",
-    "http://localhost:5173,http://localhost:5000,https://legalsmiths.onrender.com,https://legalsmiths-node.onrender.com",
+    "http://localhost:5173,http://localhost:5000,http://localhost:8000,https://legalsmiths.onrender.com,https://legalsmiths-node.onrender.com,https://legalsmiths-ai.onrender.com",
 )
 ALLOWED_ORIGINS = [o.strip() for o in _raw_origins.split(",") if o.strip()]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
+    allow_origin_regex=r"https://.*\.onrender\.com",
     allow_credentials=True,
-    allow_methods=["POST", "GET", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type"],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Mount Routers

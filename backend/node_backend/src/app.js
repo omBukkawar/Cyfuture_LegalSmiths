@@ -48,6 +48,8 @@ const defaultAllowedOrigins = [
   "http://localhost:5173",
   "http://localhost:3000",
   "https://legalsmiths.onrender.com",
+  "https://legalsmiths-ai.onrender.com",
+  "https://legalsmiths-node.onrender.com",
 ];
 
 const configuredOrigins = process.env.ALLOWED_ORIGINS
@@ -67,7 +69,7 @@ app.use(
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "x-user-id", "Accept", "Origin"],
   })
 );
 
