@@ -16,7 +16,7 @@ PIPELINE_TIMEOUT_SECS = int(__import__("os").getenv("CASE_PREDICTOR_TIMEOUT", "1
 
 @router.post("/caseoutcomeprediction", response_model=CasePredictionResponse)
 @limiter.limit("10/minute")
-def case_outcome_prediction_endpoint(request: CasePredictionRequest, req: Request):
+def case_outcome_prediction_endpoint(request: Request, payload: CasePredictionRequest):
     """
     Runs the LangGraph adversarial legal analysis pipeline for each case.
     Protected by multi-layer guardrails: prompt injection, XSS, SQL injection,
@@ -32,7 +32,7 @@ def case_outcome_prediction_endpoint(request: CasePredictionRequest, req: Reques
     start_time = time.time()
     answers = []
 
-    for question in request.questions:
+    for question in payload.questions:
         # --- Guardrail: Validate each case fact statement ---
         is_safe, guard_message = guard_case_predictor(question)
         if not is_safe:
@@ -53,9 +53,9 @@ def case_outcome_prediction_endpoint(request: CasePredictionRequest, req: Reques
                 future = executor.submit(
                     predict_case_outcome,
                     question,
-                    request.case_type or "unspecified",
-                    request.jurisdiction or "India",
-                    request.incident_date or "",
+                    payload.case_type or "unspecified",
+                    payload.jurisdiction or "India",
+                    payload.incident_date or "",
                 )
                 prediction = future.result(timeout=PIPELINE_TIMEOUT_SECS)
 
@@ -93,6 +93,6 @@ def case_outcome_prediction_endpoint(request: CasePredictionRequest, req: Reques
             )
 
     total_time = time.time() - start_time
-    print(f"[Case Prediction] ✅ Processed {len(request.questions)} case(s) in {total_time:.2f}s")
+    print(f"[Case Prediction] ✅ Processed {len(payload.questions)} case(s) in {total_time:.2f}s")
 
     return CasePredictionResponse(answers=answers)

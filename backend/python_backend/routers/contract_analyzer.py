@@ -22,8 +22,8 @@ PIPELINE_TIMEOUT_SECS = int(__import__("os").getenv("CONTRACT_ANALYZER_TIMEOUT",
 @router.post("/contractanalyzer", response_model=ContractSubmissionResponse)
 @limiter.limit("10/minute")
 async def contract_analyzer_endpoint(
-    req: Request,
-    request: str = Form("Please perform a complete evidence-backed contract risk audit."),
+    request: Request,
+    audit_request: str = Form("Please perform a complete evidence-backed contract risk audit.", alias="request"),
     files: List[UploadFile] = File(...),
 ):
     """
@@ -34,7 +34,7 @@ async def contract_analyzer_endpoint(
     start_time = time.time()
 
     # --- Guardrail: Validate the request instruction text ---
-    is_safe, guard_message = guard_contract_analyzer(request)
+    is_safe, guard_message = guard_contract_analyzer(audit_request)
     if not is_safe:
         print(f"[Guardrail] Contract Analyzer: blocked request text")
         return ContractSubmissionResponse(answers=[{
@@ -130,7 +130,7 @@ async def contract_analyzer_endpoint(
     # Run the analysis pipeline with timeout
     try:
         with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-            future = executor.submit(run_contract_analyzer_pipeline, request, docs)
+            future = executor.submit(run_contract_analyzer_pipeline, audit_request, docs)
             analysis_result = future.result(timeout=PIPELINE_TIMEOUT_SECS)
     except concurrent.futures.TimeoutError:
         print(f"[Contract Analyzer] Pipeline timeout after {PIPELINE_TIMEOUT_SECS}s")
